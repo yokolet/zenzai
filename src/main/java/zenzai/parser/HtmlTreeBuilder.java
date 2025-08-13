@@ -10,13 +10,14 @@ import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+
+import zenzai.nodes.HtmlNode;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilderState.Constants.InTableFoster;
@@ -158,11 +159,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    List<Node> completeParseFragment() {
+    List<HtmlNode> completeParseFragment() {
         if (contextElement != null) {
             // depending on context and the input html, content may have been added outside of the root el
             // e.g. context=p, input=div, the div will have been pushed out.
-            List<Node> nodes = contextElement.siblingNodes();
+            List<HtmlNode> nodes = contextElement.siblingNodes();
             if (!nodes.isEmpty())
                 contextElement.insertChildren(-1, nodes);
             return contextElement.childNodes();
@@ -425,7 +426,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      * Inserts the provided character token into the provided element.
      */
     void insertCharacterToElement(Token.Character characterToken, Element el) {
-        final Node node;
+        final HtmlNode node;
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
@@ -1028,7 +1029,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(null);
     }
 
-    void insertInFosterParent(Node in) {
+    void insertInFosterParent(HtmlNode in) {
         Element fosterParent;
         Element lastTable = getFromStack("table");
         boolean isLastTableParent = false;

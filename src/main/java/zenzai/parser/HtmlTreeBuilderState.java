@@ -7,11 +7,12 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+
+import zenzai.nodes.HtmlNode;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilder.isSpecial;
@@ -966,7 +967,7 @@ enum HtmlTreeBuilderState {
                 Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
-                for (Node child : furthestBlock.childNodes()) {
+                for (HtmlNode child : furthestBlock.childNodes()) {
                     adoptor.appendChild(child);
                 }
 

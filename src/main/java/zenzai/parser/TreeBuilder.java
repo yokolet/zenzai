@@ -5,7 +5,6 @@ import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.Range;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
@@ -13,6 +12,8 @@ import org.jspecify.annotations.Nullable;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+
+import zenzai.nodes.HtmlNode;
 
 import static zenzai.parser.HtmlParser.NamespaceHtml;
 
@@ -74,7 +75,7 @@ abstract class TreeBuilder {
         return doc;
     }
 
-    List<Node> parseFragment(Reader inputFragment, @Nullable Element context, String baseUri, HtmlParser parser) {
+    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable Element context, String baseUri, HtmlParser parser) {
         initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
@@ -85,7 +86,7 @@ abstract class TreeBuilder {
         // in Html, sets up context; no-op in XML
     }
 
-    abstract List<Node> completeParseFragment();
+    abstract List<HtmlNode> completeParseFragment();
 
     /** Set the node listener, which will then get callbacks for node insert and removals. */
     void nodeListener(NodeVisitor nodeListener) {
@@ -251,7 +252,7 @@ abstract class TreeBuilder {
      Called by implementing TreeBuilders when a node has been inserted. This implementation includes optionally tracking
      the source range of the node.  @param node the node that was just inserted
      */
-    void onNodeInserted(Node node) {
+    void onNodeInserted(HtmlNode node) {
         trackNodePosition(node, true);
 
         if (nodeListener != null)
@@ -262,14 +263,14 @@ abstract class TreeBuilder {
      Called by implementing TreeBuilders when a node is explicitly closed. This implementation includes optionally
      tracking the closing source range of the node.  @param node the node being closed
      */
-    void onNodeClosed(Node node) {
+    void onNodeClosed(HtmlNode node) {
         trackNodePosition(node, false);
 
         if (nodeListener != null)
             nodeListener.tail(node, stack.size());
     }
 
-    void trackNodePosition(Node node, boolean isStart) {
+    void trackNodePosition(HtmlNode node, boolean isStart) {
         if (!trackSourceRange) return;
 
         final Token token = currentToken;
