@@ -20,7 +20,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class HtmlParser implements Cloneable {
     public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
-    public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
     public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
     public static final String NamespaceSvg = "http://www.w3.org/2000/svg";
 

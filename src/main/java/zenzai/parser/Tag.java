@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
-import static org.jsoup.parser.Parser.NamespaceHtml;
+import static zenzai.parser.HtmlParser.NamespaceHtml;
 
 /**
  A Tag represents an Element's name and configured options, common throughout the Document. Options may affect the parse
@@ -359,6 +359,4 @@ public class Tag implements Cloneable {
             throw new RuntimeException(e);
         }
     }
-
-
 }

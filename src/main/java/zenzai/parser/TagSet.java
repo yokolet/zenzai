@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static org.jsoup.parser.Parser.NamespaceHtml;
-import static org.jsoup.parser.Parser.NamespaceMathml;
-import static org.jsoup.parser.Parser.NamespaceSvg;
+import static zenzai.parser.HtmlParser.NamespaceHtml;
+import static zenzai.parser.HtmlParser.NamespaceMathml;
+import static zenzai.parser.HtmlParser.NamespaceSvg;
 
 /**
  A TagSet controls the {@link Tag} configuration for a Document's parse, and its serialization. It contains the initial

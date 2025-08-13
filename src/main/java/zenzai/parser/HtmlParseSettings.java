@@ -1,7 +1,6 @@
 package zenzai.parser;
 
 import org.jsoup.nodes.Attributes;
-import org.jspecify.annotations.Nullable;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 import static org.jsoup.internal.Normalizer.normalize;
