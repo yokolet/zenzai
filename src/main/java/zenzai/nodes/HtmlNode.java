@@ -6,7 +6,10 @@ import java.util.LinkedList;
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
 
+import zenzai.helper.Validate;
+
 public abstract class HtmlNode implements Node, Cloneable {
+    @Nullable HtmlElement parentNode; // Nodes don't always have parents
 
     public abstract String getNodeName();
     public abstract String getNodeValue();
@@ -91,5 +94,63 @@ public abstract class HtmlNode implements Node, Cloneable {
             }
         }
         return clone;
+    }
+
+    /**
+     * Get the number of child nodes that this node holds.
+     * @return the number of child nodes that this node holds.
+     */
+    public abstract int childNodeSize();
+
+    /**
+     * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
+     * @param baseUri new URI
+     */
+    protected abstract void doSetBaseUri(String baseUri);
+
+    /**
+     Update the base URI of this node and all of its descendants.
+     @param baseUri base URI to set
+     */
+    public void setBaseUri(final String baseUri) {
+        Validate.notNull(baseUri);
+        doSetBaseUri(baseUri);
+    }
+
+    /**
+     Get the node name of this node. Use for debugging purposes and not logic switching (for that, use instanceof).
+     @return node name
+     */
+    public abstract String nodeName();
+
+    /**
+     Get the normalized name of this node. For node types other than Element, this is the same as {@link #nodeName()}.
+     For an Element, will be the lower-cased tag name.
+     @return normalized node name
+     @since 1.15.4.
+     */
+    public String normalName() {
+        return nodeName();
+    }
+
+    /**
+     * Gets the Document associated with this Node.
+     * @return the Document associated with this Node, or null if there is no such Document.
+     */
+    public @Nullable Document ownerDocument() {
+        HtmlNode node = this;
+        while (node != null) {
+            if (node instanceof Document) return (Document) node;
+            node = node.parentNode;
+        }
+        return null;
+    }
+
+    /**
+     Gets this node's parent node. Not overridable by extending classes, so useful if you really just need the Node type.
+     @return parent node; or null if no parent.
+     */
+    public @Nullable final HtmlNode parentNode() {
+        return parentNode;
     }
 }

@@ -2,7 +2,6 @@ package zenzai.parser;
 
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -11,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import zenzai.nodes.HtmlNode;
+import zenzai.nodes.HtmlElement;
 
 /**
  Parses HTML or XML into a {@link org.jsoup.nodes.Document}. Generally, it is simpler to use one of the parse methods in
@@ -98,7 +98,7 @@ public class HtmlParser implements Cloneable {
      @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
      @return list of nodes parsed from the input HTML.
      */
-    public List<HtmlNode> parseFragmentInput(String fragment, @Nullable Element context, String baseUri) {
+    public List<HtmlNode> parseFragmentInput(String fragment, @Nullable HtmlElement context, String baseUri) {
         return parseFragmentInput(new StringReader(fragment), context, baseUri);
     }
 
@@ -111,7 +111,7 @@ public class HtmlParser implements Cloneable {
      @return list of nodes parsed from the input HTML.
      @throws java.io.UncheckedIOException if an I/O error occurs in the Reader
      */
-    public List<HtmlNode> parseFragmentInput(Reader fragment, @Nullable Element context, String baseUri) {
+    public List<HtmlNode> parseFragmentInput(Reader fragment, @Nullable HtmlElement context, String baseUri) {
         try {
             lock.lock();
             return treeBuilder.parseFragment(fragment, context, baseUri, this);
@@ -248,7 +248,7 @@ public class HtmlParser implements Cloneable {
      *
      * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
-    public static List<HtmlNode> parseFragment(String fragmentHtml, Element context, String baseUri) {
+    public static List<HtmlNode> parseFragment(String fragmentHtml, HtmlElement context, String baseUri) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
         return treeBuilder.parseFragment(new StringReader(fragmentHtml), context, baseUri, new HtmlParser(treeBuilder));
     }
@@ -264,7 +264,7 @@ public class HtmlParser implements Cloneable {
      *
      * @return list of nodes parsed from the input HTML. Note that the context element, if supplied, is not modified.
      */
-    public static List<HtmlNode> parseFragment(String fragmentHtml, Element context, String baseUri, HtmlParseErrorList errorList) {
+    public static List<HtmlNode> parseFragment(String fragmentHtml, HtmlElement context, String baseUri, HtmlParseErrorList errorList) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
         HtmlParser parser = new HtmlParser(treeBuilder);
         parser.errors = errorList;
@@ -281,7 +281,7 @@ public class HtmlParser implements Cloneable {
      */
     public static Document parseBodyFragment(String bodyHtml, String baseUri) {
         Document doc = Document.createShell(baseUri);
-        Element body = doc.body();
+        HtmlElement body = doc.body();
         List<HtmlNode> nodeList = parseFragment(bodyHtml, body, baseUri);
         body.appendChildren(nodeList);
         return doc;

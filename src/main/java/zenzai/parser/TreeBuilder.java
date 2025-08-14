@@ -4,7 +4,6 @@ import org.jsoup.helper.Validate;
 import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Range;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import zenzai.nodes.HtmlNode;
+import zenzai.nodes.HtmlElement;
 
 import static zenzai.parser.HtmlParser.NamespaceHtml;
 
@@ -25,7 +25,7 @@ abstract class TreeBuilder {
     CharacterReader reader;
     Tokeniser tokeniser;
     Document doc; // current doc we are building into
-    ArrayList<Element> stack; // the stack of open elements
+    ArrayList<HtmlElement> stack; // the stack of open elements
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     HtmlParseSettings settings;
@@ -75,14 +75,14 @@ abstract class TreeBuilder {
         return doc;
     }
 
-    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable Element context, String baseUri, HtmlParser parser) {
+    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, HtmlParser parser) {
         initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
         return completeParseFragment();
     }
 
-    void initialiseParseFragment(@Nullable Element context) {
+    void initialiseParseFragment(@Nullable HtmlElement context) {
         // in Html, sets up context; no-op in XML
     }
 
@@ -156,9 +156,9 @@ abstract class TreeBuilder {
      Removes the last Element from the stack, hits onNodeClosed, and then returns it.
      * @return
      */
-    Element pop() {
+    HtmlElement pop() {
         int size = stack.size();
-        Element removed = stack.remove(size - 1);
+        HtmlElement removed = stack.remove(size - 1);
         onNodeClosed(removed);
         return removed;
     }
@@ -167,7 +167,7 @@ abstract class TreeBuilder {
      Adds the specified Element to the end of the stack, and hits onNodeInserted.
      * @param element
      */
-    final void push(Element element) {
+    final void push(HtmlElement element) {
         stack.add(element);
         onNodeInserted(element);
     }
@@ -177,7 +177,7 @@ abstract class TreeBuilder {
      (which might not actually be on the stack; use stack.size() == 0 to test if required.
      @return the last element on the stack, if any; or the root document
      */
-    Element currentElement() {
+    HtmlElement currentElement() {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : doc;
     }
@@ -190,7 +190,7 @@ abstract class TreeBuilder {
     boolean currentElementIs(String normalName) {
         if (stack.size() == 0)
             return false;
-        Element current = currentElement();
+        HtmlElement current = currentElement();
         return current != null && current.normalName().equals(normalName)
                 && current.tag().namespace().equals(NamespaceHtml);
     }
@@ -204,7 +204,7 @@ abstract class TreeBuilder {
     boolean currentElementIs(String normalName, String namespace) {
         if (stack.size() == 0)
             return false;
-        Element current = currentElement();
+        HtmlElement current = currentElement();
         return current != null && current.normalName().equals(normalName)
                 && current.tag().namespace().equals(namespace);
     }
@@ -278,8 +278,8 @@ abstract class TreeBuilder {
         int endPos = token.endPos();
 
         // handle implicit element open / closes.
-        if (node instanceof Element) {
-            final Element el = (Element) node;
+        if (node instanceof HtmlElement) {
+            final HtmlElement el = (HtmlElement) node;
             if (token.isEOF()) {
                 if (el.endSourceRange().isTracked())
                     return; // /body and /html are left on stack until EOF, don't reset them

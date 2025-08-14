@@ -6,13 +6,13 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 
 import zenzai.nodes.HtmlNode;
+import zenzai.nodes.HtmlElement;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilder.isSpecial;
@@ -90,7 +90,7 @@ enum HtmlTreeBuilderState {
             } else if (t.isStartTag() && t.asStartTag().normalName().equals("html")) {
                 return InBody.process(t, tb); // does not transition
             } else if (t.isStartTag() && t.asStartTag().normalName().equals("head")) {
-                Element head = tb.insertElementFor(t.asStartTag());
+                HtmlElement head = tb.insertElementFor(t.asStartTag());
                 tb.setHeadElement(head);
                 tb.transition(InHead);
             } else if (t.isEndTag() && (inSorted(t.asEndTag().normalName(), BeforeHtmlToHead))) {
@@ -126,7 +126,7 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html")) {
                         return InBody.process(t, tb);
                     } else if (inSorted(name, InHeadEmpty)) {
-                        Element el = tb.insertEmptyElementFor(start);
+                        HtmlElement el = tb.insertEmptyElementFor(start);
                         // jsoup special: update base the first time it is seen
                         if (name.equals("base") && el.hasAttr("href"))
                             tb.maybeSetBaseUri(el);
@@ -249,7 +249,7 @@ enum HtmlTreeBuilderState {
                     tb.transition(InFrameset);
                 } else if (inSorted(name, InBodyStartToHead)) {
                     tb.error(this);
-                    Element head = tb.getHeadElement();
+                    HtmlElement head = tb.getHeadElement();
                     tb.push(head);
                     tb.process(t, InHead);
                     tb.removeFromStack(head);
@@ -328,8 +328,8 @@ enum HtmlTreeBuilderState {
         private boolean inBodyStartTag(Token t, HtmlTreeBuilder tb) {
             final Token.StartTag startTag = t.asStartTag();
             final String name = startTag.normalName();
-            final ArrayList<Element> stack;
-            Element el;
+            final ArrayList<HtmlElement> stack;
+            HtmlElement el;
 
             switch (name) {
                 case "a":
@@ -338,7 +338,7 @@ enum HtmlTreeBuilderState {
                         tb.processEndTag("a");
 
                         // still on stack?
-                        Element remainingA = tb.getFromStack("a");
+                        HtmlElement remainingA = tb.getFromStack("a");
                         if (remainingA != null) {
                             tb.removeFromActiveFormattingElements(remainingA);
                             tb.removeFromStack(remainingA);
@@ -376,7 +376,7 @@ enum HtmlTreeBuilderState {
                     // otherwise, merge attributes onto real html (if present)
                     stack = tb.getStack();
                     if (stack.size() > 0) {
-                        Element html = tb.getStack().get(0);
+                        HtmlElement html = tb.getStack().get(0);
                         mergeAttributes(startTag, html);
                     }
                     break;
@@ -389,7 +389,7 @@ enum HtmlTreeBuilderState {
                     } else {
                         tb.framesetOk(false);
                         // will be on stack if this is a nested body. won't be if closed (which is a variance from spec, which leaves it on)
-                        Element body = tb.getFromStack("body");
+                        HtmlElement body = tb.getFromStack("body");
                         if (body != null) mergeAttributes(startTag, body);
                     }
                     break;
@@ -402,7 +402,7 @@ enum HtmlTreeBuilderState {
                     } else if (!tb.framesetOk()) {
                         return false; // ignore frameset
                     } else {
-                        Element second = stack.get(1);
+                        HtmlElement second = stack.get(1);
                         if (second.parent() != null)
                             second.remove();
                         // pop up to html element
@@ -700,7 +700,7 @@ enum HtmlTreeBuilderState {
 
                 case "form":
                     if (!tb.onStack("template")) {
-                        Element currentForm = tb.getFormElement();
+                        HtmlElement currentForm = tb.getFormElement();
                         tb.setFormElement(null);
                         if (currentForm == null || !tb.inScope(name)) {
                             tb.error(this);
@@ -801,17 +801,17 @@ enum HtmlTreeBuilderState {
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             final String name = t.asEndTag().normalName; // case insensitive search - goal is to preserve output case, not for the parse to be case sensitive
-            final ArrayList<Element> stack = tb.getStack();
+            final ArrayList<HtmlElement> stack = tb.getStack();
 
             // deviate from spec slightly to speed when super deeply nested
-            Element elFromStack = tb.getFromStack(name);
+            HtmlElement elFromStack = tb.getFromStack(name);
             if (elFromStack == null) {
                 tb.error(this);
                 return false;
             }
 
             for (int pos = stack.size() - 1; pos >= 0; pos--) {
-                Element node = stack.get(pos);
+                HtmlElement node = stack.get(pos);
                 if (node.nameIs(name)) {
                     tb.generateImpliedEndTags(name);
                     if (!tb.currentElementIs(name))
@@ -852,9 +852,9 @@ enum HtmlTreeBuilderState {
                 //  - is between the end of the list and the last [marker] in the list, if any, or the start of the list otherwise, and
                 //  - has the tag name subject.
                 //  If there is no such element, then return and instead act as described in the "any other end tag" entry above.
-                Element formatEl = null;
+                HtmlElement formatEl = null;
                 for (int i = tb.formattingElements.size() - 1; i >= 0; i--) {
-                    Element next = tb.formattingElements.get(i);
+                    HtmlElement next = tb.formattingElements.get(i);
                     if (next == null) // marker
                         break;
                     if (next.normalName().equals(subject)) {
@@ -882,12 +882,12 @@ enum HtmlTreeBuilderState {
                 }
 
                 //  7. Let furthestBlock be the topmost node in the [stack of open elements] that is lower in the stack than formattingElement, and is an element in the [special]category. There might not be one.
-                Element furthestBlock = null;
-                ArrayList<Element> stack = tb.getStack();
+                HtmlElement furthestBlock = null;
+                ArrayList<HtmlElement> stack = tb.getStack();
                 int fei = stack.lastIndexOf(formatEl);
                 if (fei != -1) { // look down the stack
                     for (int i = fei + 1; i < stack.size(); i++) {
-                        Element el = stack.get(i);
+                        HtmlElement el = stack.get(i);
                         if (isSpecial(el)) {
                             furthestBlock = el;
                             break;
@@ -905,15 +905,15 @@ enum HtmlTreeBuilderState {
                     return true;
                 }
 
-                Element commonAncestor = tb.aboveOnStack(formatEl); // 9. Let commonAncestor be the element immediately above formattingElement in the [stack of open elements].
+                HtmlElement commonAncestor = tb.aboveOnStack(formatEl); // 9. Let commonAncestor be the element immediately above formattingElement in the [stack of open elements].
                 if (commonAncestor == null) { tb.error(this); return true; } // Would be a WTF
 
                 // 10. Let a bookmark note the position of formattingElement in the [list of active formatting elements] relative to the elements on either side of it in the list.
                 // JH - I think this means its index? Or do we need a linked list?
                 int bookmark = tb.positionOfElement(formatEl);
 
-                Element el = furthestBlock; //  11. Let node and lastNode be furthestBlock.
-                Element lastEl = furthestBlock;
+                HtmlElement el = furthestBlock; //  11. Let node and lastNode be furthestBlock.
+                HtmlElement lastEl = furthestBlock;
                 int inner = 0; // 12. Let innerLoopCounter be 0.
 
                 while (true) { // 13. While true:
@@ -946,7 +946,7 @@ enum HtmlTreeBuilderState {
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
-                    Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), HtmlParseSettings.preserveCase), tb.getBaseUri());
+                    HtmlElement replacement = new HtmlElement(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), HtmlParseSettings.preserveCase), tb.getBaseUri());
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
                     el = replacement;
@@ -964,7 +964,7 @@ enum HtmlTreeBuilderState {
                 // just use commonAncestor as target:
                 commonAncestor.appendChild(lastEl);
                 // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
-                Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
+                HtmlElement adoptor = new HtmlElement(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
                 for (HtmlNode child : furthestBlock.childNodes()) {
@@ -1635,7 +1635,7 @@ enum HtmlTreeBuilderState {
     },
     AfterBody {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            Element html = tb.getFromStack("html");
+            HtmlElement html = tb.getFromStack("html");
             if (isWhitespace(t)) {
                 // spec deviation - currently body is still on stack, but we want this to go to the html node
                 if (html != null)
@@ -1747,7 +1747,7 @@ enum HtmlTreeBuilderState {
                 return tb.process(t, InBody);
             } else if (isWhitespace(t)) {
                 // spec deviation - body and html still on stack, but want this space to go after </html>
-                Element doc = tb.getDocument();
+                HtmlElement doc = tb.getDocument();
                 tb.insertCharacterToElement(t.asCharacter(), doc);
             }else if (t.isEOF()) {
                 // nice work chuck
@@ -1836,11 +1836,11 @@ enum HtmlTreeBuilderState {
                     }
 
                     // Any other end tag
-                    ArrayList<Element> stack = tb.getStack();
+                    ArrayList<HtmlElement> stack = tb.getStack();
                     if (stack.isEmpty())
                         Validate.wtf("Stack unexpectedly empty");
                     int i = stack.size() - 1;
-                    Element el = stack.get(i);
+                    HtmlElement el = stack.get(i);
                     if (!el.nameIs(end.normalName))
                         tb.error(this);
                     while (i != 0) {
@@ -1870,7 +1870,7 @@ enum HtmlTreeBuilderState {
         }
     };
 
-    private static void mergeAttributes(Token.StartTag source, Element dest) {
+    private static void mergeAttributes(Token.StartTag source, HtmlElement dest) {
         if (!source.hasAttributes()) return;
         for (Attribute attr : source.attributes) { // only iterates public attributes
             Attributes destAttrs = dest.attributes();
