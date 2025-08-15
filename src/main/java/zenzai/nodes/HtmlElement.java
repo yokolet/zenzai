@@ -3,19 +3,20 @@ package zenzai.nodes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
+import zenzai.parser.HtmlParseSettings;
 import zenzai.parser.Tag;
 
 public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
     private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
     Tag tag;
     HtmlNodeList childNodes;
-
 
 
     public abstract String getTagName();
@@ -143,6 +144,64 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     @Override
     public String normalName() {
         return tag.normalName();
+    }
+
+    /**
+     * Get the Tag for this element.
+     *
+     * @return the tag object
+     */
+    public Tag tag() {
+        return tag;
+    }
+
+    /**
+     * Get the name of the tag for this element. E.g. {@code div}. If you are using {@link HtmlParseSettings#preserveCase
+     * case preserving parsing}, this will return the source's original case.
+     *
+     * @return the tag name
+     */
+    public String tagName() {
+        return tag.getName();
+    }
+
+    /**
+     Test if this Element has the specified normalized name, and is in the specified namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @param namespace the namespace
+     * @return true if the element's normal name matches exactly, and is in the specified namespace
+     * @since 1.17.2
+     */
+    public boolean elementIs(String normalName, String namespace) {
+        return tag.normalName().equals(normalName) && tag.namespace().equals(namespace);
+    }
+
+    /**
+     Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
+     enabled prior to parsing the content.
+     @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Node#sourceRange()
+     @see Range#isImplicit()
+     @since 1.15.2
+     */
+    public Range endSourceRange() {
+        return Range.of(this, false);
+    }
+
+    void reindexChildren() {
+        final int size = childNodes.size();
+        for (int i = 0; i < size; i++) {
+            childNodes.get(i).setSiblingIndex(i);
+        }
+        childNodes.validChildren = true;
+    }
+
+    @Override protected List<HtmlNode> ensureChildNodes() {
+        if (childNodes == EmptyNodeList) {
+            childNodes = new HtmlNodeList(4);
+        }
+        return childNodes;
     }
 
     static final class HtmlNodeList extends ArrayList<HtmlNode> {

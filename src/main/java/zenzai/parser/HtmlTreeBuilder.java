@@ -484,7 +484,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return null;
     }
 
-    boolean removeFromStack(Element el) {
+    boolean removeFromStack(HtmlElement el) {
         for (int pos = stack.size() - 1; pos >= 0; pos--) {
             HtmlElement next = stack.get(pos);
             if (next == el) {
@@ -573,7 +573,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     HtmlElement aboveOnStack(HtmlElement el) {
         if (!onStack(el)) return null;
         for (int pos = stack.size() - 1; pos > 0; pos--) {
-            EHtmlElementlement next = stack.get(pos);
+            HtmlElement next = stack.get(pos);
             if (next == el) {
                 return stack.get(pos - 1);
             }
