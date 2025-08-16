@@ -11,6 +11,7 @@ import org.w3c.dom.*;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 import zenzai.parser.HtmlParseSettings;
+import zenzai.parser.HtmlParser;
 import zenzai.parser.Tag;
 
 public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
@@ -181,12 +182,53 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see Node#sourceRange()
+     @see HtmlNode#sourceRange()
      @see HtmlRange#isImplicit()
      @since 1.15.2
      */
     public HtmlRange endSourceRange() {
         return HtmlRange.of(this, false);
+    }
+
+    /**
+     * Create a new element by tag name, and add it as this Element's last child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @return the new element, to allow you to add content to it, e.g.:
+     *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
+     */
+    public HtmlElement appendElement(String tagName) {
+        return appendElement(tagName, tag.namespace());
+    }
+
+    /**
+     * Create a new element by tag name and namespace, add it as this Element's last child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @param namespace the namespace of the tag (e.g. {@link HtmlParser#NamespaceHtml})
+     * @return the new element, in the specified namespace
+     */
+    public HtmlElement appendElement(String tagName, String namespace) {
+        HtmlParser parser = NodeUtils.parser(this);
+        HtmlElement child = new HtmlElement(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
+        appendChild(child);
+        return child;
+    }
+
+    /**
+     Gets the first child of this Element that is an Element, or {@code null} if there is none.
+     @return the first Element child node, or null.
+     @see #firstChild()
+     @see #lastElementChild()
+     @since 1.15.2
+     */
+    public @Nullable HtmlElement firstElementChild() {
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++) {
+            HtmlNode node = childNodes.get(i);
+            if (node instanceof HtmlElement) return (HtmlElement) node;
+        }
+        return null;
     }
 
     void reindexChildren() {

@@ -4,7 +4,6 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
@@ -16,6 +15,7 @@ import java.util.List;
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 
@@ -276,7 +276,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return framesetOk;
     }
 
-    Document getDocument() {
+    HtmlDocument getDocument() {
         return doc;
     }
 

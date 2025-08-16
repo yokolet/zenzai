@@ -1,7 +1,6 @@
 package zenzai.parser;
 
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.Document;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -11,6 +10,7 @@ import java.util.List;
 
 import zenzai.helper.Validate;
 import zenzai.internal.SharedConstants;
+import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 import zenzai.nodes.HtmlRange;
@@ -24,7 +24,7 @@ abstract class TreeBuilder {
     protected HtmlParser parser;
     CharacterReader reader;
     Tokeniser tokeniser;
-    Document doc; // current doc we are building into
+    HtmlDocument doc; // current doc we are building into
     ArrayList<HtmlElement> stack; // the stack of open elements
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
@@ -43,7 +43,7 @@ abstract class TreeBuilder {
         Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
 
-        doc = new Document(parser.defaultNamespace(), baseUri);
+        doc = new HtmlDocument(parser.defaultNamespace(), baseUri);
         doc.parser(parser);
         this.parser = parser;
         settings = parser.settings();
@@ -69,7 +69,7 @@ abstract class TreeBuilder {
         stack = null;
     }
 
-    Document parse(Reader input, String baseUri, HtmlParser parser) {
+    HtmlDocument parse(Reader input, String baseUri, HtmlParser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
         return doc;

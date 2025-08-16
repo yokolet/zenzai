@@ -2,7 +2,6 @@ package zenzai.parser;
 
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
 import org.jspecify.annotations.Nullable;
 
@@ -10,6 +9,7 @@ import java.util.ArrayList;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 import zenzai.nodes.HtmlRange;
@@ -38,11 +38,11 @@ enum HtmlTreeBuilderState {
                 tb.onNodeInserted(doctype);
                 // todo: quirk state check on more doctype ids, if deemed useful (most are ancient legacy and presumably irrelevant)
                 if (d.isForceQuirks() || !doctype.name().equals("html") || doctype.publicId().equalsIgnoreCase("HTML"))
-                    tb.getDocument().quirksMode(Document.QuirksMode.quirks);
+                    tb.getDocument().quirksMode(HtmlDocument.QuirksMode.quirks);
                 tb.transition(BeforeHtml);
             } else {
                 // todo: check not iframe srcdoc
-                tb.getDocument().quirksMode(Document.QuirksMode.quirks); // missing doctype
+                tb.getDocument().quirksMode(HtmlDocument.QuirksMode.quirks); // missing doctype
                 tb.transition(BeforeHtml);
                 return tb.process(t); // re-process token
             }
@@ -452,7 +452,7 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 case "table":
-                    if (tb.getDocument().quirksMode() != Document.QuirksMode.quirks && tb.inButtonScope("p")) {
+                    if (tb.getDocument().quirksMode() != HtmlDocument.QuirksMode.quirks && tb.inButtonScope("p")) {
                         tb.processEndTag("p");
                     }
                     tb.insertElementFor(startTag);

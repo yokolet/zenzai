@@ -119,10 +119,10 @@ public abstract class HtmlNode implements Node, Cloneable {
         clone.parentNode = (HtmlElement) parent; // can be null, to create an orphan split
         clone.siblingIndex = parent == null ? 0 : siblingIndex();
         // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
-        if (parent == null && !(this instanceof Document)) {
-            Document doc = ownerDocument();
+        if (parent == null && !(this instanceof HtmlDocument)) {
+            HtmlDocument doc = ownerDocument();
             if (doc != null) {
-                Document docClone = doc.shallowClone();
+                HtmlDocument docClone = doc.shallowClone();
                 clone.parentNode = docClone;
                 docClone.ensureChildNodes().add(clone);
             }
@@ -166,10 +166,10 @@ public abstract class HtmlNode implements Node, Cloneable {
      * Gets the Document associated with this Node.
      * @return the Document associated with this Node, or null if there is no such Document.
      */
-    public @Nullable Document ownerDocument() {
+    public @Nullable HtmlDocument ownerDocument() {
         HtmlNode node = this;
         while (node != null) {
-            if (node instanceof Document) return (Document) node;
+            if (node instanceof HtmlDocument) return (HtmlDocument) node;
             node = node.parentNode;
         }
         return null;
@@ -304,5 +304,39 @@ public abstract class HtmlNode implements Node, Cloneable {
             return "";
 
         return StringUtil.resolve(baseUri(), attributes().getIgnoreCase(attributeKey));
+    }
+
+    /**
+     Gets the next sibling Element of this node. E.g., if a {@code div} contains two {@code p}s, the
+     {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+     <p>This is similar to {@link #nextSibling()}, but specifically finds only Elements.</p>
+
+     @return the next element, or null if there is no next element
+     @see #previousElementSibling()
+     */
+    public @Nullable HtmlElement nextElementSibling() {
+        HtmlNode next = this;
+        while ((next = next.nextSibling()) != null) {
+            if (next instanceof HtmlElement) return (HtmlElement) next;
+        }
+        return null;
+    }
+
+    /**
+     Get this node's next sibling.
+     @return next sibling, or {@code null} if this is the last sibling
+     */
+    public @Nullable HtmlNode nextSibling() {
+        if (parentNode == null)
+            return null; // root
+
+        final List<HtmlNode> siblings = parentNode.ensureChildNodes();
+        final int index = siblingIndex() + 1;
+        if (siblings.size() > index) {
+            HtmlNode node = siblings.get(index);
+            assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
+            return node;
+        } else
+            return null;
     }
 }

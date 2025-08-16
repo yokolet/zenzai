@@ -1,6 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.Document;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -9,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import zenzai.helper.Validate;
+import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 
@@ -69,7 +69,7 @@ public class HtmlParser implements Cloneable {
      @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
      @return parsed Document
      */
-    public Document parseInput(String html, String baseUri) {
+    public HtmlDocument parseInput(String html, String baseUri) {
         return parseInput(new StringReader(html), baseUri);
     }
 
@@ -81,7 +81,7 @@ public class HtmlParser implements Cloneable {
      @return parsed Document
      @throws java.io.UncheckedIOException if an I/O error occurs in the Reader
      */
-    public Document parseInput(Reader inputHtml, String baseUri) {
+    public HtmlDocument parseInput(Reader inputHtml, String baseUri) {
         try {
             lock.lock(); // using a lock vs synchronized to support loom threads
             return treeBuilder.parse(inputHtml, baseUri, this);
@@ -233,7 +233,7 @@ public class HtmlParser implements Cloneable {
      *
      * @return parsed Document
      */
-    public static Document parse(String html, String baseUri) {
+    public static HtmlDocument parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
         return treeBuilder.parse(new StringReader(html), baseUri, new HtmlParser(treeBuilder));
     }
@@ -279,8 +279,8 @@ public class HtmlParser implements Cloneable {
      *
      * @return Document, with empty head, and HTML parsed into body
      */
-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
-        Document doc = Document.createShell(baseUri);
+    public static HtmlDocument parseBodyFragment(String bodyHtml, String baseUri) {
+        HtmlDocument doc = HtmlDocument.createShell(baseUri);
         HtmlElement body = doc.body();
         List<HtmlNode> nodeList = parseFragment(bodyHtml, body, baseUri);
         body.appendChildren(nodeList);
