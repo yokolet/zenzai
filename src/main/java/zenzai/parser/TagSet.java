@@ -1,7 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -9,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import zenzai.helper.Validate;
+import zenzai.internal.SharedConstants;
 
 import static zenzai.parser.HtmlParser.NamespaceHtml;
 import static zenzai.parser.HtmlParser.NamespaceMathml;

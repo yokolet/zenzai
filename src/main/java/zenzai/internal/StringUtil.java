@@ -7,6 +7,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
+import zenzai.helper.Validate;
+
 /**
  A minimal String utility class. Designed for <b>internal</b> jsoup use only - the API and outcome may change without
  notice.
@@ -109,9 +111,62 @@ public final class StringUtil {
         return false;
     }
 
+    public static boolean isAsciiLetter(char c) {
+        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+    }
+
+    public static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    public static boolean isHexDigit(char c) {
+        return isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
+    }
+
+    /**
+     * Maintains cached StringBuilders in a flyweight pattern, to minimize new StringBuilder GCs. The StringBuilder is
+     * prevented from growing too large.
+     * <p>
+     * Care must be taken to release the builder once its work has been completed, with {@link #releaseBuilder}
+     * @return an empty StringBuilder
+     */
+    public static StringBuilder borrowBuilder() {
+        return BuilderPool.borrow();
+    }
+
+    /**
+     * Release a borrowed builder. Care must be taken not to use the builder after it has been returned, as its
+     * contents may be changed by this method, or by a concurrent thread.
+     * @param sb the StringBuilder to release.
+     * @return the string value of the released String Builder (as an incentive to release it!).
+     */
+    public static String releaseBuilder(StringBuilder sb) {
+        Validate.notNull(sb);
+        String string = sb.toString();
+        releaseBuilderVoid(sb);
+        return string;
+    }
+
+    /**
+     Releases a borrowed builder, but does not call .toString() on it. Useful in case you already have that string.
+     @param sb the StringBuilder to release.
+     @see #releaseBuilder(StringBuilder)
+     */
+    public static void releaseBuilderVoid(StringBuilder sb) {
+        // if it hasn't grown too big, reset it and return it to the pool:
+        if (sb.length() <= MaxBuilderSize) {
+            sb.delete(0, sb.length()); // make sure it's emptied on release
+            BuilderPool.release(sb);
+        }
+    }
+
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
     private static final Pattern controlChars = Pattern.compile("[\\x00-\\x1f]*"); // matches ascii 0 - 31, to strip from url
     private static final Pattern extraDotSegmentsPattern = Pattern.compile("^/(?>(?>\\.\\.?/)+)");
+    private static final int MaxBuilderSize = 8 * 1024;
+    private static final int InitBuilderSize = 1024;
+    private static final SoftPool<StringBuilder> BuilderPool = new SoftPool<>(
+            () -> new StringBuilder(InitBuilderSize));
 
     private static String stripControlChars(final String input) {
         return controlChars.matcher(input).replaceAll("");

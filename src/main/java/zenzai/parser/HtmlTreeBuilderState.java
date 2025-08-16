@@ -1,18 +1,18 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.DocumentType;
-import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 
+import zenzai.helper.Validate;
+import zenzai.internal.StringUtil;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
+import zenzai.nodes.HtmlRange;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilder.isSpecial;
@@ -1875,7 +1875,7 @@ enum HtmlTreeBuilderState {
         for (Attribute attr : source.attributes) { // only iterates public attributes
             Attributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
-                Range.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
+                HtmlRange.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
                 destAttrs.put(attr);
                 if (source.trackSource) { // copy the attribute range
                     destAttrs.sourceRange(attr.getKey(), range);

@@ -1,10 +1,11 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.Normalizer;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.nodes.Range;
 import org.jspecify.annotations.Nullable;
+
+import zenzai.helper.Validate;
+import zenzai.internal.Normalizer;
+import zenzai.nodes.HtmlRange;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -180,13 +181,13 @@ abstract class Token {
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!attrValue.hasData()) attrValStart = attrValEnd = attrNameEnd;
 
-                Range.AttributeRange range = new Range.AttributeRange(
-                        new Range(
-                                new Range.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
-                                new Range.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
-                        new Range(
-                                new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
-                                new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
+                HtmlRange.AttributeRange range = new HtmlRange.AttributeRange(
+                        new HtmlRange(
+                                new HtmlRange.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
+                                new HtmlRange.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
+                        new HtmlRange(
+                                new HtmlRange.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
+                                new HtmlRange.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
                 );
                 attributes.sourceRange(name, range);
             }

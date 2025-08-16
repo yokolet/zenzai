@@ -182,11 +182,11 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Node#sourceRange()
-     @see Range#isImplicit()
+     @see HtmlRange#isImplicit()
      @since 1.15.2
      */
-    public Range endSourceRange() {
-        return Range.of(this, false);
+    public HtmlRange endSourceRange() {
+        return HtmlRange.of(this, false);
     }
 
     void reindexChildren() {

@@ -2,8 +2,8 @@ package zenzai.parser;
 
 import org.jsoup.nodes.Attributes;
 
-import static org.jsoup.internal.Normalizer.lowerCase;
-import static org.jsoup.internal.Normalizer.normalize;
+import static zenzai.internal.Normalizer.lowerCase;
+import static zenzai.internal.Normalizer.normalize;
 
 /**
  * Controls parser case settings, to optionally preserve tag and/or attribute name case.

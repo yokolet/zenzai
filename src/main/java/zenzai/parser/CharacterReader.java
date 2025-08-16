@@ -1,8 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.SoftPool;
-import org.jsoup.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -13,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
+
+import zenzai.helper.Validate;
+import zenzai.internal.StringUtil;
+import zenzai.internal.SoftPool;
 
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.

@@ -1,10 +1,7 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.SharedConstants;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Range;
 import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
@@ -12,8 +9,11 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import zenzai.helper.Validate;
+import zenzai.internal.SharedConstants;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
+import zenzai.nodes.HtmlRange;
 
 import static zenzai.parser.HtmlParser.NamespaceHtml;
 
@@ -297,11 +297,11 @@ abstract class TreeBuilder {
             }
         }
 
-        Range.Position startPosition = new Range.Position
+        HtmlRange.Position startPosition = new HtmlRange.Position
                 (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
-        Range.Position endPosition = new Range.Position
+        HtmlRange.Position endPosition = new HtmlRange.Position
                 (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
-        Range range = new Range(startPosition, endPosition);
+        HtmlRange range = new HtmlRange(startPosition, endPosition);
         node.attributes().userData(isStart ? SharedConstants.RangeKey : SharedConstants.EndRangeKey, range);
     }
 }

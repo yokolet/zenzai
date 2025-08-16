@@ -1,12 +1,13 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
+
+import zenzai.helper.Validate;
+import zenzai.internal.StringUtil;
 
 /**
  * Readers the input stream into tokens.

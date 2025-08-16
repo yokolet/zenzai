@@ -1,6 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jspecify.annotations.Nullable;
 
@@ -9,6 +8,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
+import zenzai.helper.Validate;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 
