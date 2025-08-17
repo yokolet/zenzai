@@ -1,6 +1,10 @@
 package zenzai.nodes;
 
+import java.nio.charset.Charset;
+
 import org.w3c.dom.*;
+
+import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.parser.HtmlParser;
 import zenzai.parser.Tag;
@@ -80,7 +84,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
     public static HtmlDocument createShell(String baseUri) {
         Validate.notNull(baseUri);
 
-        HtmlDocument doc = new Document(baseUri);
+        HtmlDocument doc = new HtmlDocument(baseUri);
         HtmlElement html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -106,6 +110,14 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
             el = el.nextElementSibling();
         }
         return html.appendElement("body");
+    }
+
+    /**
+     * Get the parser that was used to parse this document.
+     * @return the parser
+     */
+    public HtmlParser parser() {
+        return parser;
     }
 
     /**
@@ -146,10 +158,32 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
         return appendElement("html");
     }
 
+    @Override
+    public HtmlDocument shallowClone() {
+        HtmlDocument clone = new HtmlDocument(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+        if (attributes != null) clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        return clone;
+    }
+
     /**
      * A Document's output settings control the form of the text() and html() methods.
      */
     public static class OutputSettings implements Cloneable {
+        /**
+         * The output serialization syntax.
+         */
+        public enum Syntax {html, xml}
+        private HtmlEntities.EscapeMode escapeMode = HtmlEntities.EscapeMode.base;
+        private Charset charset = DataUtil.UTF_8;
+
+        /**
+         Create a new OutputSettings object, with the default settings (UTF-8, HTML, EscapeMode.base, pretty-printing,
+         indent amount of 1).
+         */
+        public OutputSettings() {
+        }
+
         @Override
         public OutputSettings clone() {
             OutputSettings clone;
@@ -159,9 +193,29 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
                 throw new RuntimeException(e);
             }
             clone.charset(charset.name()); // new charset, coreCharset, and charset encoder
-            clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
+            clone.escapeMode = HtmlEntities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;
+        }
+
+        /**
+         * Update the document's output charset.
+         * @param charset the new charset to use.
+         * @return the document's output settings, for chaining
+         */
+        public OutputSettings charset(Charset charset) {
+            this.charset = charset;
+            return this;
+        }
+
+        /**
+         * Update the document's output charset.
+         * @param charset the new charset (by name) to use.
+         * @return the document's output settings, for chaining
+         */
+        public OutputSettings charset(String charset) {
+            charset(Charset.forName(charset));
+            return this;
         }
     }
 

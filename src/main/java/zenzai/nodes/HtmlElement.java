@@ -16,6 +16,7 @@ import zenzai.parser.Tag;
 
 public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
     private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
+    static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     HtmlNodeList childNodes;
 
@@ -103,7 +104,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
-        addChildren(index, children.toArray(new Node[0]));
+        addChildren(index, children.toArray(new HtmlNode[0]));
         return this;
     }
 
@@ -145,6 +146,14 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     @Override
     public String normalName() {
         return tag.normalName();
+    }
+
+    @Override
+    public HtmlElement shallowClone() {
+        // simpler than implementing a clone version with no child copy
+        String baseUri = baseUri();
+        if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
+        return new HtmlElement(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     /**
@@ -231,12 +240,32 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
         return null;
     }
 
+    @Override @Nullable
+    public final HtmlElement parent() {
+        return (HtmlElement) parentNode;
+    }
+
+    /**
+     * Insert the specified node into the DOM before this node (as a preceding sibling).
+     * @param node to add before this element
+     * @return this Element, for chaining
+     * @see #after(Node)
+     */
+    @Override
+    public HtmlElement before(HtmlNode node) {
+        return (HtmlElement) super.before(node);
+    }
+
     void reindexChildren() {
         final int size = childNodes.size();
         for (int i = 0; i < size; i++) {
             childNodes.get(i).setSiblingIndex(i);
         }
         childNodes.validChildren = true;
+    }
+
+    void invalidateChildren() {
+        childNodes.validChildren = false;
     }
 
     @Override protected List<HtmlNode> ensureChildNodes() {

@@ -1,9 +1,6 @@
 package zenzai.nodes;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.LinkedList;
+import java.util.*;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
@@ -55,7 +52,7 @@ public abstract class HtmlNode implements Node, Cloneable {
     public abstract Object setUserData(String key, Object data, UserDataHandler handler);
     public abstract Object getUserData(String key);
 
-    protected abstract List<Node> ensureChildNodes();
+    protected abstract List<HtmlNode> ensureChildNodes();
 
     /**
      * Get the number of child nodes that this node holds.
@@ -84,6 +81,12 @@ public abstract class HtmlNode implements Node, Cloneable {
      */
     public abstract String baseUri();
 
+    /**
+     * Delete all this node's children.
+     * @return this node, for chaining
+     */
+    public abstract Node empty();
+
     @Override
     public HtmlNode clone() {
         HtmlNode thisClone = doClone(null); // splits for orphan
@@ -104,6 +107,16 @@ public abstract class HtmlNode implements Node, Cloneable {
             }
         }
         return thisClone;
+    }
+
+    /**
+     * Create a stand-alone, shallow copy of this node. None of its children (if any) will be cloned, and it will have
+     * no parent or sibling nodes.
+     * @return a single independent copy of this node
+     * @see #clone()
+     */
+    public Node shallowClone() {
+        return doClone(null);
     }
 
     protected HtmlNode doClone(@Nullable HtmlNode parent) {
@@ -181,6 +194,42 @@ public abstract class HtmlNode implements Node, Cloneable {
      */
     public @Nullable final HtmlNode parentNode() {
         return parentNode;
+    }
+
+    /**
+     Gets this node's parent node. This is always an Element.
+     @return parent node; or null if no parent.
+     @see #hasParent()
+     @see #parentElement();
+     */
+    public @Nullable HtmlNode parent() {
+        return parentNode;
+    }
+
+    /**
+     * Insert the specified node into the DOM before this node (as a preceding sibling).
+     * @param node to add before this node
+     * @return this node, for chaining
+     * @see #after(Node)
+     */
+    public Node before(HtmlNode node) {
+        Validate.notNull(node);
+        Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
+
+        parentNode.addChildren(siblingIndex(), node);
+        return this;
+    }
+
+    /**
+     * Remove (delete) this node from the DOM tree. If this node has children, they are also removed. If this node is
+     * an orphan, nothing happens.
+     */
+    public void remove() {
+        if (parentNode != null)
+            parentNode.removeChild(this);
     }
 
     /**
@@ -338,5 +387,57 @@ public abstract class HtmlNode implements Node, Cloneable {
             return node;
         } else
             return null;
+    }
+
+    protected void addChildren(int index, HtmlNode... children) {
+        // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
+        Validate.notNull(children);
+        if (children.length == 0) return;
+        final List<HtmlNode> nodes = ensureChildNodes();
+
+        // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
+        final HtmlNode firstParent = children[0].parent();
+        if (firstParent != null && firstParent.childNodeSize() == children.length) {
+            boolean sameList = true;
+            final List<HtmlNode> firstParentNodes = firstParent.ensureChildNodes();
+            // identity check contents to see if same
+            int i = children.length;
+            while (i-- > 0) {
+                if (children[i] != firstParentNodes.get(i)) {
+                    sameList = false;
+                    break;
+                }
+            }
+            if (sameList) { // moving, so OK to empty firstParent and short-circuit
+                firstParent.empty();
+                nodes.addAll(index, Arrays.asList(children));
+                i = children.length;
+                assert this instanceof HtmlElement;
+                while (i-- > 0) {
+                    children[i].parentNode = (HtmlElement) this;
+                }
+                ((HtmlElement) this).invalidateChildren();
+                return;
+            }
+        }
+
+        Validate.noNullElements(children);
+        for (Node child : children) {
+            reparentChild(child);
+        }
+        nodes.addAll(index, Arrays.asList(children));
+        ((HtmlElement) this).invalidateChildren();
+    }
+
+    protected void reparentChild(HtmlNode child) {
+        child.setParentNode(this);
+    }
+
+    protected void setParentNode(HtmlNode parentNode) {
+        Validate.notNull(parentNode);
+        if (this.parentNode != null)
+            this.parentNode.removeChild(this);
+        assert parentNode instanceof HtmlElement;
+        this.parentNode = (HtmlElement) parentNode;
     }
 }
