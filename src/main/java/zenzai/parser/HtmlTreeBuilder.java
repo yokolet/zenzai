@@ -1,6 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
@@ -15,6 +14,7 @@ import java.util.List;
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.HtmlAttributes;
 import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;

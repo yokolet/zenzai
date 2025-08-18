@@ -87,6 +87,12 @@ public abstract class HtmlNode implements Node, Cloneable {
      */
     public abstract Node empty();
 
+    /**
+     * Get each of the Element's attributes.
+     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
+     */
+    public abstract HtmlAttributes attributes();
+
     @Override
     public HtmlNode clone() {
         HtmlNode thisClone = doClone(null); // splits for orphan
@@ -389,6 +395,21 @@ public abstract class HtmlNode implements Node, Cloneable {
             return null;
     }
 
+    /**
+     Get the source range (start and end positions) in the original input source from which this node was parsed.
+     Position tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the
+     start tag.
+     @return the range for the start of the node, or {@code untracked} if its range was not tracked.
+     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see HtmlRange#isImplicit()
+     @see HtmlElement#endSourceRange()
+     @see HtmlAttributes#sourceRange(String name)
+     @since 1.15.2
+     */
+    public HtmlRange sourceRange() {
+        return HtmlRange.of(this, true);
+    }
+
     protected void addChildren(int index, HtmlNode... children) {
         // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
@@ -422,7 +443,7 @@ public abstract class HtmlNode implements Node, Cloneable {
         }
 
         Validate.noNullElements(children);
-        for (Node child : children) {
+        for (HtmlNode child : children) {
             reparentChild(child);
         }
         nodes.addAll(index, Arrays.asList(children));
