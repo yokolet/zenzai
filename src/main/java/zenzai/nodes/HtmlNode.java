@@ -7,6 +7,7 @@ import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
+import zenzai.select.NodeVisitor;
 
 public abstract class HtmlNode implements Node, Cloneable {
     @Nullable HtmlElement parentNode; // Nodes don't always have parents
@@ -147,6 +148,17 @@ public abstract class HtmlNode implements Node, Cloneable {
             }
         }
         return clone;
+    }
+
+    /**
+     * Perform a depth-first traversal through this node and its descendants.
+     * @param nodeVisitor the visitor callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public HtmlNode traverse(NodeVisitor nodeVisitor) {
+        Validate.notNull(nodeVisitor);
+        nodeVisitor.traverse(this);
+        return this;
     }
 
     /**
@@ -393,6 +405,25 @@ public abstract class HtmlNode implements Node, Cloneable {
             return node;
         } else
             return null;
+    }
+
+    /**
+     Checks if this node has a parent. Nodes won't have parents if (e.g.) they are newly created and not added as a child
+     to an existing node, or if they are a {@link #shallowClone()}. In such cases, {@link #parent()} will return {@code null}.
+     @return if this node has a parent.
+     */
+    public boolean hasParent() {
+        return parentNode != null;
+    }
+
+    /**
+     Get a child node by its 0-based index.
+     @param index index of child node
+     @return the child node at this index.
+     @throws IndexOutOfBoundsException if the index is out of bounds.
+     */
+    public HtmlNode childNode(int index) {
+        return ensureChildNodes().get(index);
     }
 
     /**

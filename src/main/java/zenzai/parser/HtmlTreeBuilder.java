@@ -3,7 +3,6 @@ package zenzai.parser;
 import org.jsoup.nodes.CDataNode;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.DataNode;
-import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
@@ -14,6 +13,7 @@ import java.util.List;
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.HtmlFormElement;
 import zenzai.nodes.HtmlAttributes;
 import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
@@ -68,7 +68,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     private boolean baseUriSetFromDoc;
     private @Nullable HtmlElement headElement; // the current head element
-    private @Nullable FormElement formElement; // the current form element
+    private @Nullable HtmlFormElement formElement; // the current form element
     private @Nullable HtmlElement contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
     ArrayList<HtmlElement> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
@@ -149,8 +149,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // with form correctly
             HtmlElement formSearch = context;
             while (formSearch != null) {
-                if (formSearch instanceof FormElement) {
-                    formElement = (FormElement) formSearch;
+                if (formSearch instanceof HtmlFormElement) {
+                    formElement = (HtmlFormElement) formSearch;
                     break;
                 }
                 formSearch = formSearch.parent();
@@ -322,7 +322,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 forcePreserveCase ? HtmlParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
-                new FormElement(tag, null, attributes) :
+                new HtmlFormElement(tag, null, attributes) :
                 new HtmlElement(tag, null, attributes);
     }
 
@@ -372,8 +372,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    FormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
-        FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
+    HtmlFormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+        HtmlFormElement el = (HtmlFormElement) createElementFor(startTag, NamespaceHtml, false);
 
         if (checkTemplateStack) {
             if (!onStack("template"))
@@ -800,11 +800,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Nullable
-    FormElement getFormElement() {
+    HtmlFormElement getFormElement() {
         return formElement;
     }
 
-    void setFormElement(FormElement formElement) {
+    void setFormElement(HtmlFormElement formElement) {
         this.formElement = formElement;
     }
 

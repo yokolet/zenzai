@@ -1,7 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.DocumentType;
 import org.jspecify.annotations.Nullable;
 

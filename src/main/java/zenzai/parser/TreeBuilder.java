@@ -1,6 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -14,6 +13,7 @@ import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
 import zenzai.nodes.HtmlRange;
+import zenzai.select.NodeVisitor;
 
 import static zenzai.parser.HtmlParser.NamespaceHtml;
 
