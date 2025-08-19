@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
+import static zenzai.nodes.HtmlEntities.EscapeMode.extended;
+
 public class HtmlEntities {
     private static final int empty = -1;
     private static final String emptyName = "";
@@ -64,6 +66,58 @@ public class HtmlEntities {
             }
             return emptyName;
         }
+    }
+
+    /**
+     * Check if the input is a known named entity
+     *
+     * @param name the possible entity name (e.g. "lt" or "amp")
+     * @return true if a known named entity
+     */
+    public static boolean isNamedEntity(final String name) {
+        return extended.codepointForName(name) != empty;
+    }
+
+    /**
+     * Check if the input is a known named entity in the base entity set.
+     *
+     * @param name the possible entity name (e.g. "lt" or "amp")
+     * @return true if a known named entity in the base set
+     * @see #isNamedEntity(String)
+     */
+    public static boolean isBaseNamedEntity(final String name) {
+        return EscapeMode.base.codepointForName(name) != empty;
+    }
+
+    /**
+     Finds the longest base named entity that is a prefix of the input. That is, input "notit" would return "not".
+
+     @return longest entity name that is a prefix of the input, or "" if no entity matches
+     */
+    public static String findPrefix(String input) {
+        for (String name : baseSorted) {
+            if (input.startsWith(name)) return name;
+        }
+        return emptyName;
+        // if perf critical, could look at using a Trie vs a scan
+    }
+
+    public static int codepointsForName(final String name, final int[] codepoints) {
+        String val = multipoints.get(name);
+        if (val != null) {
+            codepoints[0] = val.codePointAt(0);
+            codepoints[1] = val.codePointAt(1);
+            return 2;
+        }
+        int codepoint = extended.codepointForName(name);
+        if (codepoint != empty) {
+            codepoints[0] = codepoint;
+            return 1;
+        }
+        return 0;
+    }
+
+    private HtmlEntities() {
     }
 
     private static void load(EscapeMode e, String pointsData, int size) {

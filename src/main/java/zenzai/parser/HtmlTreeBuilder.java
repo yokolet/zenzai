@@ -308,7 +308,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     HtmlElement createElementFor(Token.StartTag startTag, String namespace, boolean forcePreserveCase) {
         // dedupe and normalize the attributes:
-        Attributes attributes = startTag.attributes;
+        HtmlAttributes attributes = startTag.attributes;
         if (attributes != null && !attributes.isEmpty()) {
             if (!forcePreserveCase)
                 settings.normalizeAttributes(attributes);

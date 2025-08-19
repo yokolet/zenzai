@@ -1,6 +1,7 @@
 package zenzai.parser;
 
 import org.jsoup.nodes.Attributes;
+import zenzai.nodes.HtmlAttributes;
 
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.Normalizer.normalize;
@@ -74,7 +75,7 @@ public class HtmlParseSettings {
         return name;
     }
 
-    void normalizeAttributes(Attributes attributes) {
+    void normalizeAttributes(HtmlAttributes attributes) {
         if (!preserveAttributeCase) {
             attributes.normalize();
         }

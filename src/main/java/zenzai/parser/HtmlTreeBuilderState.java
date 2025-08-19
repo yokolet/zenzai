@@ -9,10 +9,7 @@ import java.util.ArrayList;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.nodes.HtmlDocument;
-import zenzai.nodes.HtmlNode;
-import zenzai.nodes.HtmlElement;
-import zenzai.nodes.HtmlRange;
+import zenzai.nodes.*;
 
 import static org.jsoup.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilder.isSpecial;
@@ -1872,8 +1869,8 @@ enum HtmlTreeBuilderState {
 
     private static void mergeAttributes(Token.StartTag source, HtmlElement dest) {
         if (!source.hasAttributes()) return;
-        for (Attribute attr : source.attributes) { // only iterates public attributes
-            Attributes destAttrs = dest.attributes();
+        for (HtmlAttribute attr : source.attributes) { // only iterates public attributes
+            HtmlAttributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
                 HtmlRange.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
                 destAttrs.put(attr);

@@ -2,11 +2,13 @@ package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
 import zenzai.helper.Validate;
+import zenzai.parser.HtmlParseSettings;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.HtmlRange.AttributeRange.UntrackedAttr;
@@ -80,6 +82,18 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     }
 
     /**
+     Set a new attribute, or replace an existing one by key.
+     @param attribute attribute with case-sensitive key
+     @return these attributes, for chaining
+     */
+    public HtmlAttributes put(HtmlAttribute attribute) {
+        Validate.notNull(attribute);
+        put(attribute.getKey(), attribute.getValue());
+        attribute.parent = this;
+        return this;
+    }
+
+    /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      *
      * @see HtmlAttributes#put(String, String)
@@ -87,6 +101,39 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     public HtmlAttributes add(String key, @Nullable String value) {
         addObject(key, value);
         return this;
+    }
+
+    // removes and shifts up
+    @SuppressWarnings("AssignmentToNull")
+    private void remove(int index) {
+        Validate.isFalse(index >= size);
+        int shifted = size - index - 1;
+        if (shifted > 0) {
+            System.arraycopy(keys, index + 1, keys, index, shifted);
+            System.arraycopy(vals, index + 1, vals, index, shifted);
+        }
+        size--;
+        keys[size] = null; // release hold
+        vals[size] = null;
+    }
+
+    /**
+     Add all the attributes from the incoming set to this set.
+     @param incoming attributes to add to these attributes.
+     */
+    public void addAll(HtmlAttributes incoming) {
+        int incomingSize = incoming.size(); // not adding internal
+        if (incomingSize == 0) return;
+        checkCapacity(size + incomingSize);
+
+        boolean needsPut = size != 0; // if this set is empty, no need to check existing set, so can add() vs put()
+        // (and save bashing on the indexOfKey()
+        for (HtmlAttribute attr : incoming) {
+            if (needsPut)
+                put(attr);
+            else
+                addObject(attr.getKey(), attr.getValue());
+        }
     }
 
     /**
@@ -103,6 +150,14 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
             if (!isInternalKey(keys[i]))  count++;
         }
         return count;
+    }
+
+    /**
+     Test if this Attributes list is empty.
+     <p>This does not include internal attributes, such as user data.</p>
+     */
+    public boolean isEmpty() {
+        return size() == 0;
     }
 
     /**
@@ -203,6 +258,42 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     public String getIgnoreCase(String key) {
         int i = indexOfKeyIgnoreCase(key);
         return i == NotFound ? EmptyString : checkNotNull(vals[i]);
+    }
+
+    /**
+     * Internal method. Lowercases all (non-internal) keys.
+     */
+    public void normalize() {
+        for (int i = 0; i < size; i++) {
+            assert keys[i] != null;
+            String key = keys[i];
+            assert key != null;
+            if (!isInternalKey(key))
+                keys[i] = lowerCase(key);
+        }
+    }
+
+    /**
+     * Internal method. Removes duplicate attribute by name. Settings for case sensitivity of key names.
+     * @param settings case sensitivity
+     * @return number of removed dupes
+     */
+    public int deduplicate(HtmlParseSettings settings) {
+        if (size == 0) return 0;
+        boolean preserve = settings.preserveAttributeCase();
+        int dupes = 0;
+        for (int i = 0; i < size; i++) {
+            String keyI = keys[i];
+            assert keyI != null;
+            for (int j = i + 1; j < size; j++) {
+                if ((preserve && keyI.equals(keys[j])) || (!preserve && keyI.equalsIgnoreCase(keys[j]))) {
+                    dupes++;
+                    remove(j);
+                    j--;
+                }
+            }
+        }
+        return dupes;
     }
 
     /** Get the Ranges, if tracking is enabled; null otherwise. */
