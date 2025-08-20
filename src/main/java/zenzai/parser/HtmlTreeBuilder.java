@@ -1,9 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.CDataNode;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.DataNode;
-import org.jsoup.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
@@ -13,11 +9,7 @@ import java.util.List;
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.StringUtil;
-import zenzai.nodes.HtmlFormElement;
-import zenzai.nodes.HtmlAttributes;
-import zenzai.nodes.HtmlDocument;
-import zenzai.nodes.HtmlNode;
-import zenzai.nodes.HtmlElement;
+import zenzai.nodes.*;
 
 import static zenzai.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilderState.Constants.InTableFoster;
@@ -409,7 +401,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insertCommentNode(Token.Comment token) {
-        Comment node = new Comment(token.getData());
+        HtmlComment node = new HtmlComment(token.getData());
         currentElement().appendChild(node);
         onNodeInserted(node);
     }
@@ -430,11 +422,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
-            node = new CDataNode(data);
+            node = new HtmlCDataNode(data);
         else if (el.tag().is(Tag.Data))
             node = new DataNode(data);
         else
-            node = new TextNode(data);
+            node = new HtmlTextNode(data);
         el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
         onNodeInserted(node);
     }
