@@ -8,6 +8,11 @@ public abstract class HtmlCDataNode extends HtmlTextNode implements CDATASection
     }
 
     @Override
+    public String getNodeName() {
+        return "#cdata-section";
+    }
+
+    @Override
     public String nodeName() {
         return "#cdata";
     }

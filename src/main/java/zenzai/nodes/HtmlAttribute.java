@@ -12,12 +12,26 @@ public abstract class HtmlAttribute implements Cloneable, Attr {
     @Nullable private String val;
     @Nullable HtmlAttributes parent; // used to update the holding Attributes when the key / value is changed via this interface
 
-    public abstract String getName();
+    //public abstract String getName();
     public abstract boolean getSpecified();
     public abstract void setValue(String value) throws DOMException;
     public abstract Element getOnwerElement() throws DOMException;
     public abstract TypeInfo getSchemaTypeInfo();
     public abstract boolean isId();
+
+    @Override
+    public String getNodeName() {
+        return getKey();
+    }
+
+    /**
+     * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
+     * @return the attribute name
+     */
+    @Override
+    public String getName() {
+        return getKey();
+    }
 
     /**
      Get the attribute's key (aka name).

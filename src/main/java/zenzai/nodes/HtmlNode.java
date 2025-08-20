@@ -54,8 +54,6 @@ public abstract class HtmlNode implements Node, Cloneable {
     public abstract Object setUserData(String key, Object data, UserDataHandler handler);
     public abstract Object getUserData(String key);
 
-    protected abstract List<HtmlNode> ensureChildNodes();
-
     /**
      * Get the number of child nodes that this node holds.
      * @return the number of child nodes that this node holds.
@@ -126,6 +124,8 @@ public abstract class HtmlNode implements Node, Cloneable {
     public Node shallowClone() {
         return doClone(null);
     }
+
+    protected abstract List<HtmlNode> ensureChildNodes();
 
     protected HtmlNode doClone(@Nullable HtmlNode parent) {
         assert parent == null || parent instanceof Element;

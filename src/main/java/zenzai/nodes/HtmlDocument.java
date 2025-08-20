@@ -76,6 +76,11 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
         this.parser = parser;
     }
 
+    @Override
+    public String getNodeName() {
+        return "#document";
+    }
+
     /**
      Create a valid, empty shell of an HTML document, suitable for adding more elements to.
      @param baseUri baseUri of document

@@ -1,6 +1,6 @@
 package zenzai.nodes;
 
-public class DataNode extends LeafNode {
+public abstract class DataNode extends LeafNode {
 
     /**
      Create a new DataNode.
@@ -8,6 +8,11 @@ public class DataNode extends LeafNode {
      */
     public DataNode(String data) {
         super(data);
+    }
+
+    @Override
+    public String getNodeName() {
+        return "#data";
     }
 
     @Override public String nodeName() {

@@ -12,6 +12,11 @@ public abstract class HtmlComment extends LeafNode implements Comment {
         super(data);
     }
 
+    @Override
+    public String getNodeName() {
+        return "#comment";
+    }
+
     @Override public String nodeName() {
         return "#comment";
     }

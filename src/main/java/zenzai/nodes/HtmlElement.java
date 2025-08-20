@@ -78,6 +78,11 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     @Override
     public abstract Iterator<HtmlElement> iterator();
 
+    @Override
+    public String getNodeName() {
+        return tag.getName();
+    }
+
     /**
      Insert the given nodes to the end of this Element's children.
 

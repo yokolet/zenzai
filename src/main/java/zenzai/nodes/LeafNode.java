@@ -13,4 +13,12 @@ public abstract class LeafNode extends HtmlNode {
         Validate.notNull(coreValue);
         value = coreValue;
     }
+
+    String coreValue() {
+        return attr(nodeName());
+    }
+
+    void coreValue(String value) {
+        attr(nodeName(), value);
+    }
 }

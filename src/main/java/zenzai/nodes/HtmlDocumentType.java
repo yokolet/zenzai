@@ -38,6 +38,11 @@ public abstract class HtmlDocumentType extends LeafNode implements DocumentType 
         updatePubSyskey();
     }
 
+    @Override
+    public String getNodeName() {
+        return attr(NameKey);
+    }
+
     /**
      * Get this doctype's name (when set, or empty string)
      * @return doctype name
