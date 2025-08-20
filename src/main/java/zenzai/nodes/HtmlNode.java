@@ -7,6 +7,7 @@ import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
+import zenzai.parser.HtmlParseSettings;
 import zenzai.select.NodeVisitor;
 
 public abstract class HtmlNode implements Node, Cloneable {
@@ -340,6 +341,21 @@ public abstract class HtmlNode implements Node, Cloneable {
         else if (attributeKey.startsWith("abs:"))
             return absUrl(attributeKey.substring("abs:".length()));
         else return "";
+    }
+
+    /**
+     * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
+     * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings.
+     * @param attributeKey The attribute key.
+     * @param attributeValue The attribute value.
+     * @return this (for chaining)
+     */
+    public Node attr(String attributeKey, String attributeValue) {
+        HtmlDocument doc = ownerDocument();
+        HtmlParseSettings settings = doc != null ? doc.parser().settings() : HtmlParseSettings.htmlDefault;
+        attributeKey = settings.normalizeAttribute(attributeKey);
+        attributes().putIgnoreCase(attributeKey, attributeValue);
+        return this;
     }
 
     /**

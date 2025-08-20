@@ -312,6 +312,10 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
         return key.length() > 1 && key.charAt(0) == InternalPrefix;
     }
 
+    static String internalKey(String key) {
+        return InternalPrefix + key;
+    }
+
     int indexOfKey(String key) {
         Validate.notNull(key);
         for (int i = 0; i < size; i++) {
@@ -348,8 +352,17 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
         return hasKey(UserDataKey);
     }
 
-    static String internalKey(String key) {
-        return InternalPrefix + key;
+    void putIgnoreCase(String key, @Nullable String value) {
+        int i = indexOfKeyIgnoreCase(key);
+        if (i != NotFound) {
+            vals[i] = value;
+            String old = keys[i];
+            assert old != null;
+            if (!old.equals(key)) // case changed, update
+                keys[i] = key;
+        }
+        else
+            addObject(key, value);
     }
 
     private void addObject(String key, @Nullable Object value) {

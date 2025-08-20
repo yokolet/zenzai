@@ -1,6 +1,5 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.DocumentType;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype()) {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
-                DocumentType doctype = new DocumentType(
+                HtmlDocumentType doctype = new HtmlDocumentType(
                         tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
