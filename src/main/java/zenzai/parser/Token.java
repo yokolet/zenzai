@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
-import zenzai.nodes.HtmlAttributes;
+import zenzai.nodes.Attributes;
 import zenzai.nodes.HtmlRange;
 
 /**
@@ -101,7 +101,7 @@ abstract class Token {
         protected TokenData tagName = new TokenData();
         @Nullable protected String normalName; // lc version of tag name, for case-insensitive tree build
         boolean selfClosing = false;
-        @Nullable HtmlAttributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+        @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
         final private TokenData attrName = new TokenData();
         final private TokenData attrValue = new TokenData();
@@ -145,7 +145,7 @@ abstract class Token {
 
         final void newAttribute() {
             if (attributes == null)
-                attributes = new HtmlAttributes();
+                attributes = new Attributes();
 
             if (attrName.hasData() && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
@@ -311,7 +311,7 @@ abstract class Token {
             return this;
         }
 
-        StartTag nameAttr(String name, HtmlAttributes attributes) {
+        StartTag nameAttr(String name, Attributes attributes) {
             this.tagName.set(name);
             this.attributes = attributes;
             normalName = ParseSettings.normalName(name);

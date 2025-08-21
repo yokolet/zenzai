@@ -16,10 +16,10 @@ import zenzai.parser.Tag;
 
 public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
     private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
-    static final String BaseUriKey = HtmlAttributes.internalKey("baseUri");
+    static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     HtmlNodeList childNodes;
-    @Nullable HtmlAttributes attributes; // field is nullable but all methods for attributes are non-null
+    @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
     public abstract String getTagName();
     public abstract String getAttribute(String name);
@@ -51,7 +51,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      * @see #appendChild(Node)
      * @see #appendElement(String)
      */
-    public HtmlElement(Tag tag, @Nullable String baseUri, @Nullable HtmlAttributes attributes) {
+    public HtmlElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         Validate.notNull(tag);
         childNodes = EmptyNodeList;
         this.attributes = attributes;
@@ -162,9 +162,9 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     }
 
     @Override
-    public HtmlAttributes attributes() {
+    public Attributes attributes() {
         if (attributes == null) // not using hasAttributes, as doesn't clear warning
-            attributes = new HtmlAttributes();
+            attributes = new Attributes();
         return attributes;
     }
 

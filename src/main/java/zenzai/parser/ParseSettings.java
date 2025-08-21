@@ -1,6 +1,6 @@
 package zenzai.parser;
 
-import zenzai.nodes.HtmlAttributes;
+import zenzai.nodes.Attributes;
 
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.Normalizer.normalize;
@@ -74,7 +74,7 @@ public class ParseSettings {
         return name;
     }
 
-    void normalizeAttributes(HtmlAttributes attributes) {
+    void normalizeAttributes(Attributes attributes) {
         if (!preserveAttributeCase) {
             attributes.normalize();
         }

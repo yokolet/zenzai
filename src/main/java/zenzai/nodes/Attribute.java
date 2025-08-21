@@ -7,10 +7,10 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.TypeInfo;
 
-public abstract class HtmlAttribute implements Cloneable, Attr {
+public abstract class Attribute implements Cloneable, Attr {
     private String key;
     @Nullable private String val;
-    @Nullable HtmlAttributes parent; // used to update the holding Attributes when the key / value is changed via this interface
+    @Nullable Attributes parent; // used to update the holding Attributes when the key / value is changed via this interface
 
     //public abstract String getName();
     public abstract boolean getSpecified();
@@ -46,7 +46,7 @@ public abstract class HtmlAttribute implements Cloneable, Attr {
      @return the attribute value
      */
     public String getValue() {
-        return HtmlAttributes.checkNotNull(val);
+        return Attributes.checkNotNull(val);
     }
 
     /**
@@ -58,13 +58,13 @@ public abstract class HtmlAttribute implements Cloneable, Attr {
         String oldVal = this.val;
         if (parent != null) {
             int i = parent.indexOfKey(this.key);
-            if (i != HtmlAttributes.NotFound) {
+            if (i != Attributes.NotFound) {
                 oldVal = parent.get(this.key); // trust the container more
                 parent.vals[i] = val;
             }
         }
         this.val = val;
-        return HtmlAttributes.checkNotNull(oldVal);
+        return Attributes.checkNotNull(oldVal);
     }
 
     /**
@@ -74,7 +74,7 @@ public abstract class HtmlAttribute implements Cloneable, Attr {
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlAttributes#sourceRange(String)
+     @see Attributes#sourceRange(String)
      @see HtmlNode#sourceRange()
      @see HtmlElement#endSourceRange()
      @since 1.17.1

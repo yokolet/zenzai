@@ -506,11 +506,11 @@ enum HtmlTreeBuilderState {
                     break;
                 case "math":
                     tb.reconstructFormattingElements();
-                    tb.insertForeignElementFor(startTag, HtmlParser.NamespaceMathml);
+                    tb.insertForeignElementFor(startTag, Parser.NamespaceMathml);
                     break;
                 case "svg":
                     tb.reconstructFormattingElements();
-                    tb.insertForeignElementFor(startTag, HtmlParser.NamespaceSvg);
+                    tb.insertForeignElementFor(startTag, Parser.NamespaceSvg);
                     break;
                 // static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
                 case "h1":
@@ -940,7 +940,7 @@ enum HtmlTreeBuilderState {
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
-                    HtmlElement replacement = new HtmlElement(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), HtmlParseSettings.preserveCase), tb.getBaseUri());
+                    HtmlElement replacement = new HtmlElement(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
                     el = replacement;
@@ -1823,7 +1823,7 @@ enum HtmlTreeBuilderState {
                     Token.EndTag end = t.asEndTag();
                     if (end.normalName.equals("br") || end.normalName.equals("p"))
                         return processAsHtml(t, tb);
-                    if (end.normalName.equals("script") && tb.currentElementIs("script", HtmlParser.NamespaceSvg)) {
+                    if (end.normalName.equals("script") && tb.currentElementIs("script", Parser.NamespaceSvg)) {
                         // script level and execution elided.
                         tb.pop();
                         return true;
@@ -1844,7 +1844,7 @@ enum HtmlTreeBuilderState {
                         }
                         i--;
                         el = stack.get(i);
-                        if (el.tag().namespace().equals(HtmlParser.NamespaceHtml)) {
+                        if (el.tag().namespace().equals(Parser.NamespaceHtml)) {
                             return processAsHtml(t, tb);
                         }
                     }
@@ -1866,8 +1866,8 @@ enum HtmlTreeBuilderState {
 
     private static void mergeAttributes(Token.StartTag source, HtmlElement dest) {
         if (!source.hasAttributes()) return;
-        for (HtmlAttribute attr : source.attributes) { // only iterates public attributes
-            HtmlAttributes destAttrs = dest.attributes();
+        for (Attribute attr : source.attributes) { // only iterates public attributes
+            Attributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
                 HtmlRange.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
                 destAttrs.put(attr);

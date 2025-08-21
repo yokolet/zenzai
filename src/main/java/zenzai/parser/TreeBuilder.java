@@ -8,7 +8,7 @@ import java.util.List;
 
 import zenzai.helper.Validate;
 import zenzai.internal.SharedConstants;
-import zenzai.nodes.HtmlAttributes;
+import zenzai.nodes.Attributes;
 import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.HtmlNode;
 import zenzai.nodes.HtmlElement;
@@ -135,7 +135,7 @@ abstract class TreeBuilder {
         return process(start.reset().name(name));
     }
 
-    boolean processStartTag(String name, HtmlAttributes attrs) {
+    boolean processStartTag(String name, Attributes attrs) {
         final Token.StartTag start = this.start;
         if (currentToken == start) { // don't recycle an in-use token
             return process(new Token.StartTag(this).nameAttr(name, attrs));

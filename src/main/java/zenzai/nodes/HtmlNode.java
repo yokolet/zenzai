@@ -91,7 +91,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      * Get each of the Element's attributes.
      * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
      */
-    public abstract HtmlAttributes attributes();
+    public abstract Attributes attributes();
 
     @Override
     public HtmlNode clone() {
@@ -450,7 +450,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see HtmlRange#isImplicit()
      @see HtmlElement#endSourceRange()
-     @see HtmlAttributes#sourceRange(String name)
+     @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
     public HtmlRange sourceRange() {

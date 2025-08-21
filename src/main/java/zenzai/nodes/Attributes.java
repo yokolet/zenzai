@@ -13,7 +13,7 @@ import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.HtmlRange.AttributeRange.UntrackedAttr;
 
-public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneable {
+public abstract class Attributes implements Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
     private static final String EmptyString = "";
@@ -32,10 +32,10 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     Object[] vals = new Object[InitialCapacity];
 
     @Override
-    public HtmlAttributes clone() {
-        HtmlAttributes clone;
+    public Attributes clone() {
+        Attributes clone;
         try {
-            clone = (HtmlAttributes) super.clone();
+            clone = (Attributes) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +71,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @param value attribute value (which can be null, to set a true boolean attribute)
      * @return these attributes, for chaining
      */
-    public HtmlAttributes put(String key, @Nullable String value) {
+    public Attributes put(String key, @Nullable String value) {
         Validate.notNull(key);
         int i = indexOfKey(key);
         if (i != NotFound)
@@ -86,7 +86,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @param attribute attribute with case-sensitive key
      @return these attributes, for chaining
      */
-    public HtmlAttributes put(HtmlAttribute attribute) {
+    public Attributes put(Attribute attribute) {
         Validate.notNull(attribute);
         put(attribute.getKey(), attribute.getValue());
         attribute.parent = this;
@@ -96,9 +96,9 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      *
-     * @see HtmlAttributes#put(String, String)
+     * @see Attributes#put(String, String)
      */
-    public HtmlAttributes add(String key, @Nullable String value) {
+    public Attributes add(String key, @Nullable String value) {
         addObject(key, value);
         return this;
     }
@@ -121,14 +121,14 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      Add all the attributes from the incoming set to this set.
      @param incoming attributes to add to these attributes.
      */
-    public void addAll(HtmlAttributes incoming) {
+    public void addAll(Attributes incoming) {
         int incomingSize = incoming.size(); // not adding internal
         if (incomingSize == 0) return;
         checkCapacity(size + incomingSize);
 
         boolean needsPut = size != 0; // if this set is empty, no need to check existing set, so can add() vs put()
         // (and save bashing on the indexOfKey()
-        for (HtmlAttribute attr : incoming) {
+        for (Attribute attr : incoming) {
             if (needsPut)
                 put(attr);
             else
@@ -168,7 +168,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlAttribute#sourceRange()
+     @see Attribute#sourceRange()
      @see HtmlNode#sourceRange()
      @see HtmlElement#endSourceRange()
      @since 1.17.1
@@ -188,7 +188,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @return these attributes, for chaining
      @since 1.18.2
      */
-    public HtmlAttributes sourceRange(String key, HtmlRange.AttributeRange range) {
+    public Attributes sourceRange(String key, HtmlRange.AttributeRange range) {
         Validate.notNull(key);
         Validate.notNull(range);
         Map<String, HtmlRange.AttributeRange> ranges = getRanges();
@@ -232,7 +232,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @see #userData(String key)
      * @since 1.17.1
      */
-    public HtmlAttributes userData(String key, @Nullable Object value) {
+    public Attributes userData(String key, @Nullable Object value) {
         Validate.notNull(key);
         if (value == null && !hasKey(UserDataKey)) return this; // no user data exists, so short-circuit
         Map<String, Object> userData = userData();
