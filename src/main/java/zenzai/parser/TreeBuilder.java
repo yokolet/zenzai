@@ -10,7 +10,7 @@ import zenzai.helper.Validate;
 import zenzai.internal.SharedConstants;
 import zenzai.nodes.Attributes;
 import zenzai.nodes.HtmlDocument;
-import zenzai.nodes.HtmlNode;
+import zenzai.nodes.Node;
 import zenzai.nodes.HtmlElement;
 import zenzai.nodes.HtmlRange;
 import zenzai.select.NodeVisitor;
@@ -75,7 +75,7 @@ abstract class TreeBuilder {
         return doc;
     }
 
-    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, Parser parser) {
+    List<zenzai.nodes.Node> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, Parser parser) {
         initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
@@ -86,7 +86,7 @@ abstract class TreeBuilder {
         // in Html, sets up context; no-op in XML
     }
 
-    abstract List<HtmlNode> completeParseFragment();
+    abstract List<zenzai.nodes.Node> completeParseFragment();
 
     /** Set the node listener, which will then get callbacks for node insert and removals. */
     void nodeListener(NodeVisitor nodeListener) {
@@ -252,7 +252,7 @@ abstract class TreeBuilder {
      Called by implementing TreeBuilders when a node has been inserted. This implementation includes optionally tracking
      the source range of the node.  @param node the node that was just inserted
      */
-    void onNodeInserted(HtmlNode node) {
+    void onNodeInserted(zenzai.nodes.Node node) {
         trackNodePosition(node, true);
 
         if (nodeListener != null)
@@ -263,14 +263,14 @@ abstract class TreeBuilder {
      Called by implementing TreeBuilders when a node is explicitly closed. This implementation includes optionally
      tracking the closing source range of the node.  @param node the node being closed
      */
-    void onNodeClosed(HtmlNode node) {
+    void onNodeClosed(zenzai.nodes.Node node) {
         trackNodePosition(node, false);
 
         if (nodeListener != null)
             nodeListener.tail(node, stack.size());
     }
 
-    void trackNodePosition(HtmlNode node, boolean isStart) {
+    void trackNodePosition(zenzai.nodes.Node node, boolean isStart) {
         if (!trackSourceRange) return;
 
         final Token token = currentToken;

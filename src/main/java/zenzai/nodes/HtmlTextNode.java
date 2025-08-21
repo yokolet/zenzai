@@ -5,7 +5,7 @@ import org.w3c.dom.Text;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 
-public class HtmlTextNode extends LeafNode implements Text {
+public abstract class HtmlTextNode extends LeafNode implements Text {
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).

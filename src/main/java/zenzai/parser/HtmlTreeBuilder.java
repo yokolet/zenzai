@@ -151,11 +151,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    List<HtmlNode> completeParseFragment() {
+    List<zenzai.nodes.Node> completeParseFragment() {
         if (contextElement != null) {
             // depending on context and the input html, content may have been added outside of the root el
             // e.g. context=p, input=div, the div will have been pushed out.
-            List<HtmlNode> nodes = contextElement.siblingNodes();
+            List<zenzai.nodes.Node> nodes = contextElement.siblingNodes();
             if (!nodes.isEmpty())
                 contextElement.insertChildren(-1, nodes);
             return contextElement.childNodes();
@@ -418,7 +418,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
      * Inserts the provided character token into the provided element.
      */
     void insertCharacterToElement(Token.Character characterToken, HtmlElement el) {
-        final HtmlNode node;
+        final zenzai.nodes.Node node;
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
@@ -1021,7 +1021,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(null);
     }
 
-    void insertInFosterParent(HtmlNode in) {
+    void insertInFosterParent(zenzai.nodes.Node in) {
         HtmlElement fosterParent;
         HtmlElement lastTable = getFromStack("table");
         boolean isLastTableParent = false;

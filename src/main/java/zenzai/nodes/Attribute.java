@@ -75,7 +75,7 @@ public abstract class Attribute implements Cloneable, Attr {
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Attributes#sourceRange(String)
-     @see HtmlNode#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
      @see HtmlElement#endSourceRange()
      @since 1.17.1
      */

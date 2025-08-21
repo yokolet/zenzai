@@ -2,7 +2,7 @@ package zenzai.nodes;
 
 import zenzai.helper.Validate;
 
-public abstract class LeafNode extends HtmlNode {
+public abstract class LeafNode extends zenzai.nodes.Node {
     Object value;
 
     public LeafNode() {

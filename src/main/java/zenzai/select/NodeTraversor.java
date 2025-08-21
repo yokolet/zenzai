@@ -2,25 +2,25 @@ package zenzai.select;
 
 import zenzai.helper.Validate;
 import zenzai.nodes.HtmlElement;
-import zenzai.nodes.HtmlNode;
+import zenzai.nodes.Node;
 
 public class NodeTraversor {
     /**
      Run a depth-first traverse of the root and all of its descendants.
      @param visitor Node visitor.
      @param root the initial node point to traverse.
-     @see NodeVisitor#traverse(HtmlNode root)
+     @see NodeVisitor#traverse(Node root)
      */
-    public static void traverse(NodeVisitor visitor, HtmlNode root) {
+    public static void traverse(NodeVisitor visitor, Node root) {
         Validate.notNull(visitor);
         Validate.notNull(root);
-        HtmlNode node = root;
+        Node node = root;
         int depth = 0;
 
         while (node != null) {
-            HtmlNode parent = node.parentNode(); // remember parent to find nodes that get replaced in .head
+            Node parent = node.parentNode(); // remember parent to find nodes that get replaced in .head
             int origSize = parent != null ? parent.childNodeSize() : 0;
-            HtmlNode next = node.nextSibling();
+            Node next = node.nextSibling();
 
             visitor.head(node, depth); // visit current node
 

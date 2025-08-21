@@ -169,7 +169,7 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Attribute#sourceRange()
-     @see HtmlNode#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
      @see HtmlElement#endSourceRange()
      @since 1.17.1
      */

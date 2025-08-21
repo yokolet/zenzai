@@ -27,7 +27,7 @@ public class HtmlRange {
      * @param start if this is the starting range. {@code false} for Element end tags.
      * @return the Range, or the Untracked (-1) position if tracking is disabled.
      */
-    static HtmlRange of(HtmlNode node, boolean start) {
+    static HtmlRange of(zenzai.nodes.Node node, boolean start) {
 
         final String key = start ? RangeKey : EndRangeKey;
         if (!node.hasAttributes()) return Untracked;
@@ -50,7 +50,7 @@ public class HtmlRange {
      A Position object tracks the character position in the original input source where a Node starts or ends. If you want to
      track these positions, tracking must be enabled in the Parser with
      {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}.
-     @see HtmlNode#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
      */
     public static class Position {
         private final int pos, lineNumber, columnNumber;

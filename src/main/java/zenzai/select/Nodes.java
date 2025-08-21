@@ -2,9 +2,9 @@ package zenzai.select;
 
 import java.util.ArrayList;
 
-import zenzai.nodes.HtmlNode;
+import zenzai.nodes.Node;
 
-public class Nodes<T extends HtmlNode> extends ArrayList<T> {
+public class Nodes<T extends Node> extends ArrayList<T> {
     public Nodes() {
     }
 }

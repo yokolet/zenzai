@@ -14,7 +14,7 @@ import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
-public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
+public abstract class HtmlElement extends zenzai.nodes.Node implements Element, Iterable<HtmlElement> {
     private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
@@ -90,7 +90,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      @return this Element, for chaining
      @see #insertChildren(int, Collection)
      */
-    public HtmlElement appendChildren(Collection<? extends HtmlNode> children) {
+    public HtmlElement appendChildren(Collection<? extends zenzai.nodes.Node> children) {
         insertChildren(-1, children);
         return this;
     }
@@ -104,12 +104,12 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      * @param children child nodes to insert
      * @return this element, for chaining.
      */
-    public HtmlElement insertChildren(int index, Collection<? extends HtmlNode> children) {
+    public HtmlElement insertChildren(int index, Collection<? extends zenzai.nodes.Node> children) {
         Validate.notNull(children, "Children collection to be inserted must not be null.");
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
-        addChildren(index, children.toArray(new HtmlNode[0]));
+        addChildren(index, children.toArray(new zenzai.nodes.Node[0]));
         return this;
     }
 
@@ -122,7 +122,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      * @param children child nodes to insert
      * @return this element, for chaining.
      */
-    public HtmlElement insertChildren(int index, HtmlNode... children) {
+    public HtmlElement insertChildren(int index, zenzai.nodes.Node... children) {
         Validate.notNull(children, "Children collection to be inserted must not be null.");
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
@@ -203,7 +203,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlNode#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
      @see HtmlRange#isImplicit()
      @since 1.15.2
      */
@@ -246,7 +246,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     public @Nullable HtmlElement firstElementChild() {
         int size = childNodes.size();
         for (int i = 0; i < size; i++) {
-            HtmlNode node = childNodes.get(i);
+            zenzai.nodes.Node node = childNodes.get(i);
             if (node instanceof HtmlElement) return (HtmlElement) node;
         }
         return null;
@@ -264,7 +264,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      * @see #after(Node)
      */
     @Override
-    public HtmlElement before(HtmlNode node) {
+    public HtmlElement before(zenzai.nodes.Node node) {
         return (HtmlElement) super.before(node);
     }
 
@@ -280,14 +280,14 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
         childNodes.validChildren = false;
     }
 
-    @Override protected List<HtmlNode> ensureChildNodes() {
+    @Override protected List<zenzai.nodes.Node> ensureChildNodes() {
         if (childNodes == EmptyNodeList) {
             childNodes = new HtmlNodeList(4);
         }
         return childNodes;
     }
 
-    static final class HtmlNodeList extends ArrayList<HtmlNode> {
+    static final class HtmlNodeList extends ArrayList<zenzai.nodes.Node> {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
 

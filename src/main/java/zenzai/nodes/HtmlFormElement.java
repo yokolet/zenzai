@@ -14,7 +14,7 @@ public abstract class HtmlFormElement extends HtmlElement{
      * @param baseUri    the base URI
      * @param attributes initial attributes
      */
-    public HtmlFormElement(Tag tag, @Nullable String baseUri, @Nullable HtmlAttributes attributes) {
+    public HtmlFormElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         super(tag, baseUri, attributes);
     }
 

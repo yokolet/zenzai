@@ -961,7 +961,7 @@ enum HtmlTreeBuilderState {
                 HtmlElement adoptor = new HtmlElement(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
-                for (HtmlNode child : furthestBlock.childNodes()) {
+                for (zenzai.nodes.Node child : furthestBlock.childNodes()) {
                     adoptor.appendChild(child);
                 }
 
