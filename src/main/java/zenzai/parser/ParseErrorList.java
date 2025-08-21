@@ -7,12 +7,12 @@ import java.util.ArrayList;
  *
  * @author Jonathan Hedley
  */
-public class HtmlParseErrorList extends ArrayList<HtmlParseError>{
+public class ParseErrorList extends ArrayList<ParseError> {
     private static final int INITIAL_CAPACITY = 16;
     private final int initialCapacity;
     private final int maxSize;
 
-    HtmlParseErrorList(int initialCapacity, int maxSize) {
+    ParseErrorList(int initialCapacity, int maxSize) {
         super(initialCapacity);
         this.initialCapacity = initialCapacity;
         this.maxSize = maxSize;
@@ -22,7 +22,7 @@ public class HtmlParseErrorList extends ArrayList<HtmlParseError>{
      Create a new ParseErrorList with the same settings, but no errors in the list
      @param copy initial and max size details to copy
      */
-    HtmlParseErrorList(HtmlParseErrorList copy) {
+    ParseErrorList(ParseErrorList copy) {
         this(copy.initialCapacity, copy.maxSize);
     }
 
@@ -34,12 +34,12 @@ public class HtmlParseErrorList extends ArrayList<HtmlParseError>{
         return maxSize;
     }
 
-    public static HtmlParseErrorList noTracking() {
-        return new HtmlParseErrorList(0, 0);
+    public static ParseErrorList noTracking() {
+        return new ParseErrorList(0, 0);
     }
 
-    public static HtmlParseErrorList tracking(int maxSize) {
-        return new HtmlParseErrorList(INITIAL_CAPACITY, maxSize);
+    public static ParseErrorList tracking(int maxSize) {
+        return new ParseErrorList(INITIAL_CAPACITY, maxSize);
     }
 
     @Override

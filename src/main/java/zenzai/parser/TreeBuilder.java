@@ -15,30 +15,30 @@ import zenzai.nodes.HtmlElement;
 import zenzai.nodes.HtmlRange;
 import zenzai.select.NodeVisitor;
 
-import static zenzai.parser.HtmlParser.NamespaceHtml;
+import static zenzai.parser.Parser.NamespaceHtml;
 
 /**
  * @author Jonathan Hedley
  */
 abstract class TreeBuilder {
-    protected HtmlParser parser;
+    protected Parser parser;
     CharacterReader reader;
     Tokeniser tokeniser;
     HtmlDocument doc; // current doc we are building into
     ArrayList<HtmlElement> stack; // the stack of open elements
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
-    HtmlParseSettings settings;
+    ParseSettings settings;
     TagSet tagSet; // the tags we're using in this parse
     @Nullable NodeVisitor nodeListener; // optional listener for node add / removes
 
     private Token.StartTag start; // start tag to process
     private final Token.EndTag end  = new Token.EndTag(this);
-    abstract HtmlParseSettings defaultSettings();
+    abstract ParseSettings defaultSettings();
 
     boolean trackSourceRange;  // optionally tracks the source range of nodes and attributes
 
-    void initialiseParse(Reader input, String baseUri, HtmlParser parser) {
+    void initialiseParse(Reader input, String baseUri, Parser parser) {
         Validate.notNullParam(input, "input");
         Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
@@ -69,13 +69,13 @@ abstract class TreeBuilder {
         stack = null;
     }
 
-    HtmlDocument parse(Reader input, String baseUri, HtmlParser parser) {
+    HtmlDocument parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
         return doc;
     }
 
-    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, HtmlParser parser) {
+    List<HtmlNode> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, Parser parser) {
         initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
@@ -223,12 +223,12 @@ abstract class TreeBuilder {
      * @param args template arguments
      */
     void error(String msg, Object... args) {
-        HtmlParseErrorList errors = parser.getErrors();
+        ParseErrorList errors = parser.getErrors();
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, msg, args));
+            errors.add(new ParseError(reader, msg, args));
     }
 
-    Tag tagFor(String tagName, String normalName, String namespace, HtmlParseSettings settings) {
+    Tag tagFor(String tagName, String normalName, String namespace, ParseSettings settings) {
         return tagSet.valueOf(tagName, normalName, namespace, settings.preserveTagCase());
     }
 

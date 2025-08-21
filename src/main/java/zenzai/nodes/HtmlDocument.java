@@ -6,14 +6,14 @@ import org.w3c.dom.*;
 
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
-import zenzai.parser.HtmlParser;
+import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
-import static zenzai.parser.HtmlParser.NamespaceHtml;
+import static zenzai.parser.Parser.NamespaceHtml;
 
 public abstract class HtmlDocument extends HtmlElement implements Document {
     private OutputSettings outputSettings = new OutputSettings();
-    private HtmlParser parser; // the parser used to parse this document
+    private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
 
@@ -57,7 +57,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      @see #createShell
      */
     public HtmlDocument(String namespace, String baseUri) {
-        this(namespace, baseUri, HtmlParser.htmlParser()); // default HTML parser, but overridable
+        this(namespace, baseUri, Parser.htmlParser()); // default HTML parser, but overridable
     }
 
     /**
@@ -70,7 +70,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
         this(NamespaceHtml, baseUri);
     }
 
-    private HtmlDocument(String namespace, String baseUri, HtmlParser parser) {
+    private HtmlDocument(String namespace, String baseUri, Parser parser) {
         super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
         this.parser = parser;
@@ -121,7 +121,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      * Get the parser that was used to parse this document.
      * @return the parser
      */
-    public HtmlParser parser() {
+    public Parser parser() {
         return parser;
     }
 
@@ -131,7 +131,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      * @param parser the configured parser to use when further parsing is required for this document.
      * @return this document, for chaining.
      */
-    public HtmlDocument parser(HtmlParser parser) {
+    public HtmlDocument parser(Parser parser) {
         this.parser = parser;
         return this;
     }

@@ -7,7 +7,7 @@ import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.parser.HtmlParseSettings;
+import zenzai.parser.ParseSettings;
 import zenzai.select.NodeVisitor;
 
 public abstract class HtmlNode implements Node, Cloneable {
@@ -352,7 +352,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      */
     public Node attr(String attributeKey, String attributeValue) {
         HtmlDocument doc = ownerDocument();
-        HtmlParseSettings settings = doc != null ? doc.parser().settings() : HtmlParseSettings.htmlDefault;
+        ParseSettings settings = doc != null ? doc.parser().settings() : ParseSettings.htmlDefault;
         attributeKey = settings.normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
         return this;

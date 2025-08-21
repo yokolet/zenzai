@@ -3,30 +3,30 @@ package zenzai.parser;
 /**
  * A Parse Error records an error in the input HTML that occurs in either the tokenisation or the tree building phase.
  */
-public class HtmlParseError {
+public class ParseError {
     private final int pos;
     private final String cursorPos;
     private final String errorMsg;
 
-    HtmlParseError(CharacterReader reader, String errorMsg) {
+    ParseError(CharacterReader reader, String errorMsg) {
         pos = reader.pos();
         cursorPos = reader.posLineCol();
         this.errorMsg = errorMsg;
     }
 
-    HtmlParseError(CharacterReader reader, String errorFormat, Object... args) {
+    ParseError(CharacterReader reader, String errorFormat, Object... args) {
         pos = reader.pos();
         cursorPos = reader.posLineCol();
         this.errorMsg = String.format(errorFormat, args);
     }
 
-    HtmlParseError(int pos, String errorMsg) {
+    ParseError(int pos, String errorMsg) {
         this.pos = pos;
         cursorPos = String.valueOf(pos);
         this.errorMsg = errorMsg;
     }
 
-    HtmlParseError(int pos, String errorFormat, Object... args) {
+    ParseError(int pos, String errorFormat, Object... args) {
         this.pos = pos;
         cursorPos = String.valueOf(pos);
         this.errorMsg = String.format(errorFormat, args);

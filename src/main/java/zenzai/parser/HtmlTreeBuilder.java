@@ -14,7 +14,7 @@ import zenzai.nodes.*;
 import static zenzai.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilderState.Constants.InTableFoster;
 import static zenzai.parser.HtmlTreeBuilderState.ForeignContent;
-import static zenzai.parser.HtmlParser.*;
+import static zenzai.parser.Parser.*;
 
 /**
  * HTML Tree Builder; creates a DOM from Tokens.
@@ -72,8 +72,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean fragmentParsing; // if parsing a fragment of html
 
     @Override
-    HtmlParseSettings defaultSettings() {
-        return HtmlParseSettings.htmlDefault;
+    ParseSettings defaultSettings() {
+        return ParseSettings.htmlDefault;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Override
-    protected void initialiseParse(Reader input, String baseUri, HtmlParser parser) {
+    protected void initialiseParse(Reader input, String baseUri, Parser parser) {
         super.initialiseParse(input, baseUri, parser);
 
         // this is a bit mucky. todo - probably just create new parser objects to ensure all reset.
@@ -192,7 +192,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 return true;
         }
         // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
-        if (HtmlParser.NamespaceMathml.equals(ns)
+        if (NamespaceMathml.equals(ns)
                 && el.nameIs("annotation-xml")
                 && token.isStartTag()
                 && "svg".equals(token.asStartTag().normalName))
@@ -217,7 +217,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         A MathML ms element
         A MathML mtext element
          */
-        return (HtmlParser.NamespaceMathml.equals(el.tag().namespace())
+        return (NamespaceMathml.equals(el.tag().namespace())
                 && StringUtil.inSorted(el.normalName(), TagMathMlTextIntegration));
     }
 
@@ -230,14 +230,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         An SVG desc element
         An SVG title element
          */
-        if (HtmlParser.NamespaceMathml.equals(el.tag().namespace())
+        if (NamespaceMathml.equals(el.tag().namespace())
                 && el.nameIs("annotation-xml")) {
             String encoding = Normalizer.normalize(el.attr("encoding"));
             if (encoding.equals("text/html") || encoding.equals("application/xhtml+xml"))
                 return true;
         }
         // note using .tagName for case-sensitive hit here of foreignObject
-        return HtmlParser.NamespaceSvg.equals(el.tag().namespace()) && StringUtil.in(el.tagName(), TagSvgHtmlIntegration);
+        return NamespaceSvg.equals(el.tag().namespace()) && StringUtil.in(el.tagName(), TagSvgHtmlIntegration);
     }
 
     boolean process(Token token, HtmlTreeBuilderState state) {
@@ -294,7 +294,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
-            parser.getErrors().add(new HtmlParseError(reader, "Unexpected %s token [%s] when in state [%s]",
+            parser.getErrors().add(new ParseError(reader, "Unexpected %s token [%s] when in state [%s]",
                     currentToken.tokenType(), currentToken, state));
     }
 
@@ -311,7 +311,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         Tag tag = tagFor(startTag.name(), startTag.normalName, namespace,
-                forcePreserveCase ? HtmlParseSettings.preserveCase : settings);
+                forcePreserveCase ? ParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
                 new HtmlFormElement(tag, null, attributes) :
@@ -862,9 +862,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         switch (namespace) {
             case NamespaceHtml:
                 return inSorted(name, TagSearchSpecial);
-            case HtmlParser.NamespaceMathml:
+            case Parser.NamespaceMathml:
                 return inSorted(name, TagSearchSpecialMath);
-            case HtmlParser.NamespaceSvg:
+            case Parser.NamespaceSvg:
                 return inSorted(name, TagSvgHtmlIntegration);
             default:
                 return false;

@@ -226,7 +226,7 @@ abstract class Token {
 
         final Tag name(String name) {
             tagName.set(name);
-            normalName = HtmlParseSettings.normalName(tagName.value());
+            normalName = ParseSettings.normalName(tagName.value());
             return this;
         }
 
@@ -239,7 +239,7 @@ abstract class Token {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName.append(append);
-            normalName = HtmlParseSettings.normalName(tagName.value());
+            normalName = ParseSettings.normalName(tagName.value());
         }
 
         final void appendTagName(char append) {
@@ -314,7 +314,7 @@ abstract class Token {
         StartTag nameAttr(String name, HtmlAttributes attributes) {
             this.tagName.set(name);
             this.attributes = attributes;
-            normalName = HtmlParseSettings.normalName(name);
+            normalName = ParseSettings.normalName(name);
             return this;
         }
 

@@ -10,8 +10,8 @@ import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.parser.HtmlParseSettings;
-import zenzai.parser.HtmlParser;
+import zenzai.parser.ParseSettings;
+import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
 public abstract class HtmlElement extends HtmlNode implements Element, Iterable<HtmlElement> {
@@ -65,7 +65,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      *
      * @param tag element tag
      * @param baseUri the base URI of this element. Optional, and will inherit from its parent, if any.
-     * @see Tag#valueOf(String, HtmlParseSettings)
+     * @see Tag#valueOf(String, ParseSettings)
      */
     public HtmlElement(Tag tag, @Nullable String baseUri) {
         this(tag, baseUri, null);
@@ -178,7 +178,7 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
     }
 
     /**
-     * Get the name of the tag for this element. E.g. {@code div}. If you are using {@link HtmlParseSettings#preserveCase
+     * Get the name of the tag for this element. E.g. {@code div}. If you are using {@link ParseSettings#preserveCase
      * case preserving parsing}, this will return the source's original case.
      *
      * @return the tag name
@@ -226,11 +226,11 @@ public abstract class HtmlElement extends HtmlNode implements Element, Iterable<
      * Create a new element by tag name and namespace, add it as this Element's last child.
      *
      * @param tagName the name of the tag (e.g. {@code div}).
-     * @param namespace the namespace of the tag (e.g. {@link HtmlParser#NamespaceHtml})
+     * @param namespace the namespace of the tag (e.g. {@link Parser#NamespaceHtml})
      * @return the new element, in the specified namespace
      */
     public HtmlElement appendElement(String tagName, String namespace) {
-        HtmlParser parser = NodeUtils.parser(this);
+        Parser parser = NodeUtils.parser(this);
         HtmlElement child = new HtmlElement(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         appendChild(child);
         return child;

@@ -33,7 +33,7 @@ final class Tokeniser {
     }
 
     private final CharacterReader reader; // html input
-    private final HtmlParseErrorList errors; // errors found while tokenising
+    private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
@@ -278,27 +278,27 @@ final class Tokeniser {
 
     void error(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, "Unexpected character '%s' in input state [%s]", reader.current(), state));
+            errors.add(new ParseError(reader, "Unexpected character '%s' in input state [%s]", reader.current(), state));
     }
 
     void eofError(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
+            errors.add(new ParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
     private void characterReferenceError(String message, Object... args) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, String.format("Invalid character reference: " + message, args)));
+            errors.add(new ParseError(reader, String.format("Invalid character reference: " + message, args)));
     }
 
     void error(String errorMsg) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, errorMsg));
+            errors.add(new ParseError(reader, errorMsg));
     }
 
     void error(String errorMsg, Object... args) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, errorMsg, args));
+            errors.add(new ParseError(reader, errorMsg, args));
     }
 
     /**

@@ -2,7 +2,7 @@ package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
 import zenzai.helper.Validate;
-import zenzai.parser.HtmlParseSettings;
+import zenzai.parser.ParseSettings;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -278,7 +278,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @param settings case sensitivity
      * @return number of removed dupes
      */
-    public int deduplicate(HtmlParseSettings settings) {
+    public int deduplicate(ParseSettings settings) {
         if (size == 0) return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
