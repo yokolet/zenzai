@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
-import org.w3c.dom.*;
+import org.w3c.dom.DOMException;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
@@ -14,7 +14,7 @@ import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
-public abstract class HtmlElement extends zenzai.nodes.Node implements Element, Iterable<HtmlElement> {
+public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
     private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
@@ -25,22 +25,22 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
     public abstract String getAttribute(String name);
     public abstract void setAttribute(String name, String value) throws DOMException;
     public abstract void removeAttribute(String name) throws DOMException;
-    public abstract Attr getAttributeNode(String name);
-    public abstract Attr setAttributeNode(Attr attr) throws DOMException;
-    public abstract Attr removeAttributeNode(Attr attr) throws DOMException;
-    public abstract NodeList getElementsByTagName(String name);
+    public abstract org.w3c.dom.Attr getAttributeNode(String name);
+    public abstract org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
+    public abstract org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagName(String name);
     public abstract String getAttributeNS(String namespaceURI, String localName) throws DOMException;
     public abstract void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException;
     public abstract void removeAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract Attr setAttributeNodeNS(Attr attr) throws DOMException;
-    public abstract NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException;
+    public abstract org.w3c.dom.Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException;
+    public abstract org.w3c.dom.Attr setAttributeNodeNS(org.w3c.dom.Attr attr) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException;
     public abstract boolean hasAttribute(String name);
     public abstract boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract TypeInfo getSchemaTypeInfo();
+    public abstract org.w3c.dom.TypeInfo getSchemaTypeInfo();
     public abstract void setIdAttribute(String name, boolean isId) throws DOMException;
     public abstract void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException;
-    public abstract void setIdAttributeNode(Attr idAttr, boolean isId) throws DOMException;
+    public abstract void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException;
 
     /**
      * Create a new, standalone Element. (Standalone in that it has no parent.)
@@ -51,7 +51,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @see #appendChild(Node)
      * @see #appendElement(String)
      */
-    public HtmlElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
+    public Element(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         Validate.notNull(tag);
         childNodes = EmptyNodeList;
         this.attributes = attributes;
@@ -67,7 +67,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @param baseUri the base URI of this element. Optional, and will inherit from its parent, if any.
      * @see Tag#valueOf(String, ParseSettings)
      */
-    public HtmlElement(Tag tag, @Nullable String baseUri) {
+    public Element(Tag tag, @Nullable String baseUri) {
         this(tag, baseUri, null);
     }
 
@@ -76,7 +76,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      @return an Iterator
      */
     @Override
-    public abstract Iterator<HtmlElement> iterator();
+    public abstract Iterator<Element> iterator();
 
     @Override
     public String getNodeName() {
@@ -90,7 +90,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      @return this Element, for chaining
      @see #insertChildren(int, Collection)
      */
-    public HtmlElement appendChildren(Collection<? extends zenzai.nodes.Node> children) {
+    public Element appendChildren(Collection<? extends zenzai.nodes.Node> children) {
         insertChildren(-1, children);
         return this;
     }
@@ -104,7 +104,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @param children child nodes to insert
      * @return this element, for chaining.
      */
-    public HtmlElement insertChildren(int index, Collection<? extends zenzai.nodes.Node> children) {
+    public Element insertChildren(int index, Collection<? extends zenzai.nodes.Node> children) {
         Validate.notNull(children, "Children collection to be inserted must not be null.");
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
@@ -122,7 +122,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @param children child nodes to insert
      * @return this element, for chaining.
      */
-    public HtmlElement insertChildren(int index, zenzai.nodes.Node... children) {
+    public Element insertChildren(int index, zenzai.nodes.Node... children) {
         Validate.notNull(children, "Children collection to be inserted must not be null.");
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
@@ -154,11 +154,11 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
     }
 
     @Override
-    public HtmlElement shallowClone() {
+    public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
         String baseUri = baseUri();
         if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
-        return new HtmlElement(tag, baseUri, attributes == null ? null : attributes.clone());
+        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     @Override
@@ -218,7 +218,7 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @return the new element, to allow you to add content to it, e.g.:
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
-    public HtmlElement appendElement(String tagName) {
+    public Element appendElement(String tagName) {
         return appendElement(tagName, tag.namespace());
     }
 
@@ -229,9 +229,9 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @param namespace the namespace of the tag (e.g. {@link Parser#NamespaceHtml})
      * @return the new element, in the specified namespace
      */
-    public HtmlElement appendElement(String tagName, String namespace) {
+    public Element appendElement(String tagName, String namespace) {
         Parser parser = NodeUtils.parser(this);
-        HtmlElement child = new HtmlElement(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
         appendChild(child);
         return child;
     }
@@ -243,18 +243,18 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      @see #lastElementChild()
      @since 1.15.2
      */
-    public @Nullable HtmlElement firstElementChild() {
+    public @Nullable Element firstElementChild() {
         int size = childNodes.size();
         for (int i = 0; i < size; i++) {
             zenzai.nodes.Node node = childNodes.get(i);
-            if (node instanceof HtmlElement) return (HtmlElement) node;
+            if (node instanceof Element) return (Element) node;
         }
         return null;
     }
 
     @Override @Nullable
-    public final HtmlElement parent() {
-        return (HtmlElement) parentNode;
+    public final Element parent() {
+        return (Element) parentNode;
     }
 
     /**
@@ -264,8 +264,8 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      * @see #after(Node)
      */
     @Override
-    public HtmlElement before(zenzai.nodes.Node node) {
-        return (HtmlElement) super.before(node);
+    public Element before(zenzai.nodes.Node node) {
+        return (Element) super.before(node);
     }
 
     void reindexChildren() {

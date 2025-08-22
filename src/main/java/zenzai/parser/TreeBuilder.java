@@ -9,9 +9,9 @@ import java.util.List;
 import zenzai.helper.Validate;
 import zenzai.internal.SharedConstants;
 import zenzai.nodes.Attributes;
-import zenzai.nodes.HtmlDocument;
+import zenzai.nodes.Document;
 import zenzai.nodes.Node;
-import zenzai.nodes.HtmlElement;
+import zenzai.nodes.Element;
 import zenzai.nodes.Range;
 import zenzai.select.NodeVisitor;
 
@@ -24,8 +24,8 @@ abstract class TreeBuilder {
     protected Parser parser;
     CharacterReader reader;
     Tokeniser tokeniser;
-    HtmlDocument doc; // current doc we are building into
-    ArrayList<HtmlElement> stack; // the stack of open elements
+    Document doc; // current doc we are building into
+    ArrayList<Element> stack; // the stack of open elements
     String baseUri; // current base uri, for creating new elements
     Token currentToken; // currentToken is used for error and source position tracking. Null at start of fragment parse
     ParseSettings settings;
@@ -43,7 +43,7 @@ abstract class TreeBuilder {
         Validate.notNullParam(baseUri, "baseUri");
         Validate.notNull(parser);
 
-        doc = new HtmlDocument(parser.defaultNamespace(), baseUri);
+        doc = new Document(parser.defaultNamespace(), baseUri);
         doc.parser(parser);
         this.parser = parser;
         settings = parser.settings();
@@ -69,20 +69,20 @@ abstract class TreeBuilder {
         stack = null;
     }
 
-    HtmlDocument parse(Reader input, String baseUri, Parser parser) {
+    Document parse(Reader input, String baseUri, Parser parser) {
         initialiseParse(input, baseUri, parser);
         runParser();
         return doc;
     }
 
-    List<zenzai.nodes.Node> parseFragment(Reader inputFragment, @Nullable HtmlElement context, String baseUri, Parser parser) {
+    List<zenzai.nodes.Node> parseFragment(Reader inputFragment, @Nullable Element context, String baseUri, Parser parser) {
         initialiseParse(inputFragment, baseUri, parser);
         initialiseParseFragment(context);
         runParser();
         return completeParseFragment();
     }
 
-    void initialiseParseFragment(@Nullable HtmlElement context) {
+    void initialiseParseFragment(@Nullable Element context) {
         // in Html, sets up context; no-op in XML
     }
 
@@ -156,9 +156,9 @@ abstract class TreeBuilder {
      Removes the last Element from the stack, hits onNodeClosed, and then returns it.
      * @return
      */
-    HtmlElement pop() {
+    Element pop() {
         int size = stack.size();
-        HtmlElement removed = stack.remove(size - 1);
+        Element removed = stack.remove(size - 1);
         onNodeClosed(removed);
         return removed;
     }
@@ -167,7 +167,7 @@ abstract class TreeBuilder {
      Adds the specified Element to the end of the stack, and hits onNodeInserted.
      * @param element
      */
-    final void push(HtmlElement element) {
+    final void push(Element element) {
         stack.add(element);
         onNodeInserted(element);
     }
@@ -177,7 +177,7 @@ abstract class TreeBuilder {
      (which might not actually be on the stack; use stack.size() == 0 to test if required.
      @return the last element on the stack, if any; or the root document
      */
-    HtmlElement currentElement() {
+    Element currentElement() {
         int size = stack.size();
         return size > 0 ? stack.get(size-1) : doc;
     }
@@ -190,7 +190,7 @@ abstract class TreeBuilder {
     boolean currentElementIs(String normalName) {
         if (stack.size() == 0)
             return false;
-        HtmlElement current = currentElement();
+        Element current = currentElement();
         return current != null && current.normalName().equals(normalName)
                 && current.tag().namespace().equals(NamespaceHtml);
     }
@@ -204,7 +204,7 @@ abstract class TreeBuilder {
     boolean currentElementIs(String normalName, String namespace) {
         if (stack.size() == 0)
             return false;
-        HtmlElement current = currentElement();
+        Element current = currentElement();
         return current != null && current.normalName().equals(normalName)
                 && current.tag().namespace().equals(namespace);
     }
@@ -278,8 +278,8 @@ abstract class TreeBuilder {
         int endPos = token.endPos();
 
         // handle implicit element open / closes.
-        if (node instanceof HtmlElement) {
-            final HtmlElement el = (HtmlElement) node;
+        if (node instanceof Element) {
+            final Element el = (Element) node;
             if (token.isEOF()) {
                 if (el.endSourceRange().isTracked())
                     return; // /body and /html are left on stack until EOF, don't reset them

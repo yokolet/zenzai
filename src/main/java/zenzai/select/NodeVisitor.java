@@ -1,6 +1,6 @@
 package zenzai.select;
 
-import zenzai.nodes.HtmlElement;
+import zenzai.nodes.Element;
 import zenzai.nodes.Node;
 
 @FunctionalInterface
@@ -8,7 +8,7 @@ public interface NodeVisitor {
     /**
      Callback for when a node is first visited.
      <p>The node may be modified (e.g. {@link Node#attr(String)}, replaced {@link Node#replaceWith(Node)}) or removed
-     {@link Node#remove()}. If it's {@code instanceOf Element}, you may cast it to an {@link HtmlElement} and access those
+     {@link Node#remove()}. If it's {@code instanceOf Element}, you may cast it to an {@link Element} and access those
      methods.</p>
 
      @param node the node being visited.

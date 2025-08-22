@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import zenzai.parser.Tag;
 import zenzai.select.Elements;
 
-public abstract class FormElement extends HtmlElement{
+public abstract class FormElement extends Element{
     private final Elements linkedEls = new Elements();
 
     /**
@@ -23,7 +23,7 @@ public abstract class FormElement extends HtmlElement{
      * @param element form control to add
      * @return this form element, for chaining
      */
-    public FormElement addElement(HtmlElement element) {
+    public FormElement addElement(Element element) {
         linkedEls.add(element);
         return this;
     }

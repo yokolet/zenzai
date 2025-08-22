@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.nodes.HtmlDocument;
+import zenzai.nodes.Document;
 import zenzai.nodes.Entities;
 
 /**
@@ -40,7 +40,7 @@ final class Tokeniser {
     private boolean isEmitPending = false;
     final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
-    final HtmlDocument.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
+    final Document.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
     final Token.StartTag startPending;
     final Token.EndTag endPending;
     Token.Tag tagPending; // tag we are building up: start or end pending
@@ -54,7 +54,7 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
-        syntax = treeBuilder instanceof HtmlTreeBuilder ? HtmlDocument.OutputSettings.Syntax.html : HtmlDocument.OutputSettings.Syntax.xml;
+        syntax = treeBuilder instanceof HtmlTreeBuilder ? Document.OutputSettings.Syntax.html : Document.OutputSettings.Syntax.xml;
         tagPending = startPending  = new Token.StartTag(treeBuilder);
         endPending = new Token.EndTag(treeBuilder);
         xmlDeclPending = new Token.XmlDecl(treeBuilder);

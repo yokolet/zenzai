@@ -1,7 +1,7 @@
 package zenzai.select;
 
 import zenzai.helper.Validate;
-import zenzai.nodes.HtmlElement;
+import zenzai.nodes.Element;
 import zenzai.nodes.Node;
 
 public class NodeTraversor {
@@ -78,7 +78,7 @@ public class NodeTraversor {
     public static void traverse(NodeVisitor visitor, Elements elements) {
         Validate.notNull(visitor);
         Validate.notNull(elements);
-        for (HtmlElement el : elements)
+        for (Element el : elements)
             traverse(visitor, el);
     }
 }

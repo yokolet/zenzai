@@ -2,7 +2,7 @@ package zenzai.nodes;
 
 import java.nio.charset.Charset;
 
-import org.w3c.dom.*;
+import org.w3c.dom.DOMException;
 
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
@@ -11,29 +11,29 @@ import zenzai.parser.Tag;
 
 import static zenzai.parser.Parser.NamespaceHtml;
 
-public abstract class HtmlDocument extends HtmlElement implements Document {
+public abstract class Document extends Element implements org.w3c.dom.Document {
     private OutputSettings outputSettings = new OutputSettings();
     private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
 
-    public abstract DocumentType getDoctype();
-    public abstract DOMImplementation getImplementation();
-    public abstract Element getDocumentElement();
-    public abstract Element createElement(String tagName) throws DOMException;
-    public abstract DocumentFragment createDocumentFragment();
-    public abstract Text createTextNode(String data);
-    public abstract Comment createComment(String data);
-    public abstract CDATASection createCDATASection(String data);
-    public abstract ProcessingInstruction createProcessingInstruction(String target, String data) throws DOMException;
-    public abstract Attr createAttribute(String name);
-    public abstract EntityReference createEntityReference(String name) throws DOMException;
-    public abstract NodeList getElementsByTagName(String tagName);
-    public abstract Node importNode(Node importedNode, boolean deep) throws DOMException;
-    public abstract Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract NodeList getElementsByTagNameNS(String namespaceURI, String localName);
-    public abstract Element getElementById(String id);
+    public abstract org.w3c.dom.DocumentType getDoctype();
+    public abstract org.w3c.dom.DOMImplementation getImplementation();
+    public abstract org.w3c.dom.Element getDocumentElement();
+    public abstract org.w3c.dom.Element createElement(String tagName) throws DOMException;
+    public abstract org.w3c.dom.DocumentFragment createDocumentFragment();
+    public abstract org.w3c.dom.Text createTextNode(String data);
+    public abstract org.w3c.dom.Comment createComment(String data);
+    public abstract org.w3c.dom.CDATASection createCDATASection(String data);
+    public abstract org.w3c.dom.ProcessingInstruction createProcessingInstruction(String target, String data) throws DOMException;
+    public abstract org.w3c.dom.Attr createAttribute(String name);
+    public abstract org.w3c.dom.EntityReference createEntityReference(String name) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagName(String tagName);
+    public abstract org.w3c.dom.Node importNode(Node importedNode, boolean deep) throws DOMException;
+    public abstract org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException;
+    public abstract org.w3c.dom.Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName);
+    public abstract org.w3c.dom.Element getElementById(String id);
     public abstract String getInputEncoding();
     public abstract String getXmlEncoding();
     public abstract boolean getXmlStandalone();
@@ -44,10 +44,10 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
     public abstract void setStrictErrorChecking(boolean strictErrorChecking);
     public abstract String getDocumentURI();
     public abstract void setDocumentURI(String documentURI);
-    public abstract Node adoptNode(Node node) throws DOMException;
-    public abstract DOMConfiguration getDomConfig();
+    public abstract org.w3c.dom.Node adoptNode(Node node) throws DOMException;
+    public abstract org.w3c.dom.DOMConfiguration getDomConfig();
     public abstract void normalizeDocument();
-    public abstract Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException;
+    public abstract org.w3c.dom.Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException;
 
     /**
      Create a new, empty Document, in the specified namespace.
@@ -56,7 +56,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      @see org.jsoup.Jsoup#parse
      @see #createShell
      */
-    public HtmlDocument(String namespace, String baseUri) {
+    public Document(String namespace, String baseUri) {
         this(namespace, baseUri, Parser.htmlParser()); // default HTML parser, but overridable
     }
 
@@ -64,13 +64,13 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      Create a new, empty Document, in the HTML namespace.
      @param baseUri base URI of document
      @see org.jsoup.Jsoup#parse
-     @see #HtmlDocument(String namespace, String baseUri)
+     @see #Document(String namespace, String baseUri)
      */
-    public HtmlDocument(String baseUri) {
+    public Document(String baseUri) {
         this(NamespaceHtml, baseUri);
     }
 
-    private HtmlDocument(String namespace, String baseUri, Parser parser) {
+    private Document(String namespace, String baseUri, Parser parser) {
         super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
         this.parser = parser;
@@ -86,11 +86,11 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      @param baseUri baseUri of document
      @return document with html, head, and body elements.
      */
-    public static HtmlDocument createShell(String baseUri) {
+    public static Document createShell(String baseUri) {
         Validate.notNull(baseUri);
 
-        HtmlDocument doc = new HtmlDocument(baseUri);
-        HtmlElement html = doc.appendElement("html");
+        Document doc = new Document(baseUri);
+        Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
 
@@ -106,9 +106,9 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      @return {@code body} element for documents with a {@code <body>}, a new {@code <body>} element if the document
      had no contents, or the outermost {@code <frameset> element} for frameset documents.
      */
-    public HtmlElement body() {
-        final HtmlElement html = htmlEl();
-        HtmlElement el = html.firstElementChild();
+    public Element body() {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
         while (el != null) {
             if (el.nameIs("body") || el.nameIs("frameset"))
                 return el;
@@ -131,7 +131,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      * @param parser the configured parser to use when further parsing is required for this document.
      * @return this document, for chaining.
      */
-    public HtmlDocument parser(Parser parser) {
+    public Document parser(Parser parser) {
         this.parser = parser;
         return this;
     }
@@ -144,7 +144,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
         return quirksMode;
     }
 
-    public HtmlDocument quirksMode(QuirksMode quirksMode) {
+    public Document quirksMode(QuirksMode quirksMode) {
         this.quirksMode = quirksMode;
         return this;
     }
@@ -153,8 +153,8 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
      Find the root HTML element, or create it if it doesn't exist.
      @return the root HTML element.
      */
-    private HtmlElement htmlEl() {
-        HtmlElement el = firstElementChild();
+    private Element htmlEl() {
+        Element el = firstElementChild();
         while (el != null) {
             if (el.nameIs("html"))
                 return el;
@@ -164,8 +164,8 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
     }
 
     @Override
-    public HtmlDocument shallowClone() {
-        HtmlDocument clone = new HtmlDocument(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+    public Document shallowClone() {
+        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
         if (attributes != null) clone.attributes = attributes.clone();
         clone.outputSettings = this.outputSettings.clone();
         return clone;
@@ -223,5 +223,4 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
             return this;
         }
     }
-
 }

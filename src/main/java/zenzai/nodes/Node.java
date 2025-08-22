@@ -11,7 +11,7 @@ import zenzai.parser.ParseSettings;
 import zenzai.select.NodeVisitor;
 
 public abstract class Node implements org.w3c.dom.Node, Cloneable {
-    @Nullable HtmlElement parentNode; // Nodes don't always have parents
+    @Nullable Element parentNode; // Nodes don't always have parents
     static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
     int siblingIndex;
@@ -137,13 +137,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
             throw new RuntimeException(e);
         }
 
-        clone.parentNode = (HtmlElement) parent; // can be null, to create an orphan split
+        clone.parentNode = (Element) parent; // can be null, to create an orphan split
         clone.siblingIndex = parent == null ? 0 : siblingIndex();
         // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
-        if (parent == null && !(this instanceof HtmlDocument)) {
-            HtmlDocument doc = ownerDocument();
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
             if (doc != null) {
-                HtmlDocument docClone = doc.shallowClone();
+                Document docClone = doc.shallowClone();
                 clone.parentNode = docClone;
                 docClone.ensureChildNodes().add(clone);
             }
@@ -198,10 +198,10 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * Gets the Document associated with this Node.
      * @return the Document associated with this Node, or null if there is no such Document.
      */
-    public @Nullable HtmlDocument ownerDocument() {
+    public @Nullable Document ownerDocument() {
         zenzai.nodes.Node node = this;
         while (node != null) {
-            if (node instanceof HtmlDocument) return (HtmlDocument) node;
+            if (node instanceof Document) return (Document) node;
             node = node.parentNode;
         }
         return null;
@@ -351,7 +351,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        HtmlDocument doc = ownerDocument();
+        Document doc = ownerDocument();
         ParseSettings settings = doc != null ? doc.parser().settings() : ParseSettings.htmlDefault;
         attributeKey = settings.normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
@@ -397,10 +397,10 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @return the next element, or null if there is no next element
      @see #previousElementSibling()
      */
-    public @Nullable HtmlElement nextElementSibling() {
+    public @Nullable Element nextElementSibling() {
         zenzai.nodes.Node next = this;
         while ((next = next.nextSibling()) != null) {
-            if (next instanceof HtmlElement) return (HtmlElement) next;
+            if (next instanceof Element) return (Element) next;
         }
         return null;
     }
@@ -449,7 +449,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Range#isImplicit()
-     @see HtmlElement#endSourceRange()
+     @see Element#endSourceRange()
      @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
@@ -480,11 +480,11 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
                 firstParent.empty();
                 nodes.addAll(index, Arrays.asList(children));
                 i = children.length;
-                assert this instanceof HtmlElement;
+                assert this instanceof Element;
                 while (i-- > 0) {
-                    children[i].parentNode = (HtmlElement) this;
+                    children[i].parentNode = (Element) this;
                 }
-                ((HtmlElement) this).invalidateChildren();
+                ((Element) this).invalidateChildren();
                 return;
             }
         }
@@ -494,7 +494,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
             reparentChild(child);
         }
         nodes.addAll(index, Arrays.asList(children));
-        ((HtmlElement) this).invalidateChildren();
+        ((Element) this).invalidateChildren();
     }
 
     protected void reparentChild(zenzai.nodes.Node child) {
@@ -505,7 +505,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         Validate.notNull(parentNode);
         if (this.parentNode != null)
             this.parentNode.removeChild(this);
-        assert parentNode instanceof HtmlElement;
-        this.parentNode = (HtmlElement) parentNode;
+        assert parentNode instanceof Element;
+        this.parentNode = (Element) parentNode;
     }
 }
