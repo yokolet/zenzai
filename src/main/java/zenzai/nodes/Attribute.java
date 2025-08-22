@@ -79,8 +79,8 @@ public abstract class Attribute implements Cloneable, Attr {
      @see HtmlElement#endSourceRange()
      @since 1.17.1
      */
-    public HtmlRange.AttributeRange sourceRange() {
-        if (parent == null) return HtmlRange.AttributeRange.UntrackedAttr;
+    public Range.AttributeRange sourceRange() {
+        if (parent == null) return Range.AttributeRange.UntrackedAttr;
         return parent.sourceRange(key);
     }
 }

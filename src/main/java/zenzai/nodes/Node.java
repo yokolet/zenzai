@@ -221,7 +221,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @see #hasParent()
      @see #parentElement();
      */
-    public @Nullable zenzai.nodes.Node parent() {
+    public @Nullable Node parent() {
         return parentNode;
     }
 
@@ -409,7 +409,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      Get this node's next sibling.
      @return next sibling, or {@code null} if this is the last sibling
      */
-    public @Nullable zenzai.nodes.Node nextSibling() {
+    public @Nullable Node nextSibling() {
         if (parentNode == null)
             return null; // root
 
@@ -448,13 +448,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      start tag.
      @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlRange#isImplicit()
+     @see Range#isImplicit()
      @see HtmlElement#endSourceRange()
      @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
-    public HtmlRange sourceRange() {
-        return HtmlRange.of(this, true);
+    public Range sourceRange() {
+        return Range.of(this, true);
     }
 
     protected void addChildren(int index, zenzai.nodes.Node... children) {

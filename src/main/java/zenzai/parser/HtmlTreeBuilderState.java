@@ -1869,7 +1869,7 @@ enum HtmlTreeBuilderState {
         for (Attribute attr : source.attributes) { // only iterates public attributes
             Attributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
-                HtmlRange.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
+                Range.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
                 destAttrs.put(attr);
                 if (source.trackSource) { // copy the attribute range
                     destAttrs.sourceRange(attr.getKey(), range);

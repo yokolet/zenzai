@@ -179,7 +179,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
          * The output serialization syntax.
          */
         public enum Syntax {html, xml}
-        private HtmlEntities.EscapeMode escapeMode = HtmlEntities.EscapeMode.base;
+        private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = DataUtil.UTF_8;
 
         /**
@@ -198,7 +198,7 @@ public abstract class HtmlDocument extends HtmlElement implements Document {
                 throw new RuntimeException(e);
             }
             clone.charset(charset.name()); // new charset, coreCharset, and charset encoder
-            clone.escapeMode = HtmlEntities.EscapeMode.valueOf(escapeMode.name());
+            clone.escapeMode = Entities.EscapeMode.valueOf(escapeMode.name());
             // indentAmount, maxPaddingWidth, and prettyPrint are primitives so object.clone() will handle
             return clone;
         }

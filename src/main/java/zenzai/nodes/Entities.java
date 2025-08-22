@@ -8,9 +8,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static zenzai.nodes.HtmlEntities.EscapeMode.extended;
+import static zenzai.nodes.Entities.EscapeMode.extended;
 
-public class HtmlEntities {
+public class Entities {
     private static final int empty = -1;
     private static final String emptyName = "";
     static final int codepointRadix = 36;
@@ -23,15 +23,15 @@ public class HtmlEntities {
         /**
          * Restricted entities suitable for XHTML output: lt, gt, amp, and quot only.
          */
-        xhtml(HtmlEntitiesData.xmlPoints, 4),
+        xhtml(EntitiesData.xmlPoints, 4),
         /**
          * Default HTML output entities.
          */
-        base(HtmlEntitiesData.basePoints, 106),
+        base(EntitiesData.basePoints, 106),
         /**
          * Complete HTML entities.
          */
-        extended(HtmlEntitiesData.fullPoints, 2125);
+        extended(EntitiesData.fullPoints, 2125);
 
         static {
             // sort the base names by length, for prefix matching
@@ -117,7 +117,7 @@ public class HtmlEntities {
         return 0;
     }
 
-    private HtmlEntities() {
+    private Entities() {
     }
 
     private static void load(EscapeMode e, String pointsData, int size) {

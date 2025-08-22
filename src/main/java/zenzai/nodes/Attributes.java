@@ -11,7 +11,7 @@ import java.util.Map;
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
-import static zenzai.nodes.HtmlRange.AttributeRange.UntrackedAttr;
+import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
 public abstract class Attributes implements Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
@@ -173,12 +173,12 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
      @see HtmlElement#endSourceRange()
      @since 1.17.1
      */
-    public HtmlRange.AttributeRange sourceRange(String key) {
+    public Range.AttributeRange sourceRange(String key) {
         if (!hasKey(key)) return UntrackedAttr;
-        Map<String, HtmlRange.AttributeRange> ranges = getRanges();
-        if (ranges == null) return HtmlRange.AttributeRange.UntrackedAttr;
-        HtmlRange.AttributeRange range = ranges.get(key);
-        return range != null ? range : HtmlRange.AttributeRange.UntrackedAttr;
+        Map<String, Range.AttributeRange> ranges = getRanges();
+        if (ranges == null) return Range.AttributeRange.UntrackedAttr;
+        Range.AttributeRange range = ranges.get(key);
+        return range != null ? range : Range.AttributeRange.UntrackedAttr;
     }
 
     /**
@@ -188,10 +188,10 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
      @return these attributes, for chaining
      @since 1.18.2
      */
-    public Attributes sourceRange(String key, HtmlRange.AttributeRange range) {
+    public Attributes sourceRange(String key, Range.AttributeRange range) {
         Validate.notNull(key);
         Validate.notNull(range);
-        Map<String, HtmlRange.AttributeRange> ranges = getRanges();
+        Map<String, Range.AttributeRange> ranges = getRanges();
         if (ranges == null) {
             ranges = new HashMap<>();
             userData(AttrRangeKey, ranges);
@@ -297,9 +297,9 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /** Get the Ranges, if tracking is enabled; null otherwise. */
-    @Nullable Map<String, HtmlRange.AttributeRange> getRanges() {
+    @Nullable Map<String, Range.AttributeRange> getRanges() {
         //noinspection unchecked
-        return (Map<String, HtmlRange.AttributeRange>) userData(AttrRangeKey);
+        return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers

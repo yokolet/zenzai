@@ -7,7 +7,7 @@ import java.util.Arrays;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.HtmlDocument;
-import zenzai.nodes.HtmlEntities;
+import zenzai.nodes.Entities;
 
 /**
  * Readers the input stream into tokens.
@@ -184,7 +184,7 @@ final class Tokeniser {
             String nameRef = reader.consumeLetterThenDigitSequence();
             boolean looksLegit = reader.matches(';');
             // found if a base named entity without a ;, or an extended entity with the ;.
-            boolean found = (HtmlEntities.isBaseNamedEntity(nameRef) || (HtmlEntities.isNamedEntity(nameRef) && looksLegit));
+            boolean found = (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
 
             if (!found) {
                 reader.rewindToMark();
@@ -192,7 +192,7 @@ final class Tokeniser {
                     characterReferenceError("invalid named reference [%s]", nameRef);
                 if (inAttribute) return null;
                 // check if there's a base prefix match; consume and use that if so
-                String prefix = HtmlEntities.findPrefix(nameRef);
+                String prefix = Entities.findPrefix(nameRef);
                 if (prefix.isEmpty()) return null;
                 reader.matchConsume(prefix);
                 nameRef = prefix;
@@ -206,7 +206,7 @@ final class Tokeniser {
             reader.unmark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon on [&%s]", nameRef); // missing semi
-            int numChars = HtmlEntities.codepointsForName(nameRef, multipointHolder);
+            int numChars = Entities.codepointsForName(nameRef, multipointHolder);
             if (numChars == 1) {
                 codeRef[0] = multipointHolder[0];
                 return codeRef;

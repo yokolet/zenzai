@@ -1,6 +1,6 @@
 package zenzai.nodes;
 
-class HtmlEntitiesData {
+class EntitiesData {
     static final String xmlPoints;
     static final String basePoints;
     static final String fullPoints;

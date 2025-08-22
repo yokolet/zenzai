@@ -60,7 +60,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     private boolean baseUriSetFromDoc;
     private @Nullable HtmlElement headElement; // the current head element
-    private @Nullable HtmlFormElement formElement; // the current form element
+    private @Nullable FormElement formElement; // the current form element
     private @Nullable HtmlElement contextElement; // fragment parse root; name only copy of context. could be null even if fragment parsing
     ArrayList<HtmlElement> formattingElements; // active (open) formatting elements
     private ArrayList<HtmlTreeBuilderState> tmplInsertMode; // stack of Template Insertion modes
@@ -141,8 +141,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
             // with form correctly
             HtmlElement formSearch = context;
             while (formSearch != null) {
-                if (formSearch instanceof HtmlFormElement) {
-                    formElement = (HtmlFormElement) formSearch;
+                if (formSearch instanceof FormElement) {
+                    formElement = (FormElement) formSearch;
                     break;
                 }
                 formSearch = formSearch.parent();
@@ -314,7 +314,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 forcePreserveCase ? ParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
-                new HtmlFormElement(tag, null, attributes) :
+                new FormElement(tag, null, attributes) :
                 new HtmlElement(tag, null, attributes);
     }
 
@@ -364,8 +364,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    HtmlFormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
-        HtmlFormElement el = (HtmlFormElement) createElementFor(startTag, NamespaceHtml, false);
+    FormElement insertFormElement(Token.StartTag startTag, boolean onStack, boolean checkTemplateStack) {
+        FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
 
         if (checkTemplateStack) {
             if (!onStack("template"))
@@ -792,11 +792,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     @Nullable
-    HtmlFormElement getFormElement() {
+    FormElement getFormElement() {
         return formElement;
     }
 
-    void setFormElement(HtmlFormElement formElement) {
+    void setFormElement(FormElement formElement) {
         this.formElement = formElement;
     }
 

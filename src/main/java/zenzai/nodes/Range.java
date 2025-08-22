@@ -6,7 +6,7 @@ import zenzai.internal.StringUtil;
 
 import static zenzai.internal.SharedConstants.*;
 
-public class HtmlRange {
+public class Range {
     private static final Position UntrackedPos = new Position(-1, -1, -1);
     private final Position start, end;
 
@@ -15,7 +15,7 @@ public class HtmlRange {
      * @param start the start position
      * @param end the end position
      */
-    public HtmlRange(Position start, Position end) {
+    public Range(Position start, Position end) {
         this.start = start;
         this.end = end;
     }
@@ -27,12 +27,12 @@ public class HtmlRange {
      * @param start if this is the starting range. {@code false} for Element end tags.
      * @return the Range, or the Untracked (-1) position if tracking is disabled.
      */
-    static HtmlRange of(zenzai.nodes.Node node, boolean start) {
+    static Range of(zenzai.nodes.Node node, boolean start) {
 
         final String key = start ? RangeKey : EndRangeKey;
         if (!node.hasAttributes()) return Untracked;
         Object range = node.attributes().userData(key);
-        return range != null ? (HtmlRange) range : Untracked;
+        return range != null ? (Range) range : Untracked;
     }
 
     /**
@@ -44,7 +44,7 @@ public class HtmlRange {
     }
 
     /** An untracked source range. */
-    static final HtmlRange Untracked = new HtmlRange(UntrackedPos, UntrackedPos);
+    static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
 
     /**
      A Position object tracks the character position in the original input source where a Node starts or ends. If you want to
@@ -127,24 +127,24 @@ public class HtmlRange {
     }
 
     public static class AttributeRange {
-        static final AttributeRange UntrackedAttr = new AttributeRange(HtmlRange.Untracked, HtmlRange.Untracked);
+        static final AttributeRange UntrackedAttr = new AttributeRange(Range.Untracked, Range.Untracked);
 
-        private final HtmlRange nameRange;
-        private final HtmlRange valueRange;
+        private final Range nameRange;
+        private final Range valueRange;
 
         /** Creates a new AttributeRange. Called during parsing by Token.StartTag. */
-        public AttributeRange(HtmlRange nameRange, HtmlRange valueRange) {
+        public AttributeRange(Range nameRange, Range valueRange) {
             this.nameRange = nameRange;
             this.valueRange = valueRange;
         }
 
         /** Get the source range for the attribute's name. */
-        public HtmlRange nameRange() {
+        public Range nameRange() {
             return nameRange;
         }
 
         /** Get the source range for the attribute's value. */
-        public HtmlRange valueRange() {
+        public Range valueRange() {
             return valueRange;
         }
 

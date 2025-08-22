@@ -12,7 +12,7 @@ import zenzai.nodes.Attributes;
 import zenzai.nodes.HtmlDocument;
 import zenzai.nodes.Node;
 import zenzai.nodes.HtmlElement;
-import zenzai.nodes.HtmlRange;
+import zenzai.nodes.Range;
 import zenzai.select.NodeVisitor;
 
 import static zenzai.parser.Parser.NamespaceHtml;
@@ -297,11 +297,11 @@ abstract class TreeBuilder {
             }
         }
 
-        HtmlRange.Position startPosition = new HtmlRange.Position
+        Range.Position startPosition = new Range.Position
                 (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
-        HtmlRange.Position endPosition = new HtmlRange.Position
+        Range.Position endPosition = new Range.Position
                 (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
-        HtmlRange range = new HtmlRange(startPosition, endPosition);
+        Range range = new Range(startPosition, endPosition);
         node.attributes().userData(isStart ? SharedConstants.RangeKey : SharedConstants.EndRangeKey, range);
     }
 }

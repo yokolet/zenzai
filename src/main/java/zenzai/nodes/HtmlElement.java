@@ -204,11 +204,11 @@ public abstract class HtmlElement extends zenzai.nodes.Node implements Element, 
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see zenzai.nodes.Node#sourceRange()
-     @see HtmlRange#isImplicit()
+     @see Range#isImplicit()
      @since 1.15.2
      */
-    public HtmlRange endSourceRange() {
-        return HtmlRange.of(this, false);
+    public Range endSourceRange() {
+        return Range.of(this, false);
     }
 
     /**
