@@ -25,7 +25,7 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype()) {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
-                HtmlDocumentType doctype = new HtmlDocumentType(
+                DocumentType doctype = new DocumentType(
                         tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);

@@ -1,14 +1,12 @@
 package zenzai.nodes;
 
-import org.w3c.dom.Comment;
-
-public abstract class HtmlComment extends LeafNode implements Comment {
+public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
 
     /**
      Create a new comment node.
      @param data The contents of the comment
      */
-    public HtmlComment(String data) {
+    public Comment(String data) {
         super(data);
     }
 

@@ -2,11 +2,10 @@ package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.DocumentType;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 
-public abstract class HtmlDocumentType extends LeafNode implements DocumentType {
+public abstract class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
     private static final String NameKey = "name";
@@ -27,7 +26,7 @@ public abstract class HtmlDocumentType extends LeafNode implements DocumentType 
      * @param publicId the doctype's public ID
      * @param systemId the doctype's system ID
      */
-    public HtmlDocumentType(String name, String publicId, String systemId) {
+    public DocumentType(String name, String publicId, String systemId) {
         super(name);
         Validate.notNull(publicId);
         Validate.notNull(systemId);

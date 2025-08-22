@@ -401,7 +401,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void insertCommentNode(Token.Comment token) {
-        HtmlComment node = new HtmlComment(token.getData());
+        Comment node = new Comment(token.getData());
         currentElement().appendChild(node);
         onNodeInserted(node);
     }
@@ -422,11 +422,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
-            node = new HtmlCDataNode(data);
+            node = new CDataNode(data);
         else if (el.tag().is(Tag.Data))
             node = new DataNode(data);
         else
-            node = new HtmlTextNode(data);
+            node = new TextNode(data);
         el.appendChild(node); // doesn't use insertNode, because we don't foster these; and will always have a stack.
         onNodeInserted(node);
     }

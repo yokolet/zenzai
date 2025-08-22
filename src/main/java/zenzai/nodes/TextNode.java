@@ -5,7 +5,7 @@ import org.w3c.dom.Text;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 
-public abstract class HtmlTextNode extends LeafNode implements Text {
+public abstract class TextNode extends LeafNode implements Text {
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
@@ -13,7 +13,7 @@ public abstract class HtmlTextNode extends LeafNode implements Text {
      @param text raw text
      @see #createFromEncoded(String)
      */
-    public HtmlTextNode(String text) {
+    public TextNode(String text) {
         super(text);
     }
 
@@ -41,7 +41,7 @@ public abstract class HtmlTextNode extends LeafNode implements Text {
         String head = text.substring(0, offset);
         String tail = text.substring(offset);
         text(head);
-        HtmlTextNode tailNode = new HtmlTextNode(tail);
+        TextNode tailNode = new TextNode(tail);
         if (parentNode != null)
             parentNode.addChildren(siblingIndex()+1, tailNode);
 
@@ -81,7 +81,7 @@ public abstract class HtmlTextNode extends LeafNode implements Text {
      * @param text unencoded text
      * @return this, for chaining
      */
-    public HtmlTextNode text(String text) {
+    public TextNode text(String text) {
         coreValue(text);
         return this;
     }
