@@ -1,5 +1,8 @@
 package zenzai.nodes;
 
+import java.util.Arrays;
+import java.util.regex.Pattern;
+
 import org.jspecify.annotations.Nullable;
 
 import org.w3c.dom.Attr;
@@ -7,7 +10,17 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.TypeInfo;
 
+import zenzai.internal.Normalizer;
+import zenzai.internal.QuietAppendable;
+import zenzai.nodes.Document.OutputSettings.Syntax;
+
 public abstract class Attribute implements Cloneable, Attr {
+    private static final String[] booleanAttributes = {
+            "allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled",
+            "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize",
+            "noshade", "novalidate", "nowrap", "open", "readonly", "required", "reversed", "seamless", "selected",
+            "sortable", "truespeed", "typemustmatch"
+    };
     private String key;
     @Nullable private String val;
     @Nullable Attributes parent; // used to update the holding Attributes when the key / value is changed via this interface
@@ -22,6 +35,27 @@ public abstract class Attribute implements Cloneable, Attr {
     @Override
     public String getNodeName() {
         return getKey();
+    }
+
+    private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]+");
+    private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
+
+    /**
+     * Get a valid attribute key for the given syntax. If the key is not valid, it will be coerced into a valid key.
+     * @param key the original attribute key
+     * @param syntax HTML or XML
+     * @return the original key if it's valid; a key with invalid characters replaced with "_" otherwise; or null if a valid key could not be created.
+     */
+    @Nullable public static String getValidKey(String key, zenzai.nodes.Document.OutputSettings.Syntax syntax) {
+        if (syntax == zenzai.nodes.Document.OutputSettings.Syntax.xml && !isValidXmlKey(key)) {
+            key = xmlKeyReplace.matcher(key).replaceAll("_");
+            return isValidXmlKey(key) ? key : null; // null if could not be coerced
+        }
+        else if (syntax == zenzai.nodes.Document.OutputSettings.Syntax.html && !isValidHtmlKey(key)) {
+            key = htmlKeyReplace.matcher(key).replaceAll("_");
+            return isValidHtmlKey(key) ? key : null; // null if could not be coerced
+        }
+        return key;
     }
 
     /**
@@ -76,11 +110,61 @@ public abstract class Attribute implements Cloneable, Attr {
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Attributes#sourceRange(String)
      @see zenzai.nodes.Node#sourceRange()
-     @see Element#endSourceRange()
+     @see zenzai.nodes.Element#endSourceRange()
      @since 1.17.1
      */
     public Range.AttributeRange sourceRange() {
         if (parent == null) return Range.AttributeRange.UntrackedAttr;
         return parent.sourceRange(key);
+    }
+
+    /**
+     * Checks if this attribute name is defined as a boolean attribute in HTML5
+     */
+    public static boolean isBooleanAttribute(final String key) {
+        return Arrays.binarySearch(booleanAttributes, Normalizer.lowerCase(key)) >= 0;
+    }
+
+    static void htmlNoValidate(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
+        // structured like this so that Attributes can check we can write first, so it can add whitespace correctly
+        accum.append(key);
+        if (!shouldCollapseAttribute(key, val, out)) {
+            accum.append("=\"");
+            Entities.escape(accum, Attributes.checkNotNull(val), out, Entities.ForAttribute); // preserves whitespace
+            accum.append('"');
+        }
+    }
+
+    // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
+    protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final zenzai.nodes.Document.OutputSettings out) {
+        return (out.syntax() == Syntax.html &&
+                (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+    }
+
+    private static boolean isValidXmlKey(String key) {
+        // =~ [a-zA-Z_:][-a-zA-Z0-9_:.]*
+        final int length = key.length();
+        if (length == 0) return false;
+        char c = key.charAt(0);
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == ':'))
+            return false;
+        for (int i = 1; i < length; i++) {
+            c = key.charAt(i);
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == ':' || c == '.'))
+                return false;
+        }
+        return true;
+    }
+
+    private static boolean isValidHtmlKey(String key) {
+        // =~ [\x00-\x1f\x7f-\x9f "'/=]+
+        final int length = key.length();
+        if (length == 0) return false;
+        for (int i = 0; i < length; i++) {
+            char c = key.charAt(i);
+            if ((c <= 0x1f) || (c >= 0x7f && c <= 0x9f) || c == ' ' || c == '"' || c == '\'' || c == '/' || c == '=')
+                return false;
+        }
+        return true;
     }
 }
