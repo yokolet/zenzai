@@ -15,10 +15,10 @@ import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
 public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
-    private static final HtmlNodeList EmptyNodeList = new HtmlNodeList(0);
+    private static final NodeList EmptyNodeList = new NodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
-    HtmlNodeList childNodes;
+    NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
     public abstract String getTagName();
@@ -76,11 +76,68 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
      @return an Iterator
      */
     @Override
-    public abstract Iterator<Element> iterator();
+    public Iterator<zenzai.nodes.Element> iterator() {
+        return new NodeIterator<>(this, zenzai.nodes.Element.class);
+    }
 
     @Override
     public String getNodeName() {
         return tag.getName();
+    }
+
+    @Override
+    public int childNodeSize() {
+        return childNodes.size();
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        attributes().put(BaseUriKey, baseUri);
+    }
+
+    /**
+     * Get the normalized name of this Element's tag. This will always be the lower-cased version of the tag, regardless
+     * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
+     * normal name of {@code div}.
+     * @return normal name
+     */
+    @Override
+    public String normalName() {
+        return tag.normalName();
+    }
+
+    @Override
+    public Element shallowClone() {
+        // simpler than implementing a clone version with no child copy
+        String baseUri = baseUri();
+        if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
+        return new zenzai.nodes.Element(tag, baseUri, attributes == null ? null : attributes.clone());
+    }
+
+    @Override
+    public Attributes attributes() {
+        if (attributes == null) // not using hasAttributes, as doesn't clear warning
+            attributes = new Attributes();
+        return attributes;
+    }
+
+    /**
+     * Insert a node to the end of this Element's children. The incoming node will be re-parented.
+     *
+     * @param child node to add.
+     * @return this Element, for chaining
+     * @see #prependChild(Node)
+     * @see #insertChildren(int, Collection)
+     */
+    public Element appendChild(Node child) {
+        Validate.notNull(child);
+
+        // was - Node#addChildren(child). short-circuits an array create and a loop.
+        reparentChild(child);
+        ensureChildNodes();
+        childNodes.add(child);
+        child.setSiblingIndex(childNodes.size() - 1);
+        return this;
     }
 
     /**
@@ -132,40 +189,17 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return this;
     }
 
-    @Override
-    public int childNodeSize() {
-        return childNodes.size();
-    }
-
-    @Override
-    protected void doSetBaseUri(String baseUri) {
-        attributes().put(BaseUriKey, baseUri);
-    }
-
     /**
-     * Get the normalized name of this Element's tag. This will always be the lower-cased version of the tag, regardless
-     * of the tag case preserving setting of the parser. For e.g., {@code <DIV>} and {@code <div>} both have a
-     * normal name of {@code div}.
-     * @return normal name
+     * Add a node to the start of this element's children.
+     *
+     * @param child node to add.
+     * @return this element, so that you can add more child nodes or elements.
      */
-    @Override
-    public String normalName() {
-        return tag.normalName();
-    }
+    public Element prependChild(Node child) {
+        Validate.notNull(child);
 
-    @Override
-    public Element shallowClone() {
-        // simpler than implementing a clone version with no child copy
-        String baseUri = baseUri();
-        if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
-        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
-    }
-
-    @Override
-    public Attributes attributes() {
-        if (attributes == null) // not using hasAttributes, as doesn't clear warning
-            attributes = new Attributes();
-        return attributes;
+        addChildren(0, child);
+        return this;
     }
 
     /**
@@ -282,16 +316,26 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
 
     @Override protected List<zenzai.nodes.Node> ensureChildNodes() {
         if (childNodes == EmptyNodeList) {
-            childNodes = new HtmlNodeList(4);
+            childNodes = new NodeList(4);
         }
         return childNodes;
     }
 
-    static final class HtmlNodeList extends ArrayList<zenzai.nodes.Node> {
+    static final class NodeList extends ArrayList<zenzai.nodes.Node> implements org.w3c.dom.NodeList {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
 
-        public HtmlNodeList(int size) {
+        @Override
+        public org.w3c.dom.Node item(int index) {
+            return get(index);
+        }
+
+        @Override
+        public int getLength() {
+            return size();
+        }
+
+        public NodeList(int size) {
             super(size);
         }
 
