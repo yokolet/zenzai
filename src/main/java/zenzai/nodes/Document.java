@@ -181,6 +181,7 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         public enum Syntax {html, xml}
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = DataUtil.UTF_8;
+        private Syntax syntax = Syntax.html;
 
         /**
          Create a new OutputSettings object, with the default settings (UTF-8, HTML, EscapeMode.base, pretty-printing,
@@ -204,6 +205,34 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         }
 
         /**
+         Get the document's current entity escape mode:
+         <ul>
+         <li><code>xhtml</code>, the minimal named entities in XHTML / XML</li>
+         <li><code>base</code>, which provides a limited set of named HTML
+         entities and escapes other characters as numbered entities for maximum compatibility</li>
+         <li><code>extended</code>,
+         which uses the complete set of HTML named entities.</li>
+         </ul>
+         <p>The default escape mode is <code>base</code>.
+         @return the document's current escape mode
+         */
+        public Entities.EscapeMode escapeMode() {
+            return escapeMode;
+        }
+
+        /**
+         * Get the document's current output charset, which is used to control which characters are escaped when
+         * generating HTML (via the <code>html()</code> methods), and which are kept intact.
+         * <p>
+         * Where possible (when parsing from a URL or File), the document's output charset is automatically set to the
+         * input charset. Otherwise, it defaults to UTF-8.
+         * @return the document's current charset.
+         */
+        public Charset charset() {
+            return charset;
+        }
+
+        /**
          * Update the document's output charset.
          * @param charset the new charset to use.
          * @return the document's output settings, for chaining
@@ -221,6 +250,14 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         public OutputSettings charset(String charset) {
             charset(Charset.forName(charset));
             return this;
+        }
+
+        /**
+         * Get the document's current output syntax.
+         * @return current syntax
+         */
+        public Syntax syntax() {
+            return syntax;
         }
     }
 }
