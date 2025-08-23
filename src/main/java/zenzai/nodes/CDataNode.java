@@ -2,7 +2,7 @@ package zenzai.nodes;
 
 import org.w3c.dom.CDATASection;
 
-public abstract class CDataNode extends HtmlTextNode implements CDATASection {
+public abstract class CDataNode extends TextNode implements CDATASection {
     public CDataNode(String text) {
         super(text);
     }
