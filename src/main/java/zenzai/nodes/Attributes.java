@@ -2,18 +2,19 @@ package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
+import zenzai.internal.SharedConstants;
+import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
-public abstract class Attributes implements Iterable<Attribute>, Cloneable {
+public class Attributes implements Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
     private static final String EmptyString = "";
@@ -30,6 +31,51 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
     // Genericish: all non-internal attribute values must be Strings and are cast on access.
     @Nullable
     Object[] vals = new Object[InitialCapacity];
+
+
+    @Override
+    public Iterator<Attribute> iterator() {
+        return new Iterator<Attribute>() {
+            int expectedSize = size;
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                checkModified();
+                while (i < size) {
+                    String key = keys[i];
+                    assert key != null;
+                    if (isInternalKey(key)) // skip over internal keys
+                        i++;
+                    else
+                        break;
+                }
+
+                return i < size;
+            }
+
+            @Override
+            public Attribute next() {
+                checkModified();
+                if (i >= size) throw new NoSuchElementException();
+                String key = keys[i];
+                assert key != null;
+                final Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
+                i++;
+                return attr;
+            }
+
+            private void checkModified() {
+                if (size != expectedSize) throw new ConcurrentModificationException("Use Iterator#remove() instead to remove attributes while iterating.");
+            }
+
+            @Override
+            public void remove() {
+                Attributes.this.remove(--i); // next() advanced, so rewind
+                expectedSize--;
+            }
+        };
+    }
 
     @Override
     public Attributes clone() {
@@ -296,6 +342,34 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
         return dupes;
     }
 
+    /**
+     Get the attributes as a List, for iteration.
+     @return a view of the attributes as an unmodifiable List.
+     */
+    public List<Attribute> asList() {
+        ArrayList<Attribute> list = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
+                continue; // skip internal keys
+            Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
+            list.add(attr);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+
+    /**
+     Get the HTML representation of these attributes.
+     @return HTML
+     */
+    public String html() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(QuietAppendable.wrap(sb), new Document.OutputSettings()); // output settings a bit funky, but this html() seldom used
+        return StringUtil.releaseBuilder(sb);
+    }
+
     /** Get the Ranges, if tracking is enabled; null otherwise. */
     @Nullable Map<String, Range.AttributeRange> getRanges() {
         //noinspection unchecked
@@ -363,6 +437,19 @@ public abstract class Attributes implements Iterable<Attribute>, Cloneable {
         }
         else
             addObject(key, value);
+    }
+
+    final void html(final QuietAppendable accum, final zenzai.nodes.Document.OutputSettings out) {
+        final int sz = size;
+        for (int i = 0; i < sz; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
+                continue;
+            final String validated = Attribute.getValidKey(key, out.syntax());
+            if (validated != null)
+                Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
+        }
     }
 
     private void addObject(String key, @Nullable Object value) {
