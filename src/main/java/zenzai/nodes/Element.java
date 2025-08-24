@@ -286,6 +286,21 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return null;
     }
 
+    /**
+     Gets the last child of this Element that is an Element, or @{code null} if there is none.
+     @return the last Element child node, or null.
+     @see #lastChild()
+     @see #firstElementChild()
+     @since 1.15.2
+     */
+    public @Nullable Element lastElementChild() {
+        for (int i = childNodes.size() - 1; i >= 0; i--) {
+            Node node = childNodes.get(i);
+            if (node instanceof Element) return (Element) node;
+        }
+        return null;
+    }
+
     @Override @Nullable
     public final Element parent() {
         return (Element) parentNode;

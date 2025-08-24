@@ -125,9 +125,36 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return doClone(null);
     }
 
+    /**
+     Gets the first child node of this node, or {@code null} if there is none. This could be any Node type, such as an
+     Element, TextNode, Comment, etc. Use {@link Element#firstElementChild()} to get the first Element child.
+     @return the first child node, or null if there are no children.
+     @see Element#firstElementChild()
+     @see #lastChild()
+     @since 1.15.2
+     */
+    public @Nullable Node firstChild() {
+        if (childNodeSize() == 0) return null;
+        return ensureChildNodes().get(0);
+    }
+
+    /**
+     Gets the last child node of this node, or {@code null} if there is none.
+     @return the last child node, or null if there are no children.
+     @see Element#lastElementChild()
+     @see #firstChild()
+     @since 1.15.2
+     */
+    public @Nullable Node lastChild() {
+        final int size = childNodeSize();
+        if (size == 0) return null;
+        List<Node> children = ensureChildNodes();
+        return children.get(size - 1);
+    }
+
     protected abstract List<zenzai.nodes.Node> ensureChildNodes();
 
-    protected zenzai.nodes.Node doClone(@Nullable zenzai.nodes.Node parent) {
+    protected zenzai.nodes.Node doClone(@Nullable Node parent) {
         assert parent == null || parent instanceof Element;
         zenzai.nodes.Node clone;
 
@@ -211,7 +238,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      Gets this node's parent node. Not overridable by extending classes, so useful if you really just need the Node type.
      @return parent node; or null if no parent.
      */
-    public @Nullable final zenzai.nodes.Node parentNode() {
+    public @Nullable final Node parentNode() {
         return parentNode;
     }
 
@@ -222,6 +249,16 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @see #parentElement();
      */
     public @Nullable Node parent() {
+        return parentNode;
+    }
+
+    /**
+     Gets this node's parent Element.
+     @return parent element; or null if this node has no parent.
+     @see #hasParent()
+     @since 1.21.1
+     */
+    public @Nullable Element parentElement() {
         return parentNode;
     }
 
@@ -239,6 +276,23 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex(), node);
+        return this;
+    }
+
+    /**
+     * Insert the specified node into the DOM after this node (as a following sibling).
+     * @param node to add after this node
+     * @return this node, for chaining
+     * @see #before(Node)
+     */
+    public Node after(zenzai.nodes.Node node) {
+        Validate.notNull(node);
+        Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
+
+        parentNode.addChildren(siblingIndex() + 1, node);
         return this;
     }
 
@@ -406,6 +460,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     Gets the previous Element sibling of this node.
+
+     @return the previous element, or null if there is no previous element
+     @see #nextElementSibling()
+     */
+    public @Nullable Element previousElementSibling() {
+        Node prev = this;
+        while ((prev = prev.previousSibling()) != null) {
+            if (prev instanceof Element) return (Element) prev;
+        }
+        return null;
+    }
+
+    /**
      Get this node's next sibling.
      @return next sibling, or {@code null} if this is the last sibling
      */
@@ -420,6 +488,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
             assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
             return node;
         } else
+            return null;
+    }
+
+    /**
+     Get this node's previous sibling.
+     @return the previous sibling, or @{code null} if this is the first sibling
+     */
+    public @Nullable Node previousSibling() {
+        if (parentNode == null)
+            return null; // root
+
+        if (siblingIndex() > 0)
+            return parentNode.ensureChildNodes().get(siblingIndex-1);
+        else
             return null;
     }
 
