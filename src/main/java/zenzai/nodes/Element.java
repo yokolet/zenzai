@@ -55,10 +55,10 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         Validate.notNull(tag);
         childNodes = EmptyNodeList;
         this.attributes = attributes;
+        this.attributes.setOwnerElement(this);
         this.tag = tag;
         if (!StringUtil.isBlank(baseUri)) this.setBaseUri(baseUri);
     }
-
 
     /**
      * Create a new Element from a Tag and a base URI.
@@ -69,6 +69,24 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
      */
     public Element(Tag tag, @Nullable String baseUri) {
         this(tag, baseUri, null);
+    }
+
+    /**
+     * Create a new, standalone element, in the specified namespace.
+     * @param tag tag name
+     * @param namespace namespace for this element
+     */
+    public Element(String tag, String namespace) {
+        this(Tag.valueOf(tag, namespace, ParseSettings.preserveCase), null);
+    }
+
+    /**
+     * Create a new, standalone element, in the HTML namespace.
+     * @param tag tag name
+     * @see #Element(String tag, String namespace)
+     */
+    public Element(String tag) {
+        this(tag, Parser.NamespaceHtml);
     }
 
     /**
@@ -116,8 +134,10 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
 
     @Override
     public Attributes attributes() {
-        if (attributes == null) // not using hasAttributes, as doesn't clear warning
+        if (attributes == null) {// not using hasAttributes, as doesn't clear warning
             attributes = new Attributes();
+            attributes.setOwnerElement(this);
+        }
         return attributes;
     }
 

@@ -31,6 +31,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     // Genericish: all non-internal attribute values must be Strings and are cast on access.
     @Nullable
     Object[] vals = new Object[InitialCapacity];
+    Element ownerElement;
 
 
     @Override
@@ -97,6 +98,10 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
 
         return clone;
+    }
+
+    public void setOwnerElement(Element ownerElement) {
+        this.ownerElement = ownerElement;
     }
 
     /**
@@ -358,7 +363,6 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         }
         return Collections.unmodifiableList(list);
     }
-
 
     /**
      Get the HTML representation of these attributes.
