@@ -4,6 +4,7 @@ import zenzai.helper.Validate;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.CharacterReader;
+import zenzai.parser.Parser;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
@@ -126,6 +127,27 @@ public class Entities {
             return 1;
         }
         return 0;
+    }
+
+    /**
+     * Un-escape an HTML escaped string. That is, {@code &lt;} is returned as {@code <}.
+     *
+     * @param string the HTML string to un-escape
+     * @return the unescaped string
+     */
+    public static String unescape(String string) {
+        return unescape(string, false);
+    }
+
+    /**
+     * Unescape the input string.
+     *
+     * @param string to un-HTML-escape
+     * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
+     * @return unescaped string
+     */
+    static String unescape(String string, boolean strict) {
+        return Parser.unescapeEntities(string, strict);
     }
 
     enum CoreCharset {

@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
@@ -10,6 +11,7 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.TypeInfo;
 
+import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.QuietAppendable;
 import zenzai.nodes.Document.OutputSettings.Syntax;
@@ -34,6 +36,8 @@ public abstract class Attribute implements Cloneable, Attr {
     // org.w3d.dom.Node
     @Override
     public String getNodeValue() throws DOMException {
+        // DOMException.DOMSTRING_SIZE_ERR should be raised when an attribute value is very long
+        // such that over 10 million.
         return getValue();
     }
 
@@ -121,6 +125,31 @@ public abstract class Attribute implements Cloneable, Attr {
      */
     public String getValue() {
         return Attributes.checkNotNull(val);
+    }
+
+    /**
+     Set the attribute key; case is preserved.
+     @param key the new key; must not be null
+     */
+    public void setKey(String key) {
+        Validate.notNull(key);
+        key = key.trim();
+        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
+        if (parent != null) {
+            int i = parent.indexOfKey(this.key);
+            if (i != Attributes.NotFound) {
+                String oldKey = parent.keys[i];
+                parent.keys[i] = key;
+
+                // if tracking source positions, update the key in the range map
+                Map<String, Range.AttributeRange> ranges = parent.getRanges();
+                if (ranges != null) {
+                    Range.AttributeRange range = ranges.remove(oldKey);
+                    ranges.put(key, range);
+                }
+            }
+        }
+        this.key = key;
     }
 
     /**

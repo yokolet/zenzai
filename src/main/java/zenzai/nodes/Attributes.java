@@ -1,9 +1,9 @@
 package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
+import org.w3c.dom.DOMException;
 import zenzai.helper.Validate;
 import zenzai.internal.QuietAppendable;
-import zenzai.internal.SharedConstants;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 
@@ -14,7 +14,7 @@ import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
-public class Attributes implements Iterable<Attribute>, Cloneable {
+public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
     private static final String EmptyString = "";
@@ -33,6 +33,36 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     Object[] vals = new Object[InitialCapacity];
     Element ownerElement;
 
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public int getLength() {
+        return size();
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node getNamedItem(String name) {
+        return attribute(name);
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg) throws DOMException {
+        if (arg instanceof Attribute) {
+            Attribute attr = (Attribute) arg;
+            Attribute existing = attribute(attr.getKey());
+            put(attr);
+            return existing;
+        } else {
+            return null;
+        }
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node removeNamedItem(String name) {
+
+    }
 
     @Override
     public Iterator<Attribute> iterator() {
@@ -105,6 +135,19 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
     }
 
     /**
+     Get an Attribute by key. The Attribute will remain connected to these Attributes, so changes made via
+     {@link Attribute#setKey(String)}, {@link Attribute#setValue(String)} etc will cascade back to these Attributes and
+     their owning Element.
+     @param key the (case-sensitive) attribute key
+     @return the Attribute for this key, or null if not present.
+     @since 1.17.2
+     */
+    @Nullable public Attribute attribute(String key) {
+        int i = indexOfKey(key);
+        return i == NotFound ? null : new Attribute(key, checkNotNull(vals[i]), this);
+    }
+
+    /**
      * Get an attribute value by key.
      *
      * @param key the (case-sensitive) attribute key
@@ -166,6 +209,16 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
         size--;
         keys[size] = null; // release hold
         vals[size] = null;
+    }
+
+    /**
+     Remove an attribute by key. <b>Case insensitive.</b>
+     @param key attribute key to remove
+     */
+    public void removeIgnoreCase(String key) {
+        int i = indexOfKeyIgnoreCase(key);
+        if (i != NotFound)
+            remove(i);
     }
 
     /**
