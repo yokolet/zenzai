@@ -67,10 +67,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public abstract String nodeName();
 
     /**
-     * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
-     * @param baseUri new URI
+     Get the node's value. For a TextNode, the whole text; for a Comment, the comment data; for an Element,
+     wholeOwnText. Returns "" if there is no value.
+     @return the node's value
      */
-    protected abstract void doSetBaseUri(String baseUri);
+    public String nodeValue() {
+        return "";
+    }
 
     /**
      Get the base URI that applies to this node. Will return an empty string if not defined. Used to make relative links
@@ -150,32 +153,6 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (size == 0) return null;
         List<Node> children = ensureChildNodes();
         return children.get(size - 1);
-    }
-
-    protected abstract List<zenzai.nodes.Node> ensureChildNodes();
-
-    protected zenzai.nodes.Node doClone(@Nullable Node parent) {
-        assert parent == null || parent instanceof Element;
-        zenzai.nodes.Node clone;
-
-        try {
-            clone = (zenzai.nodes.Node) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-
-        clone.parentNode = (Element) parent; // can be null, to create an orphan split
-        clone.siblingIndex = parent == null ? 0 : siblingIndex();
-        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
-        if (parent == null && !(this instanceof Document)) {
-            Document doc = ownerDocument();
-            if (doc != null) {
-                Document docClone = doc.shallowClone();
-                clone.parentNode = docClone;
-                docClone.ensureChildNodes().add(clone);
-            }
-        }
-        return clone;
     }
 
     /**
@@ -365,8 +342,16 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return attributes().hasKeyIgnoreCase(attributeKey);
     }
 
-    protected void setSiblingIndex(int siblingIndex) {
-        this.siblingIndex = siblingIndex;
+    /**
+     * Remove an attribute from this node.
+     * @param attributeKey The attribute to remove.
+     * @return this (for chaining)
+     */
+    public Node removeAttr(String attributeKey) {
+        Validate.notNull(attributeKey);
+        if (hasAttributes())
+            attributes().removeIgnoreCase(attributeKey);
+        return this;
     }
 
     /**
@@ -539,6 +524,38 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return Range.of(this, true);
     }
 
+    /**
+     * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
+     * @param baseUri new URI
+     */
+    protected abstract void doSetBaseUri(String baseUri);
+
+    protected abstract List<zenzai.nodes.Node> ensureChildNodes();
+
+    protected zenzai.nodes.Node doClone(@Nullable Node parent) {
+        assert parent == null || parent instanceof Element;
+        zenzai.nodes.Node clone;
+
+        try {
+            clone = (zenzai.nodes.Node) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+
+        clone.parentNode = (Element) parent; // can be null, to create an orphan split
+        clone.siblingIndex = parent == null ? 0 : siblingIndex();
+        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Document docClone = doc.shallowClone();
+                clone.parentNode = docClone;
+                docClone.ensureChildNodes().add(clone);
+            }
+        }
+        return clone;
+    }
+
     protected void addChildren(int index, zenzai.nodes.Node... children) {
         // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
@@ -589,5 +606,9 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
             this.parentNode.removeChild(this);
         assert parentNode instanceof Element;
         this.parentNode = (Element) parentNode;
+    }
+
+    protected void setSiblingIndex(int siblingIndex) {
+        this.siblingIndex = siblingIndex;
     }
 }

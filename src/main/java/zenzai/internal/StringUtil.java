@@ -160,6 +160,52 @@ public final class StringUtil {
         }
     }
 
+    /**
+     * Normalise the whitespace within this string; multiple spaces collapse to a single, and all whitespace characters
+     * (e.g. newline, tab) convert to a simple space.
+     * @param string content to normalise
+     * @return normalised string
+     */
+    public static String normaliseWhitespace(String string) {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        appendNormalisedWhitespace(sb, string, false);
+        return StringUtil.releaseBuilder(sb);
+    }
+
+
+    /**
+     * After normalizing the whitespace within a string, appends it to a string builder.
+     * @param accum builder to append to
+     * @param string string to normalize whitespace within
+     * @param stripLeading set to true if you wish to remove any leading whitespace
+     */
+    public static void appendNormalisedWhitespace(StringBuilder accum, String string, boolean stripLeading) {
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+
+        int len = string.length();
+        int c;
+        for (int i = 0; i < len; i+= Character.charCount(c)) {
+            c = string.codePointAt(i);
+            if (isActuallyWhitespace(c)) {
+                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
+                    continue;
+                accum.append(' ');
+                lastWasWhite = true;
+            }
+            else if (!isInvisibleChar(c)) {
+                accum.appendCodePoint(c);
+                lastWasWhite = false;
+                reachedNonWhite = true;
+            }
+        }
+    }
+
+    public static boolean isInvisibleChar(int c) {
+        return c == 8203 || c == 173; // zero width sp, soft hyphen
+        // previously also included zw non join, zw join - but removing those breaks semantic meaning of text
+    }
+
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
     private static final Pattern controlChars = Pattern.compile("[\\x00-\\x1f]*"); // matches ascii 0 - 31, to strip from url
     private static final Pattern extraDotSegmentsPattern = Pattern.compile("^/(?>(?>\\.\\.?/)+)");
