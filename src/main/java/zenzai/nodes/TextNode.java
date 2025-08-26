@@ -17,9 +17,16 @@ public abstract class TextNode extends LeafNode implements Text {
         super(text);
     }
 
+    // org.w3c.dom.Node
     @Override
     public String getNodeName() {
         return "#text";
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return getWholeText();
     }
 
     @Override public String nodeName() {

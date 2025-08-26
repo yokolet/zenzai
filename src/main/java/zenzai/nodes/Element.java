@@ -98,9 +98,16 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return new NodeIterator<>(this, zenzai.nodes.Element.class);
     }
 
+    // org.w3c.dom.Node
     @Override
     public String getNodeName() {
         return tag.getName();
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return null;
     }
 
     @Override

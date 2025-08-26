@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
@@ -37,9 +38,16 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
         updatePubSyskey();
     }
 
+    // org.w3c.dom.Node
     @Override
     public String getNodeName() {
         return attr(NameKey);
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return null;
     }
 
     /**

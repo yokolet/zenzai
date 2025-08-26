@@ -1,5 +1,7 @@
 package zenzai.nodes;
 
+import org.w3c.dom.DOMException;
+
 public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
 
     /**
@@ -10,9 +12,16 @@ public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
         super(data);
     }
 
+    // org.w3c.dom.Node
     @Override
     public String getNodeName() {
         return "#comment";
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return getNodeValue();
     }
 
     @Override public String nodeName() {

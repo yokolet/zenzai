@@ -76,9 +76,16 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         this.parser = parser;
     }
 
+    // org.w3c.dom.Node
     @Override
     public String getNodeName() {
         return "#document";
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return null;
     }
 
     /**

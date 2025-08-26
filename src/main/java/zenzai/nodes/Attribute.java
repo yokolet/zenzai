@@ -30,6 +30,13 @@ public abstract class Attribute implements Cloneable, Attr {
     public String getNodeName() {
         return getKey();
     }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        return getValue();
+    }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name
