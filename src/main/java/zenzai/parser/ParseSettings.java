@@ -1,7 +1,6 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.Attributes;
-import zenzai.nodes.HtmlAttributes;
+import zenzai.nodes.Attributes;
 
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.Normalizer.normalize;
@@ -9,19 +8,19 @@ import static zenzai.internal.Normalizer.normalize;
 /**
  * Controls parser case settings, to optionally preserve tag and/or attribute name case.
  */
-public class HtmlParseSettings {
+public class ParseSettings {
     /**
      * HTML default settings: both tag and attribute names are lower-cased during parsing.
      */
-    public static final HtmlParseSettings htmlDefault;
+    public static final ParseSettings htmlDefault;
     /**
      * Preserve both tag and attribute case.
      */
-    public static final HtmlParseSettings preserveCase;
+    public static final ParseSettings preserveCase;
 
     static {
-        htmlDefault = new HtmlParseSettings(false, false);
-        preserveCase = new HtmlParseSettings(true, true);
+        htmlDefault = new ParseSettings(false, false);
+        preserveCase = new ParseSettings(true, true);
     }
 
     private final boolean preserveTagCase;
@@ -46,12 +45,12 @@ public class HtmlParseSettings {
      * @param tag preserve tag case?
      * @param attribute preserve attribute name case?
      */
-    public HtmlParseSettings(boolean tag, boolean attribute) {
+    public ParseSettings(boolean tag, boolean attribute) {
         preserveTagCase = tag;
         preserveAttributeCase = attribute;
     }
 
-    HtmlParseSettings(HtmlParseSettings copy) {
+    ParseSettings(ParseSettings copy) {
         this(copy.preserveTagCase, copy.preserveAttributeCase);
     }
 
@@ -75,7 +74,7 @@ public class HtmlParseSettings {
         return name;
     }
 
-    void normalizeAttributes(HtmlAttributes attributes) {
+    void normalizeAttributes(Attributes attributes) {
         if (!preserveAttributeCase) {
             attributes.normalize();
         }

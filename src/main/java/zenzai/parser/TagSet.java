@@ -11,15 +11,15 @@ import java.util.function.Consumer;
 import zenzai.helper.Validate;
 import zenzai.internal.SharedConstants;
 
-import static zenzai.parser.HtmlParser.NamespaceHtml;
-import static zenzai.parser.HtmlParser.NamespaceMathml;
-import static zenzai.parser.HtmlParser.NamespaceSvg;
+import static zenzai.parser.Parser.NamespaceHtml;
+import static zenzai.parser.Parser.NamespaceMathml;
+import static zenzai.parser.Parser.NamespaceSvg;
 
 /**
  A TagSet controls the {@link Tag} configuration for a Document's parse, and its serialization. It contains the initial
  defaults, and after the parse, any additionally discovered tags.
 
- @see HtmlParser#tagSet(TagSet)
+ @see Parser#tagSet(TagSet)
  @since 1.20.1
  */
 public class TagSet {
@@ -117,7 +117,7 @@ public class TagSet {
         if (tag != null) return tag;
 
         // not found by tagName, try by normal
-        if (normalName == null) normalName = HtmlParseSettings.normalName(tagName);
+        if (normalName == null) normalName = ParseSettings.normalName(tagName);
         tagName = preserveTagCase ? tagName : normalName;
         tag = get(normalName, namespace);
         if (tag != null) {
@@ -145,7 +145,7 @@ public class TagSet {
      @param settings used to control tag name sensitivity
      @return The tag, either defined or new generic.
      */
-    public Tag valueOf(String tagName, String namespace, HtmlParseSettings settings) {
+    public Tag valueOf(String tagName, String namespace, ParseSettings settings) {
         return valueOf(tagName, null, namespace, settings.preserveTagCase());
     }
 
@@ -156,10 +156,10 @@ public class TagSet {
      @param tagName Name of tag, e.g. "p". <b>Case-sensitive</b>.
      @param namespace the namespace for the tag.
      @return The tag, either defined or new generic.
-     @see #valueOf(String tagName, String namespace, HtmlParseSettings settings)
+     @see #valueOf(String tagName, String namespace, ParseSettings settings)
      */
     public Tag valueOf(String tagName, String namespace) {
-        return valueOf(tagName, namespace, HtmlParseSettings.preserveCase);
+        return valueOf(tagName, namespace, ParseSettings.preserveCase);
     }
 
     /**

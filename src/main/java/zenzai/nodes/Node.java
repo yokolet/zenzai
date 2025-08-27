@@ -7,12 +7,12 @@ import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.parser.HtmlParseSettings;
+import zenzai.parser.ParseSettings;
 import zenzai.select.NodeVisitor;
 
-public abstract class HtmlNode implements Node, Cloneable {
-    @Nullable HtmlElement parentNode; // Nodes don't always have parents
-    static final List<HtmlNode> EmptyNodes = Collections.emptyList();
+public abstract class Node implements org.w3c.dom.Node, Cloneable {
+    @Nullable Element parentNode; // Nodes don't always have parents
+    static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
     int siblingIndex;
 
@@ -20,20 +20,20 @@ public abstract class HtmlNode implements Node, Cloneable {
     public abstract String getNodeValue();
     public abstract void setNodeValue(String nodeValue) throws DOMException;
     public abstract short getNodeType();
-    public abstract Node getParentNode();
+    public abstract org.w3c.dom.Node getParentNode();
     public abstract NodeList getChildNodes();
-    public abstract Node getFirstChild();
-    public abstract Node getLastChild();
-    public abstract Node getPreviousSibling();
-    public abstract Node getNextSibling();
+    public abstract org.w3c.dom.Node getFirstChild();
+    public abstract org.w3c.dom.Node getLastChild();
+    public abstract org.w3c.dom.Node getPreviousSibling();
+    public abstract org.w3c.dom.Node getNextSibling();
     public abstract NamedNodeMap getAttributes();
     public abstract Document getOwnerDocument();
-    public abstract Node insertBefore(Node newChild, Node refChild) throws DOMException;
-    public abstract Node replaceChild(Node newChild, Node oldChild) throws DOMException;
-    public abstract Node removeChild(Node oldChild) throws DOMException;
-    public abstract Node appendChild(Node newChild) throws DOMException;
+    public abstract org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException;
+    public abstract org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException;
+    public abstract org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException;
+    public abstract org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException;
     public abstract boolean hasChildNodes();
-    public abstract Node cloneNode(boolean deep);
+    public abstract org.w3c.dom.Node cloneNode(boolean deep);
     public abstract void normalize();
     public abstract boolean isSupported(String feature, String version);
     public abstract String getNamespaceURI();
@@ -67,10 +67,13 @@ public abstract class HtmlNode implements Node, Cloneable {
     public abstract String nodeName();
 
     /**
-     * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
-     * @param baseUri new URI
+     Get the node's value. For a TextNode, the whole text; for a Comment, the comment data; for an Element,
+     wholeOwnText. Returns "" if there is no value.
+     @return the node's value
      */
-    protected abstract void doSetBaseUri(String baseUri);
+    public String nodeValue() {
+        return "";
+    }
 
     /**
      Get the base URI that applies to this node. Will return an empty string if not defined. Used to make relative links
@@ -91,23 +94,23 @@ public abstract class HtmlNode implements Node, Cloneable {
      * Get each of the Element's attributes.
      * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
      */
-    public abstract HtmlAttributes attributes();
+    public abstract Attributes attributes();
 
     @Override
-    public HtmlNode clone() {
-        HtmlNode thisClone = doClone(null); // splits for orphan
+    public zenzai.nodes.Node clone() {
+        zenzai.nodes.Node thisClone = doClone(null); // splits for orphan
 
         // Queue up nodes that need their children cloned (BFS).
-        final LinkedList<HtmlNode> nodesToProcess = new LinkedList<>();
+        final LinkedList<zenzai.nodes.Node> nodesToProcess = new LinkedList<>();
         nodesToProcess.add(thisClone);
 
         while (!nodesToProcess.isEmpty()) {
-            HtmlNode currParent = nodesToProcess.remove();
+            zenzai.nodes.Node currParent = nodesToProcess.remove();
 
             final int size = currParent.childNodeSize();
             for (int i = 0; i < size; i++) {
-                final List<HtmlNode> childNodes = currParent.ensureChildNodes();
-                HtmlNode childClone = childNodes.get(i).doClone(currParent);
+                final List<zenzai.nodes.Node> childNodes = currParent.ensureChildNodes();
+                zenzai.nodes.Node childClone = childNodes.get(i).doClone(currParent);
                 childNodes.set(i, childClone);
                 nodesToProcess.add(childClone);
             }
@@ -121,34 +124,35 @@ public abstract class HtmlNode implements Node, Cloneable {
      * @return a single independent copy of this node
      * @see #clone()
      */
-    public Node shallowClone() {
+    public zenzai.nodes.Node shallowClone() {
         return doClone(null);
     }
 
-    protected abstract List<HtmlNode> ensureChildNodes();
+    /**
+     Gets the first child node of this node, or {@code null} if there is none. This could be any Node type, such as an
+     Element, TextNode, Comment, etc. Use {@link Element#firstElementChild()} to get the first Element child.
+     @return the first child node, or null if there are no children.
+     @see Element#firstElementChild()
+     @see #lastChild()
+     @since 1.15.2
+     */
+    public @Nullable Node firstChild() {
+        if (childNodeSize() == 0) return null;
+        return ensureChildNodes().get(0);
+    }
 
-    protected HtmlNode doClone(@Nullable HtmlNode parent) {
-        assert parent == null || parent instanceof Element;
-        HtmlNode clone;
-
-        try {
-            clone = (HtmlNode) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
-
-        clone.parentNode = (HtmlElement) parent; // can be null, to create an orphan split
-        clone.siblingIndex = parent == null ? 0 : siblingIndex();
-        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
-        if (parent == null && !(this instanceof HtmlDocument)) {
-            HtmlDocument doc = ownerDocument();
-            if (doc != null) {
-                HtmlDocument docClone = doc.shallowClone();
-                clone.parentNode = docClone;
-                docClone.ensureChildNodes().add(clone);
-            }
-        }
-        return clone;
+    /**
+     Gets the last child node of this node, or {@code null} if there is none.
+     @return the last child node, or null if there are no children.
+     @see Element#lastElementChild()
+     @see #firstChild()
+     @since 1.15.2
+     */
+    public @Nullable Node lastChild() {
+        final int size = childNodeSize();
+        if (size == 0) return null;
+        List<Node> children = ensureChildNodes();
+        return children.get(size - 1);
     }
 
     /**
@@ -156,7 +160,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining
      */
-    public HtmlNode traverse(NodeVisitor nodeVisitor) {
+    public zenzai.nodes.Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
         nodeVisitor.traverse(this);
         return this;
@@ -198,10 +202,10 @@ public abstract class HtmlNode implements Node, Cloneable {
      * Gets the Document associated with this Node.
      * @return the Document associated with this Node, or null if there is no such Document.
      */
-    public @Nullable HtmlDocument ownerDocument() {
-        HtmlNode node = this;
+    public @Nullable Document ownerDocument() {
+        zenzai.nodes.Node node = this;
         while (node != null) {
-            if (node instanceof HtmlDocument) return (HtmlDocument) node;
+            if (node instanceof Document) return (Document) node;
             node = node.parentNode;
         }
         return null;
@@ -211,7 +215,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      Gets this node's parent node. Not overridable by extending classes, so useful if you really just need the Node type.
      @return parent node; or null if no parent.
      */
-    public @Nullable final HtmlNode parentNode() {
+    public @Nullable final Node parentNode() {
         return parentNode;
     }
 
@@ -221,7 +225,17 @@ public abstract class HtmlNode implements Node, Cloneable {
      @see #hasParent()
      @see #parentElement();
      */
-    public @Nullable HtmlNode parent() {
+    public @Nullable Node parent() {
+        return parentNode;
+    }
+
+    /**
+     Gets this node's parent Element.
+     @return parent element; or null if this node has no parent.
+     @see #hasParent()
+     @since 1.21.1
+     */
+    public @Nullable Element parentElement() {
         return parentNode;
     }
 
@@ -231,7 +245,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      * @return this node, for chaining
      * @see #after(Node)
      */
-    public Node before(HtmlNode node) {
+    public Node before(zenzai.nodes.Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
@@ -239,6 +253,23 @@ public abstract class HtmlNode implements Node, Cloneable {
         if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex(), node);
+        return this;
+    }
+
+    /**
+     * Insert the specified node into the DOM after this node (as a following sibling).
+     * @param node to add after this node
+     * @return this node, for chaining
+     * @see #before(Node)
+     */
+    public Node after(zenzai.nodes.Node node) {
+        Validate.notNull(node);
+        Validate.notNull(parentNode);
+
+        // if the incoming node is a sibling of this, remove it first so siblingIndex is correct on add
+        if (node.parentNode == parentNode) node.remove();
+
+        parentNode.addChildren(siblingIndex() + 1, node);
         return this;
     }
 
@@ -256,12 +287,12 @@ public abstract class HtmlNode implements Node, Cloneable {
      themselves can be manipulated.
      @return list of children. If no children, returns an empty list.
      */
-    public List<HtmlNode> childNodes() {
+    public List<zenzai.nodes.Node> childNodes() {
         if (childNodeSize() == 0)
             return EmptyNodes;
 
-        List<HtmlNode> children = ensureChildNodes();
-        List<HtmlNode> rewrap = new ArrayList<>(children.size()); // wrapped so that looping and moving will not throw a CME as the source changes
+        List<zenzai.nodes.Node> children = ensureChildNodes();
+        List<zenzai.nodes.Node> rewrap = new ArrayList<>(children.size()); // wrapped so that looping and moving will not throw a CME as the source changes
         rewrap.addAll(children);
         return Collections.unmodifiableList(rewrap);
     }
@@ -271,13 +302,13 @@ public abstract class HtmlNode implements Node, Cloneable {
      include this node (a node is not a sibling of itself).
      @return node siblings. If the node has no parent, returns an empty list.
      */
-    public List<HtmlNode> siblingNodes() {
+    public List<zenzai.nodes.Node> siblingNodes() {
         if (parentNode == null)
             return Collections.emptyList();
 
-        List<HtmlNode> nodes = parentNode.ensureChildNodes();
-        List<HtmlNode> siblings = new ArrayList<>(nodes.size() - 1);
-        for (HtmlNode node: nodes)
+        List<zenzai.nodes.Node> nodes = parentNode.ensureChildNodes();
+        List<zenzai.nodes.Node> siblings = new ArrayList<>(nodes.size() - 1);
+        for (zenzai.nodes.Node node: nodes)
             if (node != this)
                 siblings.add(node);
         return siblings;
@@ -311,8 +342,16 @@ public abstract class HtmlNode implements Node, Cloneable {
         return attributes().hasKeyIgnoreCase(attributeKey);
     }
 
-    protected void setSiblingIndex(int siblingIndex) {
-        this.siblingIndex = siblingIndex;
+    /**
+     * Remove an attribute from this node.
+     * @param attributeKey The attribute to remove.
+     * @return this (for chaining)
+     */
+    public Node removeAttr(String attributeKey) {
+        Validate.notNull(attributeKey);
+        if (hasAttributes())
+            attributes().removeIgnoreCase(attributeKey);
+        return this;
     }
 
     /**
@@ -351,8 +390,8 @@ public abstract class HtmlNode implements Node, Cloneable {
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
-        HtmlDocument doc = ownerDocument();
-        HtmlParseSettings settings = doc != null ? doc.parser().settings() : HtmlParseSettings.htmlDefault;
+        Document doc = ownerDocument();
+        ParseSettings settings = doc != null ? doc.parser().settings() : ParseSettings.htmlDefault;
         attributeKey = settings.normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
         return this;
@@ -397,10 +436,24 @@ public abstract class HtmlNode implements Node, Cloneable {
      @return the next element, or null if there is no next element
      @see #previousElementSibling()
      */
-    public @Nullable HtmlElement nextElementSibling() {
-        HtmlNode next = this;
+    public @Nullable Element nextElementSibling() {
+        zenzai.nodes.Node next = this;
         while ((next = next.nextSibling()) != null) {
-            if (next instanceof HtmlElement) return (HtmlElement) next;
+            if (next instanceof Element) return (Element) next;
+        }
+        return null;
+    }
+
+    /**
+     Gets the previous Element sibling of this node.
+
+     @return the previous element, or null if there is no previous element
+     @see #nextElementSibling()
+     */
+    public @Nullable Element previousElementSibling() {
+        Node prev = this;
+        while ((prev = prev.previousSibling()) != null) {
+            if (prev instanceof Element) return (Element) prev;
         }
         return null;
     }
@@ -409,17 +462,31 @@ public abstract class HtmlNode implements Node, Cloneable {
      Get this node's next sibling.
      @return next sibling, or {@code null} if this is the last sibling
      */
-    public @Nullable HtmlNode nextSibling() {
+    public @Nullable Node nextSibling() {
         if (parentNode == null)
             return null; // root
 
-        final List<HtmlNode> siblings = parentNode.ensureChildNodes();
+        final List<zenzai.nodes.Node> siblings = parentNode.ensureChildNodes();
         final int index = siblingIndex() + 1;
         if (siblings.size() > index) {
-            HtmlNode node = siblings.get(index);
+            zenzai.nodes.Node node = siblings.get(index);
             assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
             return node;
         } else
+            return null;
+    }
+
+    /**
+     Get this node's previous sibling.
+     @return the previous sibling, or @{code null} if this is the first sibling
+     */
+    public @Nullable Node previousSibling() {
+        if (parentNode == null)
+            return null; // root
+
+        if (siblingIndex() > 0)
+            return parentNode.ensureChildNodes().get(siblingIndex-1);
+        else
             return null;
     }
 
@@ -438,7 +505,7 @@ public abstract class HtmlNode implements Node, Cloneable {
      @return the child node at this index.
      @throws IndexOutOfBoundsException if the index is out of bounds.
      */
-    public HtmlNode childNode(int index) {
+    public zenzai.nodes.Node childNode(int index) {
         return ensureChildNodes().get(index);
     }
 
@@ -448,26 +515,58 @@ public abstract class HtmlNode implements Node, Cloneable {
      start tag.
      @return the range for the start of the node, or {@code untracked} if its range was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlRange#isImplicit()
-     @see HtmlElement#endSourceRange()
-     @see HtmlAttributes#sourceRange(String name)
+     @see Range#isImplicit()
+     @see Element#endSourceRange()
+     @see Attributes#sourceRange(String name)
      @since 1.15.2
      */
-    public HtmlRange sourceRange() {
-        return HtmlRange.of(this, true);
+    public Range sourceRange() {
+        return Range.of(this, true);
     }
 
-    protected void addChildren(int index, HtmlNode... children) {
+    /**
+     * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
+     * @param baseUri new URI
+     */
+    protected abstract void doSetBaseUri(String baseUri);
+
+    protected abstract List<zenzai.nodes.Node> ensureChildNodes();
+
+    protected zenzai.nodes.Node doClone(@Nullable Node parent) {
+        assert parent == null || parent instanceof Element;
+        zenzai.nodes.Node clone;
+
+        try {
+            clone = (zenzai.nodes.Node) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+
+        clone.parentNode = (Element) parent; // can be null, to create an orphan split
+        clone.siblingIndex = parent == null ? 0 : siblingIndex();
+        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Document docClone = doc.shallowClone();
+                clone.parentNode = docClone;
+                docClone.ensureChildNodes().add(clone);
+            }
+        }
+        return clone;
+    }
+
+    protected void addChildren(int index, zenzai.nodes.Node... children) {
         // todo clean up all these and use the list, not the var array. just need to be careful when iterating the incoming (as we are removing as we go)
         Validate.notNull(children);
         if (children.length == 0) return;
-        final List<HtmlNode> nodes = ensureChildNodes();
+        final List<zenzai.nodes.Node> nodes = ensureChildNodes();
 
         // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
-        final HtmlNode firstParent = children[0].parent();
+        final zenzai.nodes.Node firstParent = children[0].parent();
         if (firstParent != null && firstParent.childNodeSize() == children.length) {
             boolean sameList = true;
-            final List<HtmlNode> firstParentNodes = firstParent.ensureChildNodes();
+            final List<zenzai.nodes.Node> firstParentNodes = firstParent.ensureChildNodes();
             // identity check contents to see if same
             int i = children.length;
             while (i-- > 0) {
@@ -480,32 +579,36 @@ public abstract class HtmlNode implements Node, Cloneable {
                 firstParent.empty();
                 nodes.addAll(index, Arrays.asList(children));
                 i = children.length;
-                assert this instanceof HtmlElement;
+                assert this instanceof Element;
                 while (i-- > 0) {
-                    children[i].parentNode = (HtmlElement) this;
+                    children[i].parentNode = (Element) this;
                 }
-                ((HtmlElement) this).invalidateChildren();
+                ((Element) this).invalidateChildren();
                 return;
             }
         }
 
         Validate.noNullElements(children);
-        for (HtmlNode child : children) {
+        for (zenzai.nodes.Node child : children) {
             reparentChild(child);
         }
         nodes.addAll(index, Arrays.asList(children));
-        ((HtmlElement) this).invalidateChildren();
+        ((Element) this).invalidateChildren();
     }
 
-    protected void reparentChild(HtmlNode child) {
+    protected void reparentChild(zenzai.nodes.Node child) {
         child.setParentNode(this);
     }
 
-    protected void setParentNode(HtmlNode parentNode) {
+    protected void setParentNode(zenzai.nodes.Node parentNode) {
         Validate.notNull(parentNode);
         if (this.parentNode != null)
             this.parentNode.removeChild(this);
-        assert parentNode instanceof HtmlElement;
-        this.parentNode = (HtmlElement) parentNode;
+        assert parentNode instanceof Element;
+        this.parentNode = (Element) parentNode;
+    }
+
+    protected void setSiblingIndex(int siblingIndex) {
+        this.siblingIndex = siblingIndex;
     }
 }

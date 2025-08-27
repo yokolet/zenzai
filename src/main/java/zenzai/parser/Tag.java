@@ -4,14 +4,14 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 
-import static zenzai.parser.HtmlParser.NamespaceHtml;
+import static zenzai.parser.Parser.NamespaceHtml;
 
 /**
  A Tag represents an Element's name and configured options, common throughout the Document. Options may affect the parse
  and output.
 
  @see TagSet
- @see HtmlParser#tagSet(TagSet) */
+ @see Parser#tagSet(TagSet) */
 public class Tag implements Cloneable {
     /** Tag option: the tag is known (specifically defined). This impacts if options may need to be inferred (when not
      known) in, e.g., the pretty-printer. Set when a tag is added to a TagSet, or when settings are set(). */
@@ -49,7 +49,7 @@ public class Tag implements Cloneable {
      @since 1.20.1
      */
     public Tag(String tagName, String namespace) {
-        this(tagName, HtmlParseSettings.normalName(tagName), namespace);
+        this(tagName, ParseSettings.normalName(tagName), namespace);
     }
 
     /**
@@ -60,7 +60,7 @@ public class Tag implements Cloneable {
      @since 1.20.1
      */
     public Tag(String tagName) {
-        this(tagName, HtmlParseSettings.normalName(tagName), NamespaceHtml);
+        this(tagName, ParseSettings.normalName(tagName), NamespaceHtml);
     }
 
     /** Path for TagSet defaults, no options set; normal name is already LC. */
@@ -95,7 +95,7 @@ public class Tag implements Cloneable {
      */
     public Tag name(String tagName) {
         this.tagName = tagName;
-        this.normalName = HtmlParseSettings.normalName(tagName);
+        this.normalName = ParseSettings.normalName(tagName);
         return this;
     }
 
@@ -199,7 +199,7 @@ public class Tag implements Cloneable {
      * @see TagSet
      * @return The tag, either defined or new generic.
      */
-    public static Tag valueOf(String tagName, String namespace, HtmlParseSettings settings) {
+    public static Tag valueOf(String tagName, String namespace, ParseSettings settings) {
         return TagSet.Html().valueOf(tagName, null, namespace, settings.preserveTagCase());
     }
 
@@ -211,10 +211,10 @@ public class Tag implements Cloneable {
      *
      * @param tagName Name of tag, e.g. "p". <b>Case sensitive</b>.
      * @return The tag, either defined or new generic.
-     * @see #valueOf(String tagName, String namespace, HtmlParseSettings settings)
+     * @see #valueOf(String tagName, String namespace, ParseSettings settings)
      */
     public static Tag valueOf(String tagName) {
-        return valueOf(tagName, NamespaceHtml, HtmlParseSettings.preserveCase);
+        return valueOf(tagName, NamespaceHtml, ParseSettings.preserveCase);
     }
 
     /**
@@ -226,9 +226,9 @@ public class Tag implements Cloneable {
      * @param tagName Name of tag, e.g. "p". <b>Case sensitive</b>.
      * @param settings used to control tag name sensitivity
      * @return The tag, either defined or new generic.
-     * @see #valueOf(String tagName, String namespace, HtmlParseSettings settings)
+     * @see #valueOf(String tagName, String namespace, ParseSettings settings)
      */
-    public static Tag valueOf(String tagName, HtmlParseSettings settings) {
+    public static Tag valueOf(String tagName, ParseSettings settings) {
         return valueOf(tagName, NamespaceHtml, settings);
     }
 

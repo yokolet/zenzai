@@ -1,8 +1,8 @@
 package zenzai.select;
 
-import zenzai.nodes.HtmlElement;
+import zenzai.nodes.Element;
 
-public class Elements extends Nodes<HtmlElement> {
+public class Elements extends Nodes<Element> {
     public Elements() {
     }
 }

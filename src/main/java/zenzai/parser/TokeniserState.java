@@ -2,7 +2,7 @@ package zenzai.parser;
 
 import org.jsoup.nodes.DocumentType;
 
-import static zenzai.nodes.HtmlDocument.OutputSettings.Syntax.xml;
+import static zenzai.nodes.Document.OutputSettings.Syntax.xml;
 
 /**
  * States and transition activations for the Tokeniser.

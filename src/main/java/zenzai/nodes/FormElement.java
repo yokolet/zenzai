@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import zenzai.parser.Tag;
 import zenzai.select.Elements;
 
-public abstract class HtmlFormElement extends HtmlElement{
+public abstract class FormElement extends Element{
     private final Elements linkedEls = new Elements();
 
     /**
@@ -14,7 +14,7 @@ public abstract class HtmlFormElement extends HtmlElement{
      * @param baseUri    the base URI
      * @param attributes initial attributes
      */
-    public HtmlFormElement(Tag tag, @Nullable String baseUri, @Nullable HtmlAttributes attributes) {
+    public FormElement(Tag tag, @Nullable String baseUri, @Nullable Attributes attributes) {
         super(tag, baseUri, attributes);
     }
 
@@ -23,8 +23,13 @@ public abstract class HtmlFormElement extends HtmlElement{
      * @param element form control to add
      * @return this form element, for chaining
      */
-    public HtmlFormElement addElement(HtmlElement element) {
+    public FormElement addElement(Element element) {
         linkedEls.add(element);
         return this;
+    }
+
+    @Override
+    public FormElement clone() {
+        return (FormElement) super.clone();
     }
 }

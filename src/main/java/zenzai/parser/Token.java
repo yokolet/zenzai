@@ -4,8 +4,8 @@ import org.jspecify.annotations.Nullable;
 
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
-import zenzai.nodes.HtmlAttributes;
-import zenzai.nodes.HtmlRange;
+import zenzai.nodes.Attributes;
+import zenzai.nodes.Range;
 
 /**
  * Parse tokens for the Tokeniser.
@@ -101,7 +101,7 @@ abstract class Token {
         protected TokenData tagName = new TokenData();
         @Nullable protected String normalName; // lc version of tag name, for case-insensitive tree build
         boolean selfClosing = false;
-        @Nullable HtmlAttributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
+        @Nullable Attributes attributes; // start tags get attributes on construction. End tags get attributes on first new attribute (but only for parser convenience, not used).
 
         final private TokenData attrName = new TokenData();
         final private TokenData attrValue = new TokenData();
@@ -145,7 +145,7 @@ abstract class Token {
 
         final void newAttribute() {
             if (attributes == null)
-                attributes = new HtmlAttributes();
+                attributes = new Attributes();
 
             if (attrName.hasData() && attributes.size() < MaxAttributes) {
                 // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
@@ -181,13 +181,13 @@ abstract class Token {
                 // if there's no value (e.g. boolean), make it an implicit range at current
                 if (!attrValue.hasData()) attrValStart = attrValEnd = attrNameEnd;
 
-                HtmlRange.AttributeRange range = new HtmlRange.AttributeRange(
-                        new HtmlRange(
-                                new HtmlRange.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
-                                new HtmlRange.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
-                        new HtmlRange(
-                                new HtmlRange.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
-                                new HtmlRange.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
+                Range.AttributeRange range = new Range.AttributeRange(
+                        new Range(
+                                new Range.Position(attrNameStart, r.lineNumber(attrNameStart), r.columnNumber(attrNameStart)),
+                                new Range.Position(attrNameEnd, r.lineNumber(attrNameEnd), r.columnNumber(attrNameEnd))),
+                        new Range(
+                                new Range.Position(attrValStart, r.lineNumber(attrValStart), r.columnNumber(attrValStart)),
+                                new Range.Position(attrValEnd, r.lineNumber(attrValEnd), r.columnNumber(attrValEnd)))
                 );
                 attributes.sourceRange(name, range);
             }
@@ -226,7 +226,7 @@ abstract class Token {
 
         final Tag name(String name) {
             tagName.set(name);
-            normalName = HtmlParseSettings.normalName(tagName.value());
+            normalName = ParseSettings.normalName(tagName.value());
             return this;
         }
 
@@ -239,7 +239,7 @@ abstract class Token {
             // might have null chars - need to replace with null replacement character
             append = append.replace(TokeniserState.nullChar, Tokeniser.replacementChar);
             tagName.append(append);
-            normalName = HtmlParseSettings.normalName(tagName.value());
+            normalName = ParseSettings.normalName(tagName.value());
         }
 
         final void appendTagName(char append) {
@@ -311,10 +311,10 @@ abstract class Token {
             return this;
         }
 
-        StartTag nameAttr(String name, HtmlAttributes attributes) {
+        StartTag nameAttr(String name, Attributes attributes) {
             this.tagName.set(name);
             this.attributes = attributes;
-            normalName = HtmlParseSettings.normalName(name);
+            normalName = ParseSettings.normalName(name);
             return this;
         }
 

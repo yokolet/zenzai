@@ -25,18 +25,18 @@ enum HtmlTreeBuilderState {
             } else if (t.isDoctype()) {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
-                HtmlDocumentType doctype = new HtmlDocumentType(
+                DocumentType doctype = new DocumentType(
                         tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
                 tb.onNodeInserted(doctype);
                 // todo: quirk state check on more doctype ids, if deemed useful (most are ancient legacy and presumably irrelevant)
                 if (d.isForceQuirks() || !doctype.name().equals("html") || doctype.publicId().equalsIgnoreCase("HTML"))
-                    tb.getDocument().quirksMode(HtmlDocument.QuirksMode.quirks);
+                    tb.getDocument().quirksMode(Document.QuirksMode.quirks);
                 tb.transition(BeforeHtml);
             } else {
                 // todo: check not iframe srcdoc
-                tb.getDocument().quirksMode(HtmlDocument.QuirksMode.quirks); // missing doctype
+                tb.getDocument().quirksMode(Document.QuirksMode.quirks); // missing doctype
                 tb.transition(BeforeHtml);
                 return tb.process(t); // re-process token
             }
@@ -84,7 +84,7 @@ enum HtmlTreeBuilderState {
             } else if (t.isStartTag() && t.asStartTag().normalName().equals("html")) {
                 return InBody.process(t, tb); // does not transition
             } else if (t.isStartTag() && t.asStartTag().normalName().equals("head")) {
-                HtmlElement head = tb.insertElementFor(t.asStartTag());
+                Element head = tb.insertElementFor(t.asStartTag());
                 tb.setHeadElement(head);
                 tb.transition(InHead);
             } else if (t.isEndTag() && (inSorted(t.asEndTag().normalName(), BeforeHtmlToHead))) {
@@ -120,7 +120,7 @@ enum HtmlTreeBuilderState {
                     if (name.equals("html")) {
                         return InBody.process(t, tb);
                     } else if (inSorted(name, InHeadEmpty)) {
-                        HtmlElement el = tb.insertEmptyElementFor(start);
+                        Element el = tb.insertEmptyElementFor(start);
                         // jsoup special: update base the first time it is seen
                         if (name.equals("base") && el.hasAttr("href"))
                             tb.maybeSetBaseUri(el);
@@ -243,7 +243,7 @@ enum HtmlTreeBuilderState {
                     tb.transition(InFrameset);
                 } else if (inSorted(name, InBodyStartToHead)) {
                     tb.error(this);
-                    HtmlElement head = tb.getHeadElement();
+                    Element head = tb.getHeadElement();
                     tb.push(head);
                     tb.process(t, InHead);
                     tb.removeFromStack(head);
@@ -322,8 +322,8 @@ enum HtmlTreeBuilderState {
         private boolean inBodyStartTag(Token t, HtmlTreeBuilder tb) {
             final Token.StartTag startTag = t.asStartTag();
             final String name = startTag.normalName();
-            final ArrayList<HtmlElement> stack;
-            HtmlElement el;
+            final ArrayList<Element> stack;
+            Element el;
 
             switch (name) {
                 case "a":
@@ -332,7 +332,7 @@ enum HtmlTreeBuilderState {
                         tb.processEndTag("a");
 
                         // still on stack?
-                        HtmlElement remainingA = tb.getFromStack("a");
+                        Element remainingA = tb.getFromStack("a");
                         if (remainingA != null) {
                             tb.removeFromActiveFormattingElements(remainingA);
                             tb.removeFromStack(remainingA);
@@ -370,7 +370,7 @@ enum HtmlTreeBuilderState {
                     // otherwise, merge attributes onto real html (if present)
                     stack = tb.getStack();
                     if (stack.size() > 0) {
-                        HtmlElement html = tb.getStack().get(0);
+                        Element html = tb.getStack().get(0);
                         mergeAttributes(startTag, html);
                     }
                     break;
@@ -383,7 +383,7 @@ enum HtmlTreeBuilderState {
                     } else {
                         tb.framesetOk(false);
                         // will be on stack if this is a nested body. won't be if closed (which is a variance from spec, which leaves it on)
-                        HtmlElement body = tb.getFromStack("body");
+                        Element body = tb.getFromStack("body");
                         if (body != null) mergeAttributes(startTag, body);
                     }
                     break;
@@ -396,7 +396,7 @@ enum HtmlTreeBuilderState {
                     } else if (!tb.framesetOk()) {
                         return false; // ignore frameset
                     } else {
-                        HtmlElement second = stack.get(1);
+                        Element second = stack.get(1);
                         if (second.parent() != null)
                             second.remove();
                         // pop up to html element
@@ -446,7 +446,7 @@ enum HtmlTreeBuilderState {
                     tb.pushActiveFormattingElements(el);
                     break;
                 case "table":
-                    if (tb.getDocument().quirksMode() != HtmlDocument.QuirksMode.quirks && tb.inButtonScope("p")) {
+                    if (tb.getDocument().quirksMode() != Document.QuirksMode.quirks && tb.inButtonScope("p")) {
                         tb.processEndTag("p");
                     }
                     tb.insertElementFor(startTag);
@@ -506,11 +506,11 @@ enum HtmlTreeBuilderState {
                     break;
                 case "math":
                     tb.reconstructFormattingElements();
-                    tb.insertForeignElementFor(startTag, HtmlParser.NamespaceMathml);
+                    tb.insertForeignElementFor(startTag, Parser.NamespaceMathml);
                     break;
                 case "svg":
                     tb.reconstructFormattingElements();
-                    tb.insertForeignElementFor(startTag, HtmlParser.NamespaceSvg);
+                    tb.insertForeignElementFor(startTag, Parser.NamespaceSvg);
                     break;
                 // static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
                 case "h1":
@@ -694,7 +694,7 @@ enum HtmlTreeBuilderState {
 
                 case "form":
                     if (!tb.onStack("template")) {
-                        HtmlElement currentForm = tb.getFormElement();
+                        Element currentForm = tb.getFormElement();
                         tb.setFormElement(null);
                         if (currentForm == null || !tb.inScope(name)) {
                             tb.error(this);
@@ -795,17 +795,17 @@ enum HtmlTreeBuilderState {
 
         boolean anyOtherEndTag(Token t, HtmlTreeBuilder tb) {
             final String name = t.asEndTag().normalName; // case insensitive search - goal is to preserve output case, not for the parse to be case sensitive
-            final ArrayList<HtmlElement> stack = tb.getStack();
+            final ArrayList<Element> stack = tb.getStack();
 
             // deviate from spec slightly to speed when super deeply nested
-            HtmlElement elFromStack = tb.getFromStack(name);
+            Element elFromStack = tb.getFromStack(name);
             if (elFromStack == null) {
                 tb.error(this);
                 return false;
             }
 
             for (int pos = stack.size() - 1; pos >= 0; pos--) {
-                HtmlElement node = stack.get(pos);
+                Element node = stack.get(pos);
                 if (node.nameIs(name)) {
                     tb.generateImpliedEndTags(name);
                     if (!tb.currentElementIs(name))
@@ -846,9 +846,9 @@ enum HtmlTreeBuilderState {
                 //  - is between the end of the list and the last [marker] in the list, if any, or the start of the list otherwise, and
                 //  - has the tag name subject.
                 //  If there is no such element, then return and instead act as described in the "any other end tag" entry above.
-                HtmlElement formatEl = null;
+                Element formatEl = null;
                 for (int i = tb.formattingElements.size() - 1; i >= 0; i--) {
-                    HtmlElement next = tb.formattingElements.get(i);
+                    Element next = tb.formattingElements.get(i);
                     if (next == null) // marker
                         break;
                     if (next.normalName().equals(subject)) {
@@ -876,12 +876,12 @@ enum HtmlTreeBuilderState {
                 }
 
                 //  7. Let furthestBlock be the topmost node in the [stack of open elements] that is lower in the stack than formattingElement, and is an element in the [special]category. There might not be one.
-                HtmlElement furthestBlock = null;
-                ArrayList<HtmlElement> stack = tb.getStack();
+                Element furthestBlock = null;
+                ArrayList<Element> stack = tb.getStack();
                 int fei = stack.lastIndexOf(formatEl);
                 if (fei != -1) { // look down the stack
                     for (int i = fei + 1; i < stack.size(); i++) {
-                        HtmlElement el = stack.get(i);
+                        Element el = stack.get(i);
                         if (isSpecial(el)) {
                             furthestBlock = el;
                             break;
@@ -899,15 +899,15 @@ enum HtmlTreeBuilderState {
                     return true;
                 }
 
-                HtmlElement commonAncestor = tb.aboveOnStack(formatEl); // 9. Let commonAncestor be the element immediately above formattingElement in the [stack of open elements].
+                Element commonAncestor = tb.aboveOnStack(formatEl); // 9. Let commonAncestor be the element immediately above formattingElement in the [stack of open elements].
                 if (commonAncestor == null) { tb.error(this); return true; } // Would be a WTF
 
                 // 10. Let a bookmark note the position of formattingElement in the [list of active formatting elements] relative to the elements on either side of it in the list.
                 // JH - I think this means its index? Or do we need a linked list?
                 int bookmark = tb.positionOfElement(formatEl);
 
-                HtmlElement el = furthestBlock; //  11. Let node and lastNode be furthestBlock.
-                HtmlElement lastEl = furthestBlock;
+                Element el = furthestBlock; //  11. Let node and lastNode be furthestBlock.
+                Element lastEl = furthestBlock;
                 int inner = 0; // 12. Let innerLoopCounter be 0.
 
                 while (true) { // 13. While true:
@@ -940,7 +940,7 @@ enum HtmlTreeBuilderState {
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
-                    HtmlElement replacement = new HtmlElement(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), HtmlParseSettings.preserveCase), tb.getBaseUri());
+                    Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
                     el = replacement;
@@ -958,10 +958,10 @@ enum HtmlTreeBuilderState {
                 // just use commonAncestor as target:
                 commonAncestor.appendChild(lastEl);
                 // 15. [Create an element for the token] for which formattingElement was created, in the [HTML namespace], with furthestBlock as the intended parent.
-                HtmlElement adoptor = new HtmlElement(formatEl.tag(), tb.getBaseUri());
+                Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
-                for (HtmlNode child : furthestBlock.childNodes()) {
+                for (zenzai.nodes.Node child : furthestBlock.childNodes()) {
                     adoptor.appendChild(child);
                 }
 
@@ -1629,7 +1629,7 @@ enum HtmlTreeBuilderState {
     },
     AfterBody {
         @Override boolean process(Token t, HtmlTreeBuilder tb) {
-            HtmlElement html = tb.getFromStack("html");
+            Element html = tb.getFromStack("html");
             if (isWhitespace(t)) {
                 // spec deviation - currently body is still on stack, but we want this to go to the html node
                 if (html != null)
@@ -1741,7 +1741,7 @@ enum HtmlTreeBuilderState {
                 return tb.process(t, InBody);
             } else if (isWhitespace(t)) {
                 // spec deviation - body and html still on stack, but want this space to go after </html>
-                HtmlElement doc = tb.getDocument();
+                Element doc = tb.getDocument();
                 tb.insertCharacterToElement(t.asCharacter(), doc);
             }else if (t.isEOF()) {
                 // nice work chuck
@@ -1823,18 +1823,18 @@ enum HtmlTreeBuilderState {
                     Token.EndTag end = t.asEndTag();
                     if (end.normalName.equals("br") || end.normalName.equals("p"))
                         return processAsHtml(t, tb);
-                    if (end.normalName.equals("script") && tb.currentElementIs("script", HtmlParser.NamespaceSvg)) {
+                    if (end.normalName.equals("script") && tb.currentElementIs("script", Parser.NamespaceSvg)) {
                         // script level and execution elided.
                         tb.pop();
                         return true;
                     }
 
                     // Any other end tag
-                    ArrayList<HtmlElement> stack = tb.getStack();
+                    ArrayList<Element> stack = tb.getStack();
                     if (stack.isEmpty())
                         Validate.wtf("Stack unexpectedly empty");
                     int i = stack.size() - 1;
-                    HtmlElement el = stack.get(i);
+                    Element el = stack.get(i);
                     if (!el.nameIs(end.normalName))
                         tb.error(this);
                     while (i != 0) {
@@ -1844,7 +1844,7 @@ enum HtmlTreeBuilderState {
                         }
                         i--;
                         el = stack.get(i);
-                        if (el.tag().namespace().equals(HtmlParser.NamespaceHtml)) {
+                        if (el.tag().namespace().equals(Parser.NamespaceHtml)) {
                             return processAsHtml(t, tb);
                         }
                     }
@@ -1864,12 +1864,12 @@ enum HtmlTreeBuilderState {
         }
     };
 
-    private static void mergeAttributes(Token.StartTag source, HtmlElement dest) {
+    private static void mergeAttributes(Token.StartTag source, Element dest) {
         if (!source.hasAttributes()) return;
-        for (HtmlAttribute attr : source.attributes) { // only iterates public attributes
-            HtmlAttributes destAttrs = dest.attributes();
+        for (Attribute attr : source.attributes) { // only iterates public attributes
+            Attributes destAttrs = dest.attributes();
             if (!destAttrs.hasKey(attr.getKey())) {
-                HtmlRange.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
+                Range.AttributeRange range = attr.sourceRange(); // need to grab range before its parent changes
                 destAttrs.put(attr);
                 if (source.trackSource) { // copy the attribute range
                     destAttrs.sourceRange(attr.getKey(), range);

@@ -6,8 +6,8 @@ import java.util.Arrays;
 
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
-import zenzai.nodes.HtmlDocument;
-import zenzai.nodes.HtmlEntities;
+import zenzai.nodes.Document;
+import zenzai.nodes.Entities;
 
 /**
  * Readers the input stream into tokens.
@@ -33,14 +33,14 @@ final class Tokeniser {
     }
 
     private final CharacterReader reader; // html input
-    private final HtmlParseErrorList errors; // errors found while tokenising
+    private final ParseErrorList errors; // errors found while tokenising
 
     private TokeniserState state = TokeniserState.Data; // current tokenisation state
     @Nullable private Token emitPending = null; // the token we are about to emit on next read
     private boolean isEmitPending = false;
     final TokenData dataBuffer = new TokenData(); // buffers data looking for </script>
 
-    final HtmlDocument.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
+    final Document.OutputSettings.Syntax syntax; // html or xml syntax; affects processing of xml declarations vs as bogus comments
     final Token.StartTag startPending;
     final Token.EndTag endPending;
     Token.Tag tagPending; // tag we are building up: start or end pending
@@ -54,7 +54,7 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
-        syntax = treeBuilder instanceof HtmlTreeBuilder ? HtmlDocument.OutputSettings.Syntax.html : HtmlDocument.OutputSettings.Syntax.xml;
+        syntax = treeBuilder instanceof HtmlTreeBuilder ? Document.OutputSettings.Syntax.html : Document.OutputSettings.Syntax.xml;
         tagPending = startPending  = new Token.StartTag(treeBuilder);
         endPending = new Token.EndTag(treeBuilder);
         xmlDeclPending = new Token.XmlDecl(treeBuilder);
@@ -184,7 +184,7 @@ final class Tokeniser {
             String nameRef = reader.consumeLetterThenDigitSequence();
             boolean looksLegit = reader.matches(';');
             // found if a base named entity without a ;, or an extended entity with the ;.
-            boolean found = (HtmlEntities.isBaseNamedEntity(nameRef) || (HtmlEntities.isNamedEntity(nameRef) && looksLegit));
+            boolean found = (Entities.isBaseNamedEntity(nameRef) || (Entities.isNamedEntity(nameRef) && looksLegit));
 
             if (!found) {
                 reader.rewindToMark();
@@ -192,7 +192,7 @@ final class Tokeniser {
                     characterReferenceError("invalid named reference [%s]", nameRef);
                 if (inAttribute) return null;
                 // check if there's a base prefix match; consume and use that if so
-                String prefix = HtmlEntities.findPrefix(nameRef);
+                String prefix = Entities.findPrefix(nameRef);
                 if (prefix.isEmpty()) return null;
                 reader.matchConsume(prefix);
                 nameRef = prefix;
@@ -206,7 +206,7 @@ final class Tokeniser {
             reader.unmark();
             if (!reader.matchConsume(";"))
                 characterReferenceError("missing semicolon on [&%s]", nameRef); // missing semi
-            int numChars = HtmlEntities.codepointsForName(nameRef, multipointHolder);
+            int numChars = Entities.codepointsForName(nameRef, multipointHolder);
             if (numChars == 1) {
                 codeRef[0] = multipointHolder[0];
                 return codeRef;
@@ -278,27 +278,27 @@ final class Tokeniser {
 
     void error(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, "Unexpected character '%s' in input state [%s]", reader.current(), state));
+            errors.add(new ParseError(reader, "Unexpected character '%s' in input state [%s]", reader.current(), state));
     }
 
     void eofError(TokeniserState state) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
+            errors.add(new ParseError(reader, "Unexpectedly reached end of file (EOF) in input state [%s]", state));
     }
 
     private void characterReferenceError(String message, Object... args) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, String.format("Invalid character reference: " + message, args)));
+            errors.add(new ParseError(reader, String.format("Invalid character reference: " + message, args)));
     }
 
     void error(String errorMsg) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, errorMsg));
+            errors.add(new ParseError(reader, errorMsg));
     }
 
     void error(String errorMsg, Object... args) {
         if (errors.canAddError())
-            errors.add(new HtmlParseError(reader, errorMsg, args));
+            errors.add(new ParseError(reader, errorMsg, args));
     }
 
     /**

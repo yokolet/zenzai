@@ -6,7 +6,7 @@ import zenzai.internal.StringUtil;
 
 import static zenzai.internal.SharedConstants.*;
 
-public class HtmlRange {
+public class Range {
     private static final Position UntrackedPos = new Position(-1, -1, -1);
     private final Position start, end;
 
@@ -15,25 +15,11 @@ public class HtmlRange {
      * @param start the start position
      * @param end the end position
      */
-    public HtmlRange(Position start, Position end) {
+    public Range(Position start, Position end) {
         this.start = start;
         this.end = end;
     }
 
-    /**
-     * Retrieves the source range for a given Node.
-     *
-     * @param node  the node to retrieve the position for
-     * @param start if this is the starting range. {@code false} for Element end tags.
-     * @return the Range, or the Untracked (-1) position if tracking is disabled.
-     */
-    static HtmlRange of(HtmlNode node, boolean start) {
-
-        final String key = start ? RangeKey : EndRangeKey;
-        if (!node.hasAttributes()) return Untracked;
-        Object range = node.attributes().userData(key);
-        return range != null ? (HtmlRange) range : Untracked;
-    }
 
     /**
      Test if this source range was tracked during parsing.
@@ -43,14 +29,43 @@ public class HtmlRange {
         return this != Untracked;
     }
 
+    /**
+     Checks if the range represents a node that was implicitly created / closed.
+     <p>For example, with HTML of {@code <p>One<p>Two}, both {@code p} elements will have an explicit
+     {@link Element#sourceRange()} but an implicit {@link Element#endSourceRange()} marking the end position, as neither
+     have closing {@code </p>} tags. The TextNodes will have explicit sourceRanges.
+     <p>A range is considered implicit if its start and end positions are the same.
+     @return true if the range is tracked and its start and end positions are the same, false otherwise.
+     @since 1.17.1
+     */
+    public boolean isImplicit() {
+        if (!isTracked()) return false;
+        return start.equals(end);
+    }
+
+    /**
+     * Retrieves the source range for a given Node.
+     *
+     * @param node  the node to retrieve the position for
+     * @param start if this is the starting range. {@code false} for Element end tags.
+     * @return the Range, or the Untracked (-1) position if tracking is disabled.
+     */
+    static Range of(zenzai.nodes.Node node, boolean start) {
+
+        final String key = start ? RangeKey : EndRangeKey;
+        if (!node.hasAttributes()) return Untracked;
+        Object range = node.attributes().userData(key);
+        return range != null ? (Range) range : Untracked;
+    }
+
     /** An untracked source range. */
-    static final HtmlRange Untracked = new HtmlRange(UntrackedPos, UntrackedPos);
+    static final Range Untracked = new Range(UntrackedPos, UntrackedPos);
 
     /**
      A Position object tracks the character position in the original input source where a Node starts or ends. If you want to
      track these positions, tracking must be enabled in the Parser with
      {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}.
-     @see HtmlNode#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
      */
     public static class Position {
         private final int pos, lineNumber, columnNumber;
@@ -127,24 +142,24 @@ public class HtmlRange {
     }
 
     public static class AttributeRange {
-        static final AttributeRange UntrackedAttr = new AttributeRange(HtmlRange.Untracked, HtmlRange.Untracked);
+        static final AttributeRange UntrackedAttr = new AttributeRange(Range.Untracked, Range.Untracked);
 
-        private final HtmlRange nameRange;
-        private final HtmlRange valueRange;
+        private final Range nameRange;
+        private final Range valueRange;
 
         /** Creates a new AttributeRange. Called during parsing by Token.StartTag. */
-        public AttributeRange(HtmlRange nameRange, HtmlRange valueRange) {
+        public AttributeRange(Range nameRange, Range valueRange) {
             this.nameRange = nameRange;
             this.valueRange = valueRange;
         }
 
         /** Get the source range for the attribute's name. */
-        public HtmlRange nameRange() {
+        public Range nameRange() {
             return nameRange;
         }
 
         /** Get the source range for the attribute's value. */
-        public HtmlRange valueRange() {
+        public Range valueRange() {
             return valueRange;
         }
 

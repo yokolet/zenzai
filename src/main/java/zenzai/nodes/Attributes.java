@@ -1,19 +1,20 @@
 package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
+import org.w3c.dom.DOMException;
 import zenzai.helper.Validate;
-import zenzai.parser.HtmlParseSettings;
+import zenzai.internal.QuietAppendable;
+import zenzai.internal.StringUtil;
+import zenzai.parser.ParseSettings;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static zenzai.internal.Normalizer.lowerCase;
 import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
-import static zenzai.nodes.HtmlRange.AttributeRange.UntrackedAttr;
+import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
-public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneable {
+public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
     private static final String EmptyString = "";
@@ -30,12 +31,88 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     // Genericish: all non-internal attribute values must be Strings and are cast on access.
     @Nullable
     Object[] vals = new Object[InitialCapacity];
+    Element ownerElement;
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public int getLength() {
+        return size();
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node getNamedItem(String name) {
+        return attribute(name);
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg) throws DOMException {
+        if (arg instanceof Attribute) {
+            Attribute attr = (Attribute) arg;
+            Attribute existing = attribute(attr.getKey());
+            put(attr);
+            return existing;
+        } else {
+            return null;
+        }
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node removeNamedItem(String name) {
+
+    }
 
     @Override
-    public HtmlAttributes clone() {
-        HtmlAttributes clone;
+    public Iterator<Attribute> iterator() {
+        return new Iterator<Attribute>() {
+            int expectedSize = size;
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                checkModified();
+                while (i < size) {
+                    String key = keys[i];
+                    assert key != null;
+                    if (isInternalKey(key)) // skip over internal keys
+                        i++;
+                    else
+                        break;
+                }
+
+                return i < size;
+            }
+
+            @Override
+            public Attribute next() {
+                checkModified();
+                if (i >= size) throw new NoSuchElementException();
+                String key = keys[i];
+                assert key != null;
+                final Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
+                i++;
+                return attr;
+            }
+
+            private void checkModified() {
+                if (size != expectedSize) throw new ConcurrentModificationException("Use Iterator#remove() instead to remove attributes while iterating.");
+            }
+
+            @Override
+            public void remove() {
+                Attributes.this.remove(--i); // next() advanced, so rewind
+                expectedSize--;
+            }
+        };
+    }
+
+    @Override
+    public Attributes clone() {
+        Attributes clone;
         try {
-            clone = (HtmlAttributes) super.clone();
+            clone = (Attributes) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
@@ -51,6 +128,23 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
         }
 
         return clone;
+    }
+
+    public void setOwnerElement(Element ownerElement) {
+        this.ownerElement = ownerElement;
+    }
+
+    /**
+     Get an Attribute by key. The Attribute will remain connected to these Attributes, so changes made via
+     {@link Attribute#setKey(String)}, {@link Attribute#setValue(String)} etc will cascade back to these Attributes and
+     their owning Element.
+     @param key the (case-sensitive) attribute key
+     @return the Attribute for this key, or null if not present.
+     @since 1.17.2
+     */
+    @Nullable public Attribute attribute(String key) {
+        int i = indexOfKey(key);
+        return i == NotFound ? null : new Attribute(key, checkNotNull(vals[i]), this);
     }
 
     /**
@@ -71,7 +165,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @param value attribute value (which can be null, to set a true boolean attribute)
      * @return these attributes, for chaining
      */
-    public HtmlAttributes put(String key, @Nullable String value) {
+    public Attributes put(String key, @Nullable String value) {
         Validate.notNull(key);
         int i = indexOfKey(key);
         if (i != NotFound)
@@ -86,7 +180,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @param attribute attribute with case-sensitive key
      @return these attributes, for chaining
      */
-    public HtmlAttributes put(HtmlAttribute attribute) {
+    public Attributes put(Attribute attribute) {
         Validate.notNull(attribute);
         put(attribute.getKey(), attribute.getValue());
         attribute.parent = this;
@@ -96,9 +190,9 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     /**
      * Adds a new attribute. Will produce duplicates if the key already exists.
      *
-     * @see HtmlAttributes#put(String, String)
+     * @see Attributes#put(String, String)
      */
-    public HtmlAttributes add(String key, @Nullable String value) {
+    public Attributes add(String key, @Nullable String value) {
         addObject(key, value);
         return this;
     }
@@ -118,17 +212,27 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
     }
 
     /**
+     Remove an attribute by key. <b>Case insensitive.</b>
+     @param key attribute key to remove
+     */
+    public void removeIgnoreCase(String key) {
+        int i = indexOfKeyIgnoreCase(key);
+        if (i != NotFound)
+            remove(i);
+    }
+
+    /**
      Add all the attributes from the incoming set to this set.
      @param incoming attributes to add to these attributes.
      */
-    public void addAll(HtmlAttributes incoming) {
+    public void addAll(Attributes incoming) {
         int incomingSize = incoming.size(); // not adding internal
         if (incomingSize == 0) return;
         checkCapacity(size + incomingSize);
 
         boolean needsPut = size != 0; // if this set is empty, no need to check existing set, so can add() vs put()
         // (and save bashing on the indexOfKey()
-        for (HtmlAttribute attr : incoming) {
+        for (Attribute attr : incoming) {
             if (needsPut)
                 put(attr);
             else
@@ -168,17 +272,17 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
-     @see HtmlAttribute#sourceRange()
-     @see HtmlNode#sourceRange()
-     @see HtmlElement#endSourceRange()
+     @see Attribute#sourceRange()
+     @see zenzai.nodes.Node#sourceRange()
+     @see Element#endSourceRange()
      @since 1.17.1
      */
-    public HtmlRange.AttributeRange sourceRange(String key) {
+    public Range.AttributeRange sourceRange(String key) {
         if (!hasKey(key)) return UntrackedAttr;
-        Map<String, HtmlRange.AttributeRange> ranges = getRanges();
-        if (ranges == null) return HtmlRange.AttributeRange.UntrackedAttr;
-        HtmlRange.AttributeRange range = ranges.get(key);
-        return range != null ? range : HtmlRange.AttributeRange.UntrackedAttr;
+        Map<String, Range.AttributeRange> ranges = getRanges();
+        if (ranges == null) return Range.AttributeRange.UntrackedAttr;
+        Range.AttributeRange range = ranges.get(key);
+        return range != null ? range : Range.AttributeRange.UntrackedAttr;
     }
 
     /**
@@ -188,10 +292,10 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      @return these attributes, for chaining
      @since 1.18.2
      */
-    public HtmlAttributes sourceRange(String key, HtmlRange.AttributeRange range) {
+    public Attributes sourceRange(String key, Range.AttributeRange range) {
         Validate.notNull(key);
         Validate.notNull(range);
-        Map<String, HtmlRange.AttributeRange> ranges = getRanges();
+        Map<String, Range.AttributeRange> ranges = getRanges();
         if (ranges == null) {
             ranges = new HashMap<>();
             userData(AttrRangeKey, ranges);
@@ -232,7 +336,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @see #userData(String key)
      * @since 1.17.1
      */
-    public HtmlAttributes userData(String key, @Nullable Object value) {
+    public Attributes userData(String key, @Nullable Object value) {
         Validate.notNull(key);
         if (value == null && !hasKey(UserDataKey)) return this; // no user data exists, so short-circuit
         Map<String, Object> userData = userData();
@@ -278,7 +382,7 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
      * @param settings case sensitivity
      * @return number of removed dupes
      */
-    public int deduplicate(HtmlParseSettings settings) {
+    public int deduplicate(ParseSettings settings) {
         if (size == 0) return 0;
         boolean preserve = settings.preserveAttributeCase();
         int dupes = 0;
@@ -296,10 +400,37 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
         return dupes;
     }
 
+    /**
+     Get the attributes as a List, for iteration.
+     @return a view of the attributes as an unmodifiable List.
+     */
+    public List<Attribute> asList() {
+        ArrayList<Attribute> list = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
+                continue; // skip internal keys
+            Attribute attr = new Attribute(key, (String) vals[i], Attributes.this);
+            list.add(attr);
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    /**
+     Get the HTML representation of these attributes.
+     @return HTML
+     */
+    public String html() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(QuietAppendable.wrap(sb), new Document.OutputSettings()); // output settings a bit funky, but this html() seldom used
+        return StringUtil.releaseBuilder(sb);
+    }
+
     /** Get the Ranges, if tracking is enabled; null otherwise. */
-    @Nullable Map<String, HtmlRange.AttributeRange> getRanges() {
+    @Nullable Map<String, Range.AttributeRange> getRanges() {
         //noinspection unchecked
-        return (Map<String, HtmlRange.AttributeRange>) userData(AttrRangeKey);
+        return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
@@ -363,6 +494,19 @@ public abstract class HtmlAttributes implements Iterable<HtmlAttribute>, Cloneab
         }
         else
             addObject(key, value);
+    }
+
+    final void html(final QuietAppendable accum, final zenzai.nodes.Document.OutputSettings out) {
+        final int sz = size;
+        for (int i = 0; i < sz; i++) {
+            String key = keys[i];
+            assert key != null;
+            if (isInternalKey(key))
+                continue;
+            final String validated = Attribute.getValidKey(key, out.syntax());
+            if (validated != null)
+                Attribute.htmlNoValidate(validated, (String) vals[i], accum.append(' '), out);
+        }
     }
 
     private void addObject(String key, @Nullable Object value) {
