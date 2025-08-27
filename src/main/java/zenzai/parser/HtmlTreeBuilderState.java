@@ -1,14 +1,19 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.internal.StringUtil;
+import zenzai.nodes.Attribute;
+import zenzai.nodes.Attributes;
+import zenzai.nodes.Document;
+import zenzai.nodes.DocumentType;
+import zenzai.nodes.Element;
+import zenzai.nodes.Node;
+import zenzai.nodes.Range;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 
-import zenzai.helper.Validate;
-import zenzai.internal.StringUtil;
-import zenzai.nodes.*;
-
-import static org.jsoup.internal.StringUtil.inSorted;
+import static zenzai.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilder.isSpecial;
 import static zenzai.parser.HtmlTreeBuilderState.Constants.*;
 
@@ -26,7 +31,7 @@ enum HtmlTreeBuilderState {
                 // todo: parse error check on expected doctypes
                 Token.Doctype d = t.asDoctype();
                 DocumentType doctype = new DocumentType(
-                        tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
+                    tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier());
                 doctype.setPubSysKey(d.getPubSysKey());
                 tb.getDocument().appendChild(doctype);
                 tb.onNodeInserted(doctype);
@@ -940,6 +945,11 @@ enum HtmlTreeBuilderState {
                     }
 
                     //  6. [Create an element for the token] for which the element node was created, in the [HTML namespace], with commonAncestor as the intended parent; replace the entry for node in the [list of active formatting elements] with an entry for the new element, replace the entry for node in the [stack of open elements] with an entry for the new element, and let node be the new element.
+                    if (!tb.onStack(el)) { // stale formatting element; cannot adopt/replace
+                        tb.error(this);
+                        tb.removeFromActiveFormattingElements(el);
+                        break; // exit inner loop; proceed with step 14 using current lastEl
+                    }
                     Element replacement = new Element(tb.tagFor(el.nodeName(), el.normalName(), tb.defaultNamespace(), ParseSettings.preserveCase), tb.getBaseUri());
                     tb.replaceActiveFormattingElement(el, replacement);
                     tb.replaceOnStack(el, replacement);
@@ -961,7 +971,7 @@ enum HtmlTreeBuilderState {
                 Element adoptor = new Element(formatEl.tag(), tb.getBaseUri());
                 adoptor.attributes().addAll(formatEl.attributes()); // also attributes
                 // 16. Take all of the child nodes of furthestBlock and append them to the element created in the last step.
-                for (zenzai.nodes.Node child : furthestBlock.childNodes()) {
+                for (Node child : furthestBlock.childNodes()) {
                     adoptor.appendChild(child);
                 }
 
@@ -1156,7 +1166,7 @@ enum HtmlTreeBuilderState {
             } else if ((
                     t.isStartTag() && inSorted(t.asStartTag().normalName(), InCellCol) ||
                             t.isEndTag() && t.asEndTag().normalName().equals("table"))
-            ) {
+                    ) {
                 // same as above but processes after transition
                 if (!tb.inTableScope("caption")) { // fragment case
                     tb.error(this);
@@ -1480,7 +1490,11 @@ enum HtmlTreeBuilderState {
                         tb.error(this);
                         if (!tb.inSelectScope("select"))
                             return false; // frag
-                        tb.processEndTag("select");
+                        // spec says close select then reprocess; leads to recursion. iter directly:
+                        do {
+                            tb.popStackToClose("select");
+                            tb.resetInsertionMode();
+                        } while (tb.inSelectScope("select")); // collapse invalid nested selects
                         return tb.process(start);
                     } else if (name.equals("script") || name.equals("template")) {
                         return tb.process(t, InHead);
@@ -1796,9 +1810,9 @@ enum HtmlTreeBuilderState {
                     if (StringUtil.in(start.normalName, InForeignToHtml))
                         return processAsHtml(t, tb);
                     if (start.normalName.equals("font") && (
-                            start.hasAttributeIgnoreCase("color")
-                                    || start.hasAttributeIgnoreCase("face")
-                                    || start.hasAttributeIgnoreCase("size")))
+                        start.hasAttributeIgnoreCase("color")
+                            || start.hasAttributeIgnoreCase("face")
+                            || start.hasAttributeIgnoreCase("size")))
                         return processAsHtml(t, tb);
 
                     // Any other start:
@@ -1908,8 +1922,8 @@ enum HtmlTreeBuilderState {
         static final String[] InHeadNoScriptHead = new String[]{"basefont", "bgsound", "link", "meta", "noframes", "style"};
         static final String[] InBodyStartToHead = new String[]{"base", "basefont", "bgsound", "command", "link", "meta", "noframes", "script", "style", "template", "title"};
         static final String[] InBodyStartPClosers = new String[]{"address", "article", "aside", "blockquote", "center", "details", "dir", "div", "dl",
-                "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
-                "p", "section", "summary", "ul"};
+            "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "menu", "nav", "ol",
+            "p", "section", "summary", "ul"};
         static final String[] Headings = new String[]{"h1", "h2", "h3", "h4", "h5", "h6"};
         static final String[] InBodyStartLiBreakers = new String[]{"address", "div", "p"};
         static final String[] DdDt = new String[]{"dd", "dt"};
@@ -1918,8 +1932,8 @@ enum HtmlTreeBuilderState {
         static final String[] InBodyStartInputAttribs = new String[]{"action", "name", "prompt"};
         static final String[] InBodyStartDrop = new String[]{"caption", "col", "colgroup", "frame", "head", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndClosers = new String[]{"address", "article", "aside", "blockquote", "button", "center", "details", "dir", "div",
-                "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
-                "nav", "ol", "pre", "section", "summary", "ul"};
+            "dl", "fieldset", "figcaption", "figure", "footer", "header", "hgroup", "listing", "menu",
+            "nav", "ol", "pre", "section", "summary", "ul"};
         static final String[] InBodyEndOtherErrors = new String[] {"body", "dd", "dt", "html", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
         static final String[] InBodyEndAdoptionFormatters = new String[]{"a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"};
         static final String[] InTableToBody = new String[]{"tbody", "tfoot", "thead"};

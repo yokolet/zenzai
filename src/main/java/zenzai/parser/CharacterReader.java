@@ -1,5 +1,8 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.internal.SoftPool;
+import zenzai.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -10,10 +13,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
-
-import zenzai.helper.Validate;
-import zenzai.internal.StringUtil;
-import zenzai.internal.SoftPool;
 
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.
@@ -220,8 +219,7 @@ public final class CharacterReader implements AutoCloseable {
             return pos + 1;
 
         int i = lineNumIndex(pos);
-        if (i == -1)
-            return pos + 1;
+        if (i == -1) return pos + 1;
         return pos - newlinePositions.get(i) + 1;
     }
 

@@ -1,6 +1,6 @@
 package zenzai.parser;
 
-import org.jsoup.nodes.DocumentType;
+import zenzai.nodes.DocumentType;
 
 import static zenzai.nodes.Document.OutputSettings.Syntax.xml;
 

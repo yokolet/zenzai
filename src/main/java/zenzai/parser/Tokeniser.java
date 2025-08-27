@@ -1,13 +1,12 @@
 package zenzai.parser;
 
-import org.jspecify.annotations.Nullable;
-
-import java.util.Arrays;
-
 import zenzai.helper.Validate;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.Document;
 import zenzai.nodes.Entities;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Arrays;
 
 /**
  * Readers the input stream into tokens.
@@ -54,7 +53,7 @@ final class Tokeniser {
     private int markupStartPos, charStartPos = 0; // reader pos at the start of markup / characters. markup updated on state transition, char on token emit.
 
     Tokeniser(TreeBuilder treeBuilder) {
-        syntax = treeBuilder instanceof HtmlTreeBuilder ? Document.OutputSettings.Syntax.html : Document.OutputSettings.Syntax.xml;
+        syntax = treeBuilder instanceof XmlTreeBuilder ? Document.OutputSettings.Syntax.xml : Document.OutputSettings.Syntax.html;
         tagPending = startPending  = new Token.StartTag(treeBuilder);
         endPending = new Token.EndTag(treeBuilder);
         xmlDeclPending = new Token.XmlDecl(treeBuilder);

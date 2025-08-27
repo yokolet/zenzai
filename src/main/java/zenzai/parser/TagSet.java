@@ -1,5 +1,7 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.internal.SharedConstants;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -7,9 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-
-import zenzai.helper.Validate;
-import zenzai.internal.SharedConstants;
 
 import static zenzai.parser.Parser.NamespaceHtml;
 import static zenzai.parser.Parser.NamespaceMathml;
@@ -67,7 +66,7 @@ public class TagSet {
         }
 
         tags.computeIfAbsent(tag.namespace, ns -> new HashMap<>())
-                .put(tag.tagName, tag);
+            .put(tag.tagName, tag);
     }
 
     /**
@@ -171,7 +170,7 @@ public class TagSet {
      Parser parser = Parser.htmlParser();
      parser.tagSet().onNewTag(tag -> {
      if (!tag.isKnownTag())
-     tag.set(Tag.SelfClose);
+        tag.set(Tag.SelfClose);
      });
 
      Document doc = Jsoup.parse(html, parser);
@@ -209,36 +208,36 @@ public class TagSet {
      */
     static TagSet initHtmlDefault() {
         String[] blockTags = {
-                "html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame",
-                "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5",
-                "h6", "br", "button",
-                "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
-                "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
-                "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main",
-                "center", "template",
-                "dir", "applet", "marquee", "listing", // deprecated but still known / special handling
-                "#root" // the outer Document
+            "html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame",
+            "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5",
+            "h6", "br", "button",
+            "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins",
+            "del", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th",
+            "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main",
+            "center", "template",
+            "dir", "applet", "marquee", "listing", // deprecated but still known / special handling
+            "#root" // the outer Document
         };
         String[] inlineTags = {
-                "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",
-                "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "wbr", "map",
-                "q",
-                "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "optgroup",
-                "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
-                "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
-                "data", "bdi", "s", "strike", "nobr",
-                "rb", // deprecated but still known / special handling
+            "object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd",
+            "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "rtc", "a", "img", "wbr", "map",
+            "q",
+            "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "optgroup",
+            "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track",
+            "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track",
+            "data", "bdi", "s", "strike", "nobr",
+            "rb", // deprecated but still known / special handling
         };
         String[] inlineContainers = { // can only contain inline; aka phrasing content
-                "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
-                "ins", "del", "s", "button"
+            "title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style",
+            "ins", "del", "s", "button"
         };
         String[] voidTags = {
-                "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
-                "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
+            "meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command",
+            "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track"
         };
         String[] preserveWhitespaceTags = {
-                "pre", "plaintext", "title", "textarea", "script"
+            "pre", "plaintext", "title", "textarea", "script"
         };
         String[] rcdataTags = { "title", "textarea" };
         String[] dataTags = { "iframe", "noembed", "noframes", "script", "style", "xmp" };
@@ -250,20 +249,20 @@ public class TagSet {
         String[] dataSvgTags = {"script"};
 
         return new TagSet()
-                .setupTags(NamespaceHtml, blockTags, tag -> tag.set(Tag.Block))
-                .setupTags(NamespaceHtml, inlineTags, tag -> tag.set(0))
-                .setupTags(NamespaceHtml, inlineContainers, tag -> tag.set(Tag.InlineContainer))
-                .setupTags(NamespaceHtml, voidTags, tag -> tag.set(Tag.Void))
-                .setupTags(NamespaceHtml, preserveWhitespaceTags, tag -> tag.set(Tag.PreserveWhitespace))
-                .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
-                .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
-                .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
-                .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.Block))
-                .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
-                .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))
-                .setupTags(NamespaceSvg, inlineSvgTags, tag -> tag.set(0))
-                .setupTags(NamespaceSvg, dataSvgTags, tag -> tag.set(Tag.Data))
-                ;
+            .setupTags(NamespaceHtml, blockTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceHtml, inlineTags, tag -> tag.set(0))
+            .setupTags(NamespaceHtml, inlineContainers, tag -> tag.set(Tag.InlineContainer))
+            .setupTags(NamespaceHtml, voidTags, tag -> tag.set(Tag.Void))
+            .setupTags(NamespaceHtml, preserveWhitespaceTags, tag -> tag.set(Tag.PreserveWhitespace))
+            .setupTags(NamespaceHtml, rcdataTags, tag -> tag.set(Tag.RcData))
+            .setupTags(NamespaceHtml, dataTags, tag -> tag.set(Tag.Data))
+            .setupTags(NamespaceHtml, formSubmitTags, tag -> tag.set(Tag.FormSubmittable))
+            .setupTags(NamespaceMathml, blockMathTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceMathml, inlineMathTags, tag -> tag.set(0))
+            .setupTags(NamespaceSvg, blockSvgTags, tag -> tag.set(Tag.Block))
+            .setupTags(NamespaceSvg, inlineSvgTags, tag -> tag.set(0))
+            .setupTags(NamespaceSvg, dataSvgTags, tag -> tag.set(Tag.Data))
+            ;
     }
 
     private TagSet setupTags(String namespace, String[] tagNames, Consumer<Tag> tagModifier) {

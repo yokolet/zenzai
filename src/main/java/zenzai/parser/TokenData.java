@@ -1,8 +1,7 @@
 package zenzai.parser;
 
-import org.jspecify.annotations.Nullable;
-
 import zenzai.internal.StringUtil;
+import org.jspecify.annotations.Nullable;
 
 /**
  A value holder for Tokens, as the stream is Tokenized. Can hold a String or a StringBuilder.
@@ -89,4 +88,5 @@ class TokenData {
         if (builder != null) return builder.toString();
         return value != null ? value : "";
     }
+
 }

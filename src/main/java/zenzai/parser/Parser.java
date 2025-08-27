@@ -1,16 +1,15 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.nodes.Document;
+import zenzai.nodes.Element;
+import zenzai.nodes.Node;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
-
-import zenzai.helper.Validate;
-import zenzai.nodes.Document;
-import zenzai.nodes.Node;
-import zenzai.nodes.Element;
 
 /**
  Parses HTML or XML into a {@link zenzai.nodes.Document}. Generally, it is simpler to use one of the parse methods in
@@ -21,6 +20,7 @@ import zenzai.nodes.Element;
  */
 public class Parser implements Cloneable {
     public static final String NamespaceHtml = "http://www.w3.org/1999/xhtml";
+    public static final String NamespaceXml = "http://www.w3.org/XML/1998/namespace";
     public static final String NamespaceMathml = "http://www.w3.org/1998/Math/MathML";
     public static final String NamespaceSvg = "http://www.w3.org/2000/svg";
 
@@ -272,6 +272,18 @@ public class Parser implements Cloneable {
     }
 
     /**
+     * Parse a fragment of XML into a list of nodes.
+     *
+     * @param fragmentXml the fragment of XML to parse
+     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+     * @return list of nodes parsed from the input XML.
+     */
+    public static List<Node> parseXmlFragment(String fragmentXml, String baseUri) {
+        XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
+        return treeBuilder.parseFragment(new StringReader(fragmentXml), null, baseUri, new Parser(treeBuilder));
+    }
+
+    /**
      * Parse a fragment of HTML into the {@code body} of a Document.
      *
      * @param bodyHtml fragment of HTML
@@ -311,5 +323,14 @@ public class Parser implements Cloneable {
      */
     public static Parser htmlParser() {
         return new Parser(new HtmlTreeBuilder());
+    }
+
+    /**
+     * Create a new XML parser. This parser assumes no knowledge of the incoming tags and does not treat it as HTML,
+     * rather creates a simple tree directly from the input.
+     * @return a new simple XML parser.
+     */
+    public static Parser xmlParser() {
+        return new Parser(new XmlTreeBuilder());
     }
 }
