@@ -3,6 +3,12 @@ package zenzai.nodes;
 import zenzai.parser.Parser;
 import zenzai.parser.HtmlTreeBuilder;
 
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 final class NodeUtils {
 
     /**
@@ -20,5 +26,19 @@ final class NodeUtils {
     static Parser parser(zenzai.nodes.Node node) {
         Document doc = node.ownerDocument();
         return doc != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
+    }
+
+    /** Creates a Stream, starting with the supplied node. */
+    static <T extends Node> Stream<T> stream(Node start, Class<T> type) {
+        NodeIterator<T> iterator = new NodeIterator<>(start, type);
+        Spliterator<T> spliterator = spliterator(iterator);
+
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    static <T extends Node> Spliterator<T> spliterator(Iterator<T> iterator) {
+        return Spliterators.spliteratorUnknownSize(
+                iterator,
+                Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.ORDERED);
     }
 }

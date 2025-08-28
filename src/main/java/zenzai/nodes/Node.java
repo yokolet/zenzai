@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
@@ -241,6 +242,17 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     * Insert the specified HTML into the DOM before this node (as a preceding sibling).
+     * @param html HTML to add before this node
+     * @return this node, for chaining
+     * @see #after(String)
+     */
+    public Node before(String html) {
+        addSiblingHtml(siblingIndex(), html);
+        return this;
+    }
+
+    /**
      * Insert the specified node into the DOM before this node (as a preceding sibling).
      * @param node to add before this node
      * @return this node, for chaining
@@ -258,6 +270,17 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     * Insert the specified HTML into the DOM after this node (as a following sibling).
+     * @param html HTML to add after this node
+     * @return this node, for chaining
+     * @see #before(String)
+     */
+    public Node after(String html) {
+        addSiblingHtml(siblingIndex() + 1, html);
+        return this;
+    }
+
+    /**
      * Insert the specified node into the DOM after this node (as a following sibling).
      * @param node to add after this node
      * @return this node, for chaining
@@ -271,6 +294,49 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (node.parentNode == parentNode) node.remove();
 
         parentNode.addChildren(siblingIndex() + 1, node);
+        return this;
+    }
+
+    /**
+     Wrap the supplied HTML around this node.
+
+     @param html HTML to wrap around this node, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep. If
+     the input HTML does not parse to a result starting with an Element, this will be a no-op.
+     @return this node, for chaining.
+     */
+    public Node wrap(String html) {
+        Validate.notEmpty(html);
+
+        // Parse context - parent (because wrapping), this, or null
+        Element context =
+                parentNode != null && parentNode instanceof Element ? (Element) parentNode :
+                        this instanceof Element ? (Element) this :
+                                null;
+        List<Node> wrapChildren = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
+        Node wrapNode = wrapChildren.get(0);
+        if (!(wrapNode instanceof Element)) // nothing to wrap with; noop
+            return this;
+
+        Element wrap = (Element) wrapNode;
+        Element deepest = getDeepChild(wrap);
+        if (parentNode != null)
+            parentNode.replaceChild(this, wrap);
+        deepest.addChildren(this); // side effect of tricking wrapChildren to lose first
+
+        // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
+        if (wrapChildren.size() > 0) {
+            //noinspection ForLoopReplaceableByForEach (beacause it allocates an Iterator which is wasteful here)
+            for (int i = 0; i < wrapChildren.size(); i++) {
+                Node remainder = wrapChildren.get(i);
+                // if no parent, this could be the wrap node, so skip
+                if (wrap == remainder)
+                    continue;
+
+                if (remainder.parentNode != null)
+                    remainder.parentNode.removeChild(remainder);
+                wrap.after(remainder);
+            }
+        }
         return this;
     }
 
@@ -560,6 +626,16 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     Returns a Stream of this Node and all of its descendant Nodes. The stream has document order.
+     @return a stream of all nodes.
+     @see Element#stream()
+     @since 1.17.1
+     */
+    public Stream<Node> nodeStream() {
+        return NodeUtils.stream(this, Node.class);
+    }
+
+    /**
      * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
      * @param baseUri new URI
      */
@@ -589,6 +665,17 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
             }
         }
         return clone;
+    }
+
+    protected void addChildren(Node... children) {
+        //most used. short circuit addChildren(int), which hits reindex children and array copy
+        final List<Node> nodes = ensureChildNodes();
+
+        for (Node child: children) {
+            reparentChild(child);
+            nodes.add(child);
+            child.setSiblingIndex(nodes.size()-1);
+        }
     }
 
     protected void addChildren(int index, zenzai.nodes.Node... children) {
@@ -665,4 +752,22 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     abstract void outerHtmlHead(final QuietAppendable accum, final Document.OutputSettings out);
 
     abstract void outerHtmlTail(final QuietAppendable accum, final Document.OutputSettings out);
+
+    private static Element getDeepChild(Element el) {
+        Element child = el.firstElementChild();
+        while (child != null) {
+            el = child;
+            child = child.firstElementChild();
+        }
+        return el;
+    }
+
+    private void addSiblingHtml(int index, String html) {
+        Validate.notNull(html);
+        Validate.notNull(parentNode);
+
+        Element context = parentNode instanceof Element ? (Element) parentNode : null;
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
+        parentNode.addChildren(index, nodes.toArray(new Node[0]));
+    }
 }

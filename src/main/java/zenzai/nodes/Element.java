@@ -1,29 +1,36 @@
 package zenzai.nodes;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.lang.ref.WeakReference;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 
+import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.Validate;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
+import zenzai.select.Elements;
 
 public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
+    private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
-    public abstract String getTagName();
-    public abstract String getAttribute(String name);
+    // org.w3c.dom.Element
+    public String getTagName() { return tagName(); }
+    public String getAttribute(String name) {
+        Attribute attr = attribute(name);
+        return attr == null ? null : attr.getValue();
+    }
     public abstract void setAttribute(String name, String value) throws DOMException;
     public abstract void removeAttribute(String name) throws DOMException;
     public abstract org.w3c.dom.Attr getAttributeNode(String name);
@@ -111,14 +118,25 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return null;
     }
 
+    // org.w3c.dom.Node
+    // zenzai.nodes.Node
+    @Override
+    public boolean hasAttributes() {
+        return attributes != null;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return attributes(); }
+
     @Override
     public int childNodeSize() {
         return childNodes.size();
     }
 
     @Override
-    protected void doSetBaseUri(String baseUri) {
-        attributes().put(BaseUriKey, baseUri);
+    public String nodeName() {
+        return tag.getName();
     }
 
     /**
@@ -149,6 +167,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return attributes;
     }
 
+    @Override
+    public String baseUri() {
+        String baseUri = searchUpForAttribute(this, BaseUriKey);
+        return baseUri != null ? baseUri : "";
+    }
+
     /**
      * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
      * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
@@ -174,6 +198,205 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             }
         }
         return accum;
+    }
+
+    @Override @Nullable
+    public final Element parent() {
+        return (Element) parentNode;
+    }
+
+    /**
+     * Insert the specified HTML into the DOM before this element (as a preceding sibling).
+     *
+     * @param html HTML to add before this element
+     * @return this element, for chaining
+     * @see #after(String)
+     */
+    @Override
+    public Element before(String html) {
+        return (Element) super.before(html);
+    }
+
+    /**
+     * Insert the specified node into the DOM before this node (as a preceding sibling).
+     * @param node to add before this element
+     * @return this Element, for chaining
+     * @see #after(Node)
+     */
+    @Override
+    public Element before(Node node) {
+        return (Element) super.before(node);
+    }
+
+    /**
+     * Insert the specified HTML into the DOM after this element (as a following sibling).
+     *
+     * @param html HTML to add after this element
+     * @return this element, for chaining
+     * @see #before(String)
+     */
+    @Override
+    public Element after(String html) {
+        return (Element) super.after(html);
+    }
+
+    /**
+     * Insert the specified node into the DOM after this node (as a following sibling).
+     * @param node to add after this element
+     * @return this element, for chaining
+     * @see #before(Node)
+     */
+    @Override
+    public Element after(Node node) {
+        return (Element) super.after(node);
+    }
+
+    /**
+     * Remove all the element's child nodes. Any attributes are left as-is. Each child node has its parent set to
+     * {@code null}.
+     * @return this element
+     */
+    @Override
+    public Element empty() {
+        // Detach each of the children -> parent links:
+        int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).parentNode = null;
+        childNodes.clear();
+        return this;
+    }
+
+    /**
+     * Wrap the supplied HTML around this element.
+     *
+     * @param html HTML to wrap around this element, e.g. {@code <div class="head"></div>}. Can be arbitrarily deep.
+     * @return this element, for chaining.
+     */
+    @Override
+    public Element wrap(String html) {
+        return (Element) super.wrap(html);
+    }
+
+    /**
+     * Set an attribute value on this element. If this element already has an attribute with the
+     * key, its value is updated; otherwise, a new attribute is added.
+     *
+     * @return this element
+     */
+    @Override public Element attr(String attributeKey, String attributeValue) {
+        super.attr(attributeKey, attributeValue);
+        return this;
+    }
+
+    /**
+     * Set a boolean attribute value on this element. Setting to <code>true</code> sets the attribute value to "" and
+     * marks the attribute as boolean so no value is written out. Setting to <code>false</code> removes the attribute
+     * with the same key if it exists.
+     *
+     * @param attributeKey the attribute key
+     * @param attributeValue the attribute value
+     *
+     * @return this element
+     */
+    public Element attr(String attributeKey, boolean attributeValue) {
+        attributes().put(attributeKey, attributeValue);
+        return this;
+    }
+
+    /**
+     * Get this element's parent and ancestors, up to the document root.
+     * @return this element's stack of parents, starting with the closest first.
+     */
+    public Elements parents() {
+        Elements parents = new Elements();
+        Element parent = this.parent();
+        while (parent != null && !parent.nameIs("#root")) {
+            parents.add(parent);
+            parent = parent.parent();
+        }
+        return parents;
+    }
+
+    /**
+     * Get a child element of this element, by its 0-based index number.
+     * <p>
+     * Note that an element can have both mixed Nodes and Elements as children. This method inspects
+     * a filtered list of children that are elements, and the index is based on that filtered list.
+     * </p>
+     *
+     * @param index the index number of the element to retrieve
+     * @return the child element, if it exists, otherwise throws an {@code IndexOutOfBoundsException}
+     * @see #childNode(int)
+     */
+    public Element child(int index) {
+        Validate.isTrue(index >= 0, "Index must be >= 0");
+        List<Element> cached = cachedChildren();
+        if (cached != null) return cached.get(index);
+        // otherwise, iter on elementChild; saves creating list
+        int size = childNodes.size();
+        for (int i = 0, e = 0; i < size; i++) { // direct iter is faster than chasing firstElSib, nextElSibd
+            Node node = childNodes.get(i);
+            if (node instanceof Element) {
+                if (e++ == index) return (Element) node;
+            }
+        }
+        throw new IndexOutOfBoundsException("No child at index: " + index);
+    }
+
+    /**
+     * Get the number of child nodes of this element that are elements.
+     * <p>
+     * This method works on the same filtered list like {@link #child(int)}. Use {@link #childNodes()} and {@link
+     * #childNodeSize()} to get the unfiltered Nodes (e.g. includes TextNodes etc.)
+     * </p>
+     *
+     * @return the number of child nodes that are elements
+     * @see #children()
+     * @see #child(int)
+     */
+    public int childrenSize() {
+        if (childNodeSize() == 0) return 0;
+        return childElementsList().size(); // gets children into cache; faster subsequent child(i) if unmodified
+    }
+
+    /**
+     * Get this element's child elements.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+     * </p>
+     * @return child elements. If this element has no children, returns an empty list.
+     * @see #childNodes()
+     */
+    public Elements children() {
+        return new Elements(childElementsList());
+    }
+
+    /**
+     Get an Attribute by key. Changes made via {@link Attribute#setKey(String)}, {@link Attribute#setValue(String)} etc
+     will cascade back to this Element.
+     @param key the (case-sensitive) attribute key
+     @return the Attribute for this key, or null if not present.
+     @since 1.17.2
+     */
+    @Nullable public Attribute attribute(String key) {
+        return hasAttributes() ? attributes().attribute(key) : null;
+    }
+
+    /**
+     * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
+     * starting with "data-" is included the dataset.
+     * <p>
+     * E.g., the element {@code <div data-package="jsoup" data-language="Java" class="group">...} has the dataset
+     * {@code package=jsoup, language=java}.
+     * <p>
+     * This map is a filtered view of the element's attribute map. Changes to one map (add, remove, update) are reflected
+     * in the other map.
+     * <p>
+     * You can find elements that have data attributes using the {@code [^data-]} attribute key prefix selector.
+     * @return a map of {@code key=value} custom data attributes.
+     */
+    public Map<String, String> dataset() {
+        return attributes().dataset();
     }
 
     /**
@@ -223,6 +446,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
      */
     public Element appendChildren(Collection<? extends zenzai.nodes.Node> children) {
         insertChildren(-1, children);
+        return this;
+    }
+
+    /**
+     * Add this element to the supplied parent element, as its next child.
+     *
+     * @param parent element to which this element will be appended
+     * @return this element, so that you can continue modifying the element
+     */
+    public Element appendTo(Element parent) {
+        Validate.notNull(parent);
+        parent.appendChild(this);
         return this;
     }
 
@@ -277,6 +512,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     Insert the given nodes to the start of this Element's children.
+
+     @param children nodes to add
+     @return this Element, for chaining
+     @see #insertChildren(int, Collection)
+     */
+    public Element prependChildren(Collection<? extends Node> children) {
+        insertChildren(0, children);
+        return this;
+    }
+
+    /**
      * Create a new element by tag name, and add it as this Element's first child.
      *
      * @param tagName the name of the tag (e.g. {@code div}).
@@ -302,12 +549,93 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     * Create and append a new TextNode to this element.
+     *
+     * @param text the (un-encoded) text to add
+     * @return this element
+     */
+    public Element appendText(String text) {
+        Validate.notNull(text);
+        TextNode node = new TextNode(text);
+        appendChild(node);
+        return this;
+    }
+
+    /**
+     * Create and prepend a new TextNode to this element.
+     *
+     * @param text the decoded text to add
+     * @return this element
+     */
+    public Element prependText(String text) {
+        Validate.notNull(text);
+        TextNode node = new TextNode(text);
+        prependChild(node);
+        return this;
+    }
+
+    /**
+     * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended to the end of the children.
+     * @param html HTML to add inside this element, after the existing HTML
+     * @return this element
+     * @see #html(String)
+     */
+    public Element append(String html) {
+        Validate.notNull(html);
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
+        addChildren(nodes.toArray(new Node[0]));
+        return this;
+    }
+
+    /**
+     * Add inner HTML into this element. The supplied HTML will be parsed, and each node prepended to the start of the element's children.
+     * @param html HTML to add inside this element, before the existing HTML
+     * @return this element
+     * @see #html(String)
+     */
+    public Element prepend(String html) {
+        Validate.notNull(html);
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
+        addChildren(0, nodes.toArray(new Node[0]));
+        return this;
+    }
+
+    /**
+     * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
+     * of itself, so will not be included in the returned list.
+     * @return sibling elements
+     */
+    public Elements siblingElements() {
+        if (parentNode == null)
+            return new Elements(0);
+
+        List<Element> elements = parent().childElementsList();
+        Elements siblings = new Elements(elements.size() - 1);
+        for (Element el: elements)
+            if (el != this)
+                siblings.add(el);
+        return siblings;
+    }
+
+    /**
      * Get the Tag for this element.
      *
      * @return the tag object
      */
     public Tag tag() {
         return tag;
+    }
+
+    /**
+     Change the Tag of this element.
+     @param tag the new tag
+     @return this element, for chaining
+     @since 1.20.1
+     */
+    public Element tag(Tag tag) {
+        Validate.notNull(tag);
+        this.tag = tag;
+        return this;
     }
 
     /**
@@ -329,6 +657,35 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
      */
     public boolean elementIs(String normalName, String namespace) {
         return tag.normalName().equals(normalName) && tag.namespace().equals(namespace);
+    }
+
+    /**
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @return this element, for chaining
+     * @see zenzai.select.Elements#tagName(String)
+     */
+    public Element tagName(String tagName) {
+        return tagName(tagName, tag.namespace());
+    }
+
+    /**
+     * Change (rename) the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+     * {@code el.tagName("div");}.
+     *
+     * @param tagName new tag name for this element
+     * @param namespace the new namespace for this element
+     * @return this element, for chaining
+     * @see zenzai.select.Elements#tagName(String)
+     */
+    public Element tagName(String tagName, String namespace) {
+        Validate.notEmptyParam(tagName, "tagName");
+        Validate.notEmptyParam(namespace, "namespace");
+        Parser parser = NodeUtils.parser(this);
+        tag = parser.tagSet().valueOf(tagName, namespace, parser.settings()); // maintains the case option of the original parse
+        return this;
     }
 
     /**
@@ -400,20 +757,105 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return null;
     }
 
-    @Override @Nullable
-    public final Element parent() {
-        return (Element) parentNode;
+    /**
+     * Test if this element is a block-level element. (E.g. {@code <div> == true} or an inline element
+     * {@code <span> == false}).
+     *
+     * @return true if block, false if not (and thus inline)
+     */
+    public boolean isBlock() {
+        return tag.isBlock();
     }
 
     /**
-     * Insert the specified node into the DOM before this node (as a preceding sibling).
-     * @param node to add before this element
-     * @return this Element, for chaining
-     * @see #after(Node)
+     * Get the {@code id} attribute of this element.
+     *
+     * @return The id attribute, if present, or an empty string if not.
      */
-    @Override
-    public Element before(zenzai.nodes.Node node) {
-        return (Element) super.before(node);
+    public String id() {
+        return attributes != null ? attributes.getIgnoreCase("id") :"";
+    }
+
+    /**
+     Set the {@code id} attribute of this element.
+     @param id the ID value to use
+     @return this Element, for chaining
+     */
+    public Element id(String id) {
+        Validate.notNull(id);
+        attr("id", id);
+        return this;
+    }
+
+    /**
+     Returns a Stream of this Element and all of its descendant Elements. The stream has document order.
+     @return a stream of this element and its descendants.
+     @see #nodeStream()
+     @since 1.17.1
+     */
+    public Stream<Element> stream() {
+        return NodeUtils.stream(this, Element.class);
+    }
+
+    /**
+     * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Text nodes.
+     * @return child text nodes. If this element has no text nodes, returns an
+     * empty list.
+     * </p>
+     * For example, with the input HTML: {@code <p>One <span>Two</span> Three <br> Four</p>} with the {@code p} element selected:
+     * <ul>
+     *     <li>{@code p.text()} = {@code "One Two Three Four"}</li>
+     *     <li>{@code p.ownText()} = {@code "One Three Four"}</li>
+     *     <li>{@code p.children()} = {@code Elements[<span>, <br>]}</li>
+     *     <li>{@code p.childNodes()} = {@code List<Node>["One ", <span>, " Three ", <br>, " Four"]}</li>
+     *     <li>{@code p.textNodes()} = {@code List<TextNode>["One ", " Three ", " Four"]}</li>
+     * </ul>
+     */
+    public List<TextNode> textNodes() {
+        return filterNodes(TextNode.class);
+    }
+
+    /**
+     * Get this element's child data nodes. The list is unmodifiable but the data nodes may be manipulated.
+     * <p>
+     * This is effectively a filter on {@link #childNodes()} to get Data nodes.
+     * </p>
+     * @return child data nodes. If this element has no data nodes, returns an
+     * empty list.
+     * @see #data()
+     */
+    public List<DataNode> dataNodes() {
+        return filterNodes(DataNode.class);
+    }
+
+    /**
+     * Get the combined data of this element. Data is e.g. the inside of a {@code <script>} tag. Note that data is NOT the
+     * text of the element. Use {@link #text()} to get the text that would be visible to a user, and {@code data()}
+     * for the contents of scripts, comments, CSS styles, etc.
+     *
+     * @return the data, or empty string if none
+     *
+     * @see #dataNodes()
+     */
+    public String data() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        traverse((childNode, depth) -> {
+            if (childNode instanceof DataNode) {
+                DataNode data = (DataNode) childNode;
+                sb.append(data.getWholeData());
+            } else if (childNode instanceof Comment) {
+                Comment comment = (Comment) childNode;
+                sb.append(comment.getData());
+            } else if (childNode instanceof CDataNode) {
+                // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
+                // but in case another type gets through.
+                CDataNode cDataNode = (CDataNode) childNode;
+                sb.append(cDataNode.getWholeText());
+            }
+        });
+        return StringUtil.releaseBuilder(sb);
     }
 
     void reindexChildren() {
@@ -462,10 +904,74 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return null;
     }
 
+    private static final String childElsKey = "jsoup.childEls";
+    private static final String childElsMod = "jsoup.childElsMod";
+
+    /** returns the cached child els, if they exist, and the modcount of our childnodes matches the stashed modcount */
+    @Nullable List<Element> cachedChildren() {
+        if (attributes == null || !attributes.hasUserData()) return null; // don't create empty userdata
+        Map<String, Object> userData = attributes.userData();
+        //noinspection unchecked
+        WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
+        if (ref != null) {
+            List<Element> els = ref.get();
+            if (els != null) {
+                Integer modCount = (Integer) userData.get(childElsMod);
+                if (modCount != null && modCount == childNodes.modCount())
+                    return els;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Maintains a shadow copy of this element's child elements. If the nodelist is changed, this cache is invalidated.
+     * @return a list of child elements
+     */
+    List<Element> childElementsList() {
+        if (childNodeSize() == 0) return EmptyChildren; // short circuit creating empty
+        // set atomically, so works in multi-thread. Calling methods look like reads, so should be thread-safe
+        synchronized (childNodes) { // sync vs re-entrant lock, to save another field
+            List<Element> children = cachedChildren();
+            if (children == null) {
+                children = filterNodes(Element.class);
+                stashChildren(children);
+            }
+            return children;
+        }
+    }
+
     @Override protected List<zenzai.nodes.Node> ensureChildNodes() {
         if (childNodes == EmptyNodeList) {
             childNodes = new NodeList(4);
         }
         return childNodes;
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        attributes().put(BaseUriKey, baseUri);
+    }
+
+    /**
+     Internal test to check if a nodelist object has been created.
+     */
+    protected boolean hasChildNodes() {
+        return childNodes != EmptyNodeList;
+    }
+
+    private <T> List<T> filterNodes(Class<T> clazz) {
+        return childNodes.stream()
+                .filter(clazz::isInstance)
+                .map(clazz::cast)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+    }
+
+    /** caches the child els into the Attribute user data. */
+    private void stashChildren(List<Element> els) {
+        Map<String, Object> userData = attributes().userData();
+        WeakReference<List<Element>> ref = new WeakReference<>(els);
+        userData.put(childElsKey, ref);
+        userData.put(childElsMod, childNodes.modCount());
     }
 }

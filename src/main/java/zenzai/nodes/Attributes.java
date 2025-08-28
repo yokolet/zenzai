@@ -218,6 +218,20 @@ public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<A
     }
 
     /**
+     * Set a new boolean attribute. Removes the attribute if the value is false.
+     * @param key case <b>insensitive</b> attribute key
+     * @param value attribute value
+     * @return these attributes, for chaining
+     */
+    public Attributes put(String key, boolean value) {
+        if (value)
+            putIgnoreCase(key, null);
+        else
+            remove(key);
+        return this;
+    }
+
+    /**
      Set a new attribute, or replace an existing one by key.
      @param attribute attribute with case-sensitive key
      @return these attributes, for chaining
