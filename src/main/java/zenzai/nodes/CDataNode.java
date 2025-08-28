@@ -2,6 +2,7 @@ package zenzai.nodes;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.DOMException;
+import zenzai.internal.QuietAppendable;
 
 public abstract class CDataNode extends TextNode implements CDATASection {
     public CDataNode(String text) {
@@ -31,5 +32,13 @@ public abstract class CDataNode extends TextNode implements CDATASection {
     @Override
     public CDataNode clone() {
         return (CDataNode) super.clone();
+    }
+
+    @Override
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        accum
+                .append("<![CDATA[")
+                .append(getWholeText())
+                .append("]]>");
     }
 }

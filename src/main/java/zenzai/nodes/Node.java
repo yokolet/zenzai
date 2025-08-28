@@ -6,6 +6,7 @@ import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.select.NodeVisitor;
@@ -611,4 +612,14 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     protected void setSiblingIndex(int siblingIndex) {
         this.siblingIndex = siblingIndex;
     }
+
+    /**
+     Get the outer HTML of this node.
+
+     @param accum accumulator to place HTML into
+     @param out
+     */
+    abstract void outerHtmlHead(final QuietAppendable accum, final Document.OutputSettings out);
+
+    abstract void outerHtmlTail(final QuietAppendable accum, final Document.OutputSettings out);
 }

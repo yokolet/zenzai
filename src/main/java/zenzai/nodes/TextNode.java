@@ -3,6 +3,7 @@ package zenzai.nodes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Text;
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 
 public abstract class TextNode extends LeafNode implements Text {
@@ -128,5 +129,10 @@ public abstract class TextNode extends LeafNode implements Text {
     public static TextNode createFromEncoded(String encodedText) {
         String text = Entities.unescape(encodedText);
         return new TextNode(text);
+    }
+
+    @Override
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        Entities.escape(accum, coreValue(), out, Entities.ForText);
     }
 }
