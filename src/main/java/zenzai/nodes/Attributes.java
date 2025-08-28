@@ -14,9 +14,10 @@ import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
-public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
+public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
+    protected static final String dataPrefix = "data-"; // data attributes
     private static final String EmptyString = "";
     static final int NotFound = -1;
     // the number of instance fields is kept as low as possible giving an object size of 24 bytes
@@ -130,6 +131,47 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
         return clone;
     }
 
+    @Override
+    public String toString() {
+        return html();
+    }
+
+    /**
+     * Checks if these attributes are equal to another set of attributes, by comparing the two sets. Note that the order
+     * of the attributes does not impact this equality (as per the Map interface equals()).
+     * @param o attributes to compare with
+     * @return if both sets of attributes have the same content
+     */
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Attributes that = (Attributes) o;
+        if (size != that.size) return false;
+        for (int i = 0; i < size; i++) {
+            String key = keys[i];
+            assert key != null;
+            int thatI = that.indexOfKey(key);
+            if (thatI == NotFound || !Objects.equals(vals[i], that.vals[thatI]))
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
+     * @return calculated hashcode
+     */
+    @Override
+    public int hashCode() {
+        int result = size;
+        result = 31 * result + Arrays.hashCode(keys);
+        result = 31 * result + Arrays.hashCode(vals);
+        return result;
+    }
+
+    // for org.w3c.dom.Attr to implement getOwnerElement method
     public void setOwnerElement(Element ownerElement) {
         this.ownerElement = ownerElement;
     }
@@ -209,6 +251,16 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
         size--;
         keys[size] = null; // release hold
         vals[size] = null;
+    }
+
+    /**
+     Remove an attribute by key. <b>Case sensitive.</b>
+     @param key attribute key to remove
+     */
+    public void remove(String key) {
+        int i = indexOfKey(key);
+        if (i != NotFound)
+            remove(i);
     }
 
     /**
@@ -355,6 +407,16 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
     }
 
     /**
+     * Check if these attributes contain an attribute with a value for this key.
+     * @param key case-insensitive key to check for
+     * @return true if key exists, and it has a value
+     */
+    public boolean hasDeclaredValueForKeyIgnoreCase(String key) {
+        int i = indexOfKeyIgnoreCase(key);
+        return i != NotFound && vals[i] != null;
+    }
+
+    /**
      * Get an attribute's value by case-insensitive key
      * @param key the attribute name
      * @return the first matching attribute value if set; or empty string if not set (ora boolean attribute).
@@ -415,6 +477,15 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
             list.add(attr);
         }
         return Collections.unmodifiableList(list);
+    }
+
+    /**
+     * Retrieves a filtered view of attributes that are HTML5 custom data attributes; that is, attributes with keys
+     * starting with {@code data-}.
+     * @return map of custom data attributes.
+     */
+    public Map<String, String> dataset() {
+        return new Dataset(this);
     }
 
     /**
@@ -537,5 +608,68 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
                 return i;
         }
         return NotFound;
+    }
+
+    private static String dataKey(String key) {
+        return dataPrefix + key;
+    }
+
+    private static class Dataset extends AbstractMap<String, String> {
+        private final Attributes attributes;
+
+        private Dataset(Attributes attributes) {
+            this.attributes = attributes;
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            return new EntrySet();
+        }
+
+        @Override
+        public String put(String key, String value) {
+            String dataKey = dataKey(key);
+            String oldValue = attributes.hasKey(dataKey) ? attributes.get(dataKey) : null;
+            attributes.put(dataKey, value);
+            return oldValue;
+        }
+
+        private class EntrySet extends AbstractSet<Map.Entry<String, String>> {
+
+            @Override
+            public Iterator<Map.Entry<String, String>> iterator() {
+                return new DatasetIterator();
+            }
+
+            @Override
+            public int size() {
+                int count = 0;
+                Iterator<Entry<String, String>> iter = new DatasetIterator();
+                while (iter.hasNext())
+                    count++;
+                return count;
+            }
+        }
+
+        private class DatasetIterator implements Iterator<Map.Entry<String, String>> {
+            private final Iterator<Attribute> attrIter = attributes.iterator();
+            private Attribute attr;
+
+            @Override public boolean hasNext() {
+                while (attrIter.hasNext()) {
+                    attr = attrIter.next();
+                    if (attr.isDataAttribute()) return true;
+                }
+                return false;
+            }
+
+            @Override public Entry<String, String> next() {
+                return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
+            }
+
+            @Override public void remove() {
+                attributes.remove(attr.getKey());
+            }
+        }
     }
 }
