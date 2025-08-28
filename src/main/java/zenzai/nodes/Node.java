@@ -501,6 +501,16 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     Test if this node's parent has the specified normalized name.
+     * @param normalName a normalized name (e.g. {@code div}).
+     * @return true if the parent element's normal name matches exactly
+     * @since 1.17.2
+     */
+    public boolean parentNameIs(String normalName) {
+        return parentNode != null && parentNode.normalName().equals(normalName);
+    }
+
+    /**
      Get a child node by its 0-based index.
      @param index index of child node
      @return the child node at this index.

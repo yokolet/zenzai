@@ -1,5 +1,7 @@
 package zenzai.nodes;
 
+import zenzai.internal.QuietAppendable;
+
 public abstract class DataNode extends LeafNode {
 
     /**
@@ -10,12 +12,48 @@ public abstract class DataNode extends LeafNode {
         super(data);
     }
 
-    @Override
-    public String getNodeName() {
+    @Override public String nodeName() {
         return "#data";
     }
 
-    @Override public String nodeName() {
-        return "#data";
+    @Override
+    public DataNode clone() {
+        return (DataNode) super.clone();
+    }
+
+    /**
+     Get the data contents of this node. Will be unescaped and with original new lines, space etc.
+     @return data
+     */
+    public String getWholeData() {
+        return coreValue();
+    }
+
+    /**
+     * Set the data contents of this node.
+     * @param data un-encoded data
+     * @return this node, for chaining
+     */
+    public DataNode setWholeData(String data) {
+        coreValue(data);
+        return this;
+    }
+
+    @Override
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        /* For XML output, escape the DataNode in a CData section. The data may contain pseudo-CData content if it was
+        parsed as HTML, so don't double up Cdata. Output in polyglot HTML / XHTML / XML format. */
+        final String data = getWholeData();
+        if (out.syntax() == Document.OutputSettings.Syntax.xml && !data.contains("<![CDATA[")) {
+            if (parentNameIs("script"))
+                accum.append("//<![CDATA[\n").append(data).append("\n//]]>");
+            else if (parentNameIs("style"))
+                accum.append("/*<![CDATA[*/\n").append(data).append("\n/*]]>*/");
+            else
+                accum.append("<![CDATA[").append(data).append("]]>");
+        } else {
+            // In HTML, data is not escaped in the output of data nodes, so < and & in script, style is OK
+            accum.append(data);
+        }
     }
 }
