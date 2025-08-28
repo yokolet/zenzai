@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
@@ -149,6 +150,52 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
+     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
+     *
+     * @return String of HTML.
+     * @see #outerHtml()
+     */
+    public String html() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(sb);
+        String html = StringUtil.releaseBuilder(sb);
+        return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
+    }
+
+    @Override
+    public <T extends Appendable> T html(T accum) {
+        Node child = firstChild();
+        if (child != null) {
+            Printer printer = Printer.printerFor(child, QuietAppendable.wrap(accum));
+            while (child != null) {
+                printer.traverse(child);
+                child = child.nextSibling();
+            }
+        }
+        return accum;
+    }
+
+    /**
+     * Set the text of this element. Any existing contents (text or elements) will be cleared.
+     * <p>As a special case, for {@code <script>} and {@code <style>} tags, the input text will be treated as data,
+     * not visible text.</p>
+     * @param text decoded text
+     * @return this element
+     */
+    public Element text(String text) {
+        Validate.notNull(text);
+        empty();
+        // special case for script/style in HTML (or customs): should be data node
+        if (tag().is(Tag.Data))
+            appendChild(new DataNode(text));
+        else
+            appendChild(new TextNode(text));
+
+        return this;
+    }
+
+    /**
      * Insert a node to the end of this Element's children. The incoming node will be re-parented.
      *
      * @param child node to add.
@@ -227,6 +274,31 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
 
         addChildren(0, child);
         return this;
+    }
+
+    /**
+     * Create a new element by tag name, and add it as this Element's first child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @return the new element, to allow you to add content to it, e.g.:
+     *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
+     */
+    public Element prependElement(String tagName) {
+        return prependElement(tagName, tag.namespace());
+    }
+
+    /**
+     * Create a new element by tag name and namespace, and add it as this Element's first child.
+     *
+     * @param tagName the name of the tag (e.g. {@code div}).
+     * @param namespace the namespace of the tag (e.g. {@link Parser#NamespaceHtml})
+     * @return the new element, in the specified namespace
+     */
+    public Element prependElement(String tagName, String namespace) {
+        Parser parser = NodeUtils.parser(this);
+        Element child = new Element(parser.tagSet().valueOf(tagName, namespace, parser.settings()), baseUri());
+        prependChild(child);
+        return child;
     }
 
     /**
@@ -356,13 +428,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         childNodes.validChildren = false;
     }
 
-    @Override protected List<zenzai.nodes.Node> ensureChildNodes() {
-        if (childNodes == EmptyNodeList) {
-            childNodes = new NodeList(4);
-        }
-        return childNodes;
-    }
-
     static final class NodeList extends ArrayList<zenzai.nodes.Node> implements org.w3c.dom.NodeList {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
@@ -384,5 +449,23 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         int modCount() {
             return this.modCount;
         }
+    }
+
+    @Nullable
+    static String searchUpForAttribute(final Element start, final String key) {
+        Element el = start;
+        while (el != null) {
+            if (el.attributes != null && el.attributes.hasKey(key))
+                return el.attributes.get(key);
+            el = el.parent();
+        }
+        return null;
+    }
+
+    @Override protected List<zenzai.nodes.Node> ensureChildNodes() {
+        if (childNodes == EmptyNodeList) {
+            childNodes = new NodeList(4);
+        }
+        return childNodes;
     }
 }

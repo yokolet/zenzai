@@ -14,6 +14,10 @@ import zenzai.helper.Validate;
  notice.
  */
 public final class StringUtil {
+    static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
+            "         ", "          ", "           ", "            ", "             ", "              ", "               ",
+            "                ", "                 ", "                  ", "                   ", "                    "};
+
     /**
      * Tests if a string is blank: null, empty, or only whitespace (" ", \r\n, \t, etc)
      * @param string string to test
@@ -204,6 +208,35 @@ public final class StringUtil {
     public static boolean isInvisibleChar(int c) {
         return c == 8203 || c == 173; // zero width sp, soft hyphen
         // previously also included zw non join, zw join - but removing those breaks semantic meaning of text
+    }
+
+    /**
+     * Returns space padding (up to the default max of 30). Use {@link #padding(int, int)} to specify a different limit.
+     * @param width amount of padding desired
+     * @return string of spaces * width
+     * @see #padding(int, int)
+     */
+    public static String padding(int width) {
+        return padding(width, 30);
+    }
+
+    /**
+     * Returns space padding, up to a max of maxPaddingWidth.
+     * @param width amount of padding desired
+     * @param maxPaddingWidth maximum padding to apply. Set to {@code -1} for unlimited.
+     * @return string of spaces * width
+     */
+    public static String padding(int width, int maxPaddingWidth) {
+        Validate.isTrue(width >= 0, "width must be >= 0");
+        Validate.isTrue(maxPaddingWidth >= -1);
+        if (maxPaddingWidth != -1)
+            width = Math.min(width, maxPaddingWidth);
+        if (width < padding.length)
+            return padding[width];
+        char[] out = new char[width];
+        for (int i = 0; i < width; i++)
+            out[i] = ' ';
+        return String.valueOf(out);
     }
 
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");

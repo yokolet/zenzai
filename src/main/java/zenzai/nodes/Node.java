@@ -536,6 +536,30 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     Get the outer HTML of this node. For example, on a {@code p} element, may return {@code <p>Para</p>}.
+     @return outer HTML
+     @see Element#html()
+     @see Element#text()
+     */
+    public String outerHtml() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        outerHtml(QuietAppendable.wrap(sb));
+        return StringUtil.releaseBuilder(sb);
+    }
+
+    /**
+     Write this node and its children to the given {@link Appendable}.
+
+     @param appendable the {@link Appendable} to write to.
+     @return the supplied {@link Appendable}, for chaining.
+     @throws org.jsoup.SerializationException if the appendable throws an IOException.
+     */
+    public <T extends Appendable> T html(T appendable) {
+        outerHtml(appendable);
+        return appendable;
+    }
+
+    /**
      * Set the baseUri for just this node (not its descendants), if this Node tracks base URIs.
      * @param baseUri new URI
      */
@@ -621,6 +645,15 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
 
     protected void setSiblingIndex(int siblingIndex) {
         this.siblingIndex = siblingIndex;
+    }
+
+    protected void outerHtml(Appendable accum) {
+        outerHtml(QuietAppendable.wrap(accum));
+    }
+
+    protected void outerHtml(QuietAppendable accum) {
+        Printer printer = Printer.printerFor(this, accum);
+        printer.traverse(this);
     }
 
     /**
