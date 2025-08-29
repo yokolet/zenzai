@@ -762,6 +762,19 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         child.setParentNode(this);
     }
 
+
+    protected void removeChild(Node out) {
+        Validate.isTrue(out.parentNode == this);
+        Element el = (Element) this;
+        if (el.hasValidChildren()) // can remove by index
+            ensureChildNodes().remove(out.siblingIndex);
+        else
+            ensureChildNodes().remove(out); // iterates, but potentially not every one
+
+        el.invalidateChildren();
+        out.parentNode = null;
+    }
+
     protected void setParentNode(zenzai.nodes.Node parentNode) {
         Validate.notNull(parentNode);
         if (this.parentNode != null)
