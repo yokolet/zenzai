@@ -1,8 +1,10 @@
 package zenzai.nodes;
 
+import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.Document.OutputSettings;
 import zenzai.parser.CharacterReader;
 import zenzai.parser.Parser;
 
@@ -13,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
+import static zenzai.nodes.Entities.EscapeMode.base;
 import static zenzai.nodes.Entities.EscapeMode.extended;
 
 public class Entities {
@@ -30,6 +33,9 @@ public class Entities {
     private static final HashMap<String, String> multipoints = new HashMap<>(); // name -> multiple character references
     private static final int BaseCount = 106;
     private static final ArrayList<String> baseSorted = new ArrayList<>(BaseCount); // names sorted longest first, for prefix matching
+
+    private Entities() {
+    }
 
     public enum EscapeMode {
         /**
@@ -102,6 +108,22 @@ public class Entities {
     }
 
     /**
+     * Get the character(s) represented by the named entity
+     *
+     * @param name entity (e.g. "lt" or "amp")
+     * @return the string value of the character(s) represented by this entity, or "" if not defined
+     */
+    public static String getByName(String name) {
+        String val = multipoints.get(name);
+        if (val != null)
+            return val;
+        int codepoint = extended.codepointForName(name);
+        if (codepoint != empty)
+            return new String(new int[]{codepoint}, 0, 1);
+        return emptyName;
+    }
+
+    /**
      Finds the longest base named entity that is a prefix of the input. That is, input "notit" would return "not".
 
      @return longest entity name that is a prefix of the input, or "" if no entity matches
@@ -127,6 +149,30 @@ public class Entities {
             return 1;
         }
         return 0;
+    }
+
+    /**
+     HTML escape an input string. That is, {@code <} is returned as {@code &lt;}. The escaped string is suitable for use
+     both in attributes and in text data.
+     @param data the un-escaped string to escape
+     @param out the output settings to use. This configures the character set escaped against (that is, if a
+     character is supported in the output character set, it doesn't have to be escaped), and also HTML or XML
+     settings.
+     @return the escaped string
+     */
+    public static String escape(String data, OutputSettings out) {
+        return escapeString(data, out.escapeMode(), out.charset());
+    }
+
+    /**
+     HTML escape an input string, using the default settings (UTF-8, base entities). That is, {@code <} is
+     returned as {@code &lt;}. The escaped string is suitable for use both in attributes and in text data.
+     @param data the un-escaped string to escape
+     @return the escaped string
+     @see #escape(String, OutputSettings)
+     */
+    public static String escape(String data) {
+        return escapeString(data, base, DataUtil.UTF_8);
     }
 
     /**
@@ -166,7 +212,11 @@ public class Entities {
         doEscape(data, accum, out.escapeMode(), out.charset(), options);
     }
 
-    private Entities() {
+    private static String escapeString(String data, EscapeMode escapeMode, Charset charset) {
+        if (data == null) return "";
+        StringBuilder sb = StringUtil.borrowBuilder();
+        doEscape(data, QuietAppendable.wrap(sb), escapeMode, charset, ForText | ForAttribute);
+        return StringUtil.releaseBuilder(sb);
     }
 
     private static void load(EscapeMode e, String pointsData, int size) {
