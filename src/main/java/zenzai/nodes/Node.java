@@ -19,6 +19,41 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     static final String EmptyString = "";
     int siblingIndex;
 
+    /**
+     * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
+     */
+    protected Node() {
+    }
+
+    /**
+     * Get each of the Element's attributes.
+     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
+     */
+    public abstract Attributes attributes();
+
+    @Override
+    public zenzai.nodes.Node clone() {
+        zenzai.nodes.Node thisClone = doClone(null); // splits for orphan
+
+        // Queue up nodes that need their children cloned (BFS).
+        final LinkedList<zenzai.nodes.Node> nodesToProcess = new LinkedList<>();
+        nodesToProcess.add(thisClone);
+
+        while (!nodesToProcess.isEmpty()) {
+            zenzai.nodes.Node currParent = nodesToProcess.remove();
+
+            final int size = currParent.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                final List<zenzai.nodes.Node> childNodes = currParent.ensureChildNodes();
+                zenzai.nodes.Node childClone = childNodes.get(i).doClone(currParent);
+                childNodes.set(i, childClone);
+                nodesToProcess.add(childClone);
+            }
+        }
+        return thisClone;
+    }
+
+    // org.w3c.dom.Node
     public abstract String getNodeName();
     public abstract String getNodeValue();
     public abstract void setNodeValue(String nodeValue) throws DOMException;
@@ -30,7 +65,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public abstract org.w3c.dom.Node getPreviousSibling();
     public abstract org.w3c.dom.Node getNextSibling();
     public abstract NamedNodeMap getAttributes();
-    public abstract Document getOwnerDocument();
+    public Document getOwnerDocument() { return ownerDocument(); }
     public abstract org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException;
     public abstract org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException;
     public abstract org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException;
@@ -94,34 +129,6 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public abstract Node empty();
 
     /**
-     * Get each of the Element's attributes.
-     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
-     */
-    public abstract Attributes attributes();
-
-    @Override
-    public zenzai.nodes.Node clone() {
-        zenzai.nodes.Node thisClone = doClone(null); // splits for orphan
-
-        // Queue up nodes that need their children cloned (BFS).
-        final LinkedList<zenzai.nodes.Node> nodesToProcess = new LinkedList<>();
-        nodesToProcess.add(thisClone);
-
-        while (!nodesToProcess.isEmpty()) {
-            zenzai.nodes.Node currParent = nodesToProcess.remove();
-
-            final int size = currParent.childNodeSize();
-            for (int i = 0; i < size; i++) {
-                final List<zenzai.nodes.Node> childNodes = currParent.ensureChildNodes();
-                zenzai.nodes.Node childClone = childNodes.get(i).doClone(currParent);
-                childNodes.set(i, childClone);
-                nodesToProcess.add(childClone);
-            }
-        }
-        return thisClone;
-    }
-
-    /**
      * Create a stand-alone, shallow copy of this node. None of its children (if any) will be cloned, and it will have
      * no parent or sibling nodes.
      * @return a single independent copy of this node
@@ -156,6 +163,34 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (size == 0) return null;
         List<Node> children = ensureChildNodes();
         return children.get(size - 1);
+    }
+
+    /**
+     Gets the first sibling of this node. That may be this node.
+
+     @return the first sibling node
+     @since 1.21.1
+     */
+    public Node firstSibling() {
+        if (parentNode != null) {
+            //noinspection DataFlowIssue
+            return parentNode.firstChild();
+        } else
+            return this; // orphan is its own first sibling
+    }
+
+    /**
+     Gets the last sibling of this node. That may be this node.
+
+     @return the last sibling (aka the parent's last child)
+     @since 1.21.1
+     */
+    public Node lastSibling() {
+        if (parentNode != null) {
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parentNode.lastChild();
+        } else
+            return this;
     }
 
     /**
@@ -199,6 +234,16 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      */
     public String normalName() {
         return nodeName();
+    }
+
+    /**
+     Get the number of attributes that this Node has.
+     @return the number of attributes
+     @since 1.14.2
+     */
+    public int attributesSize() {
+        // added so that we can test how many attributes exist without implicitly creating the Attributes object
+        return hasAttributes() ? attributes().size() : 0;
     }
 
     /**
@@ -342,6 +387,41 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
+     * the node but keeping its children.
+     * <p>
+     * For example, with the input html:
+     * </p>
+     * <p>{@code <div>One <span>Two <b>Three</b></span></div>}</p>
+     * Calling {@code element.unwrap()} on the {@code span} element will result in the html:
+     * <p>{@code <div>One Two <b>Three</b></div>}</p>
+     * and the {@code "Two "} {@link TextNode} being returned.
+     *
+     * @return the first child of this node, after the node has been unwrapped. @{code Null} if the node had no children.
+     * @see #remove()
+     * @see #wrap(String)
+     */
+    public @Nullable Node unwrap() {
+        Validate.notNull(parentNode);
+        Node firstChild = firstChild();
+        parentNode.addChildren(siblingIndex(), this.childNodesAsArray());
+        this.remove();
+
+        return firstChild;
+    }
+
+    /**
+     * Replace this node in the DOM with the supplied node.
+     * @param in the node that will replace the existing node.
+     */
+    public void replaceWith(Node in) {
+        Validate.notNull(in);
+        if (parentNode == null) parentNode = in.parentNode; // allows old to have been temp removed before replacing
+        Validate.notNull(parentNode);
+        parentNode.replaceChild(this, in);
+    }
+
+    /**
      * Remove (delete) this node from the DOM tree. If this node has children, they are also removed. If this node is
      * an orphan, nothing happens.
      */
@@ -363,6 +443,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         List<zenzai.nodes.Node> rewrap = new ArrayList<>(children.size()); // wrapped so that looping and moving will not throw a CME as the source changes
         rewrap.addAll(children);
         return Collections.unmodifiableList(rewrap);
+    }
+
+    /**
+     * Returns a deep copy of this node's children. Changes made to these nodes will not be reflected in the original
+     * nodes
+     * @return a deep copy of this node's children
+     */
+    public List<Node> childNodesCopy() {
+        final List<Node> nodes = ensureChildNodes();
+        final ArrayList<Node> children = new ArrayList<>(nodes.size());
+        for (Node node : nodes) {
+            children.add(node.clone());
+        }
+        return children;
     }
 
     /**
@@ -575,6 +669,18 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      */
     public boolean parentNameIs(String normalName) {
         return parentNode != null && parentNode.normalName().equals(normalName);
+    }
+
+    /**
+     Test if this node's parent is an Element with the specified normalized name and namespace.
+     * @param normalName a normalized element name (e.g. {@code div}).
+     * @param namespace the namespace
+     * @return true if the parent element's normal name matches exactly, and that element is in the specified namespace
+     * @since 1.17.2
+     */
+    public boolean parentElementIs(String normalName, String namespace) {
+        return parentNode != null && parentNode instanceof Element
+                && ((Element) parentNode).elementIs(normalName, namespace);
     }
 
     /**
@@ -794,6 +900,10 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     protected void outerHtml(QuietAppendable accum) {
         Printer printer = Printer.printerFor(this, accum);
         printer.traverse(this);
+    }
+
+    protected Node[] childNodesAsArray() {
+        return ensureChildNodes().toArray(new Node[0]);
     }
 
     /**
