@@ -2,6 +2,7 @@ package zenzai.nodes;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,6 +17,9 @@ import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 import zenzai.select.Elements;
+import zenzai.select.NodeVisitor;
+
+import static zenzai.nodes.TextNode.lastCharIsWhitespace;
 
 public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
@@ -129,6 +133,15 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     @Override
     public NamedNodeMap getAttributes() { return attributes(); }
 
+    // org.w3c.dom.Node
+    /**
+     Internal test to check if a nodelist object has been created.
+     */
+    @Override
+    public boolean hasChildNodes() {
+        return childNodes != EmptyNodeList;
+    }
+
     @Override
     public int childNodeSize() {
         return childNodes.size();
@@ -148,6 +161,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     @Override
     public String normalName() {
         return tag.normalName();
+    }
+
+
+    @Override
+    public Element clone() {
+        return (Element) super.clone();
     }
 
     @Override
@@ -171,20 +190,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public String baseUri() {
         String baseUri = searchUpForAttribute(this, BaseUriKey);
         return baseUri != null ? baseUri : "";
-    }
-
-    /**
-     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
-     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
-     *
-     * @return String of HTML.
-     * @see #outerHtml()
-     */
-    public String html() {
-        StringBuilder sb = StringUtil.borrowBuilder();
-        html(sb);
-        String html = StringUtil.releaseBuilder(sb);
-        return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }
 
     @Override
@@ -285,6 +290,75 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
      */
     @Override public Element attr(String attributeKey, String attributeValue) {
         super.attr(attributeKey, attributeValue);
+        return this;
+    }
+
+    // overrides of Node for call chaining
+    @Override
+    public Element clearAttributes() {
+        if (attributes != null) {
+            super.clearAttributes(); // keeps internal attributes via iterator
+            if (attributes.size == 0)
+                attributes = null; // only remove entirely if no internal attributes
+        }
+
+        return this;
+    }
+
+    @Override
+    public Element removeAttr(String attributeKey) {
+        return (Element) super.removeAttr(attributeKey);
+    }
+
+    @Override
+    public Element root() {
+        return (Element) super.root(); // probably a document, but always at least an element
+    }
+
+    @Override
+    public Element traverse(NodeVisitor nodeVisitor) {
+        return (Element) super.traverse(nodeVisitor);
+    }
+
+    @Override
+    public Element forEachNode(Consumer<? super Node> action) {
+        return (Element) super.forEachNode(action);
+    }
+
+    /**
+     Perform the supplied action on this Element and each of its descendant Elements, during a depth-first traversal.
+     Elements may be inspected, changed, added, replaced, or removed.
+     @param action the function to perform on the element
+     @see Node#forEachNode(Consumer)
+     */
+    @Override
+    public void forEach(Consumer<? super Element> action) {
+        stream().forEach(action);
+    }
+
+    /**
+     * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
+     * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
+     *
+     * @return String of HTML.
+     * @see #outerHtml()
+     */
+    public String html() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(sb);
+        String html = StringUtil.releaseBuilder(sb);
+        return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
+    }
+
+    /**
+     * Set this element's inner HTML. Clears the existing HTML first.
+     * @param html HTML to parse and set into this element
+     * @return this element
+     * @see #append(String)
+     */
+    public Element html(String html) {
+        empty();
+        append(html);
         return this;
     }
 
@@ -400,6 +474,28 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     Gets the <b>normalized, combined text</b> of this element and all its children. Whitespace is normalized and
+     trimmed.
+     <p>For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there
+    now!"}
+     <p>If you do not want normalized text, use {@link #wholeText()}. If you want just the text of this node (and not
+     children), use {@link #ownText()}
+     <p>Note that this method returns the textual content that would be presented to a reader. The contents of data
+     nodes (such as {@code <script>} tags) are not considered text. Use {@link #data()} or {@link #html()} to retrieve
+     that content.
+
+     @return decoded, normalized text, or empty string if none.
+     @see #wholeText()
+     @see #ownText()
+     @see #textNodes()
+     */
+    public String text() {
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        new TextAccumulator(accum).traverse(this);
+        return StringUtil.releaseBuilder(accum).trim();
+    }
+
+    /**
      * Set the text of this element. Any existing contents (text or elements) will be cleared.
      * <p>As a special case, for {@code <script>} and {@code <style>} tags, the input text will be treated as data,
      * not visible text.</p>
@@ -416,6 +512,55 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             appendChild(new TextNode(text));
 
         return this;
+    }
+
+    /**
+     Get the non-normalized, decoded text of this element and its children, including only any newlines and spaces
+     present in the original source.
+     @return decoded, non-normalized text
+     @see #text()
+     @see #wholeOwnText()
+     */
+    public String wholeText() {
+        return wholeTextOf(nodeStream());
+    }
+
+    /**
+     An Element's nodeValue is its whole own text.
+     */
+    @Override
+    public String nodeValue() {
+        return wholeOwnText();
+    }
+
+    /**
+     Get the non-normalized, decoded text of this element, <b>not including</b> any child elements, including any
+     newlines and spaces present in the original source.
+     @return decoded, non-normalized text that is a direct child of this Element
+     @see #text()
+     @see #wholeText()
+     @see #ownText()
+     @since 1.15.1
+     */
+    public String wholeOwnText() {
+        return wholeTextOf(childNodes.stream());
+    }
+
+    /**
+     * Gets the (normalized) text owned by this element only; does not get the combined text of all children.
+     * <p>
+     * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
+     * whereas {@code p.text()} returns {@code "Hello there now!"}.
+     * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
+     *
+     * @return decoded text, or empty string if none.
+     * @see #text()
+     * @see #textNodes()
+     */
+    public String ownText() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        ownText(sb);
+        return StringUtil.releaseBuilder(sb).trim();
     }
 
     /**
@@ -870,9 +1015,17 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         childNodes.validChildren = false;
     }
 
+    boolean hasValidChildren() {
+        return childNodes.validChildren;
+    }
+
     static final class NodeList extends ArrayList<zenzai.nodes.Node> implements org.w3c.dom.NodeList {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
+
+        public NodeList(int size) {
+            super(size);
+        }
 
         @Override
         public org.w3c.dom.Node item(int index) {
@@ -884,12 +1037,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             return size();
         }
 
-        public NodeList(int size) {
-            super(size);
-        }
-
         int modCount() {
             return this.modCount;
+        }
+
+        void incrementMod() {
+            this.modCount++;
         }
     }
 
@@ -953,11 +1106,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         attributes().put(BaseUriKey, baseUri);
     }
 
-    /**
-     Internal test to check if a nodelist object has been created.
-     */
-    protected boolean hasChildNodes() {
-        return childNodes != EmptyNodeList;
+    @Override
+    protected Element doClone(@Nullable Node parent) {
+        Element clone = (Element) super.doClone(parent);
+        clone.childNodes = new NodeList(childNodes.size());
+        clone.childNodes.addAll(childNodes); // the children then get iterated and cloned in Node.clone
+        if (attributes != null) {
+            clone.attributes = attributes.clone();
+            // clear any cached children
+            clone.attributes.userData(childElsKey, null);
+        }
+
+        return clone;
     }
 
     private <T> List<T> filterNodes(Class<T> clazz) {
@@ -973,5 +1133,80 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         WeakReference<List<Element>> ref = new WeakReference<>(els);
         userData.put(childElsKey, ref);
         userData.put(childElsMod, childNodes.modCount());
+    }
+
+    private void ownText(StringBuilder accum) {
+        for (int i = 0; i < childNodeSize(); i++) {
+            Node child = childNodes.get(i);
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                appendNormalisedText(accum, textNode);
+            } else if (child.nameIs("br") && !lastCharIsWhitespace(accum)) {
+                accum.append(" ");
+            }
+        }
+    }
+
+    private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
+        String text = textNode.getWholeText();
+        if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
+            accum.append(text);
+        else
+            StringUtil.appendNormalisedWhitespace(accum, text, lastCharIsWhitespace(accum));
+    }
+
+    static boolean preserveWhitespace(@Nullable Node node) {
+        // looks only at this element and five levels up, to prevent recursion & needless stack searches
+        if (node instanceof Element) {
+            Element el = (Element) node;
+            int i = 0;
+            do {
+                if (el.tag.preserveWhitespace())
+                    return true;
+                el = el.parent();
+                i++;
+            } while (i < 6 && el != null);
+        }
+        return false;
+    }
+
+    private static String wholeTextOf(Stream<Node> stream) {
+        return stream.map(node -> {
+            if (node instanceof TextNode) return ((TextNode) node).getWholeText();
+            if (node.nameIs("br")) return "\n";
+            return "";
+        }).collect(StringUtil.joining(""));
+    }
+
+    private static class TextAccumulator implements NodeVisitor {
+        private final StringBuilder accum;
+
+        public TextAccumulator(StringBuilder accum) {
+            this.accum = accum;
+        }
+
+        @Override public void head(Node node, int depth) {
+            if (node instanceof TextNode) {
+                TextNode textNode = (TextNode) node;
+                appendNormalisedText(accum, textNode);
+            } else if (node instanceof Element) {
+                Element element = (Element) node;
+                if (accum.length() > 0 &&
+                        (element.isBlock() || element.nameIs("br")) &&
+                        !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+        }
+
+        @Override public void tail(Node node, int depth) {
+            // make sure there is a space between block tags and immediately following text nodes or inline elements <div>One</div>Two should be "One Two".
+            if (node instanceof Element) {
+                Element element = (Element) node;
+                Node next = node.nextSibling();
+                if (!element.tag.isInline() && (next instanceof TextNode || next instanceof Element && ((Element) next).tag.isInline()) && !lastCharIsWhitespace(accum))
+                    accum.append(' ');
+            }
+
+        }
     }
 }

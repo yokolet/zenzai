@@ -135,4 +135,8 @@ public abstract class TextNode extends LeafNode implements Text {
     void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         Entities.escape(accum, coreValue(), out, Entities.ForText);
     }
+
+    static boolean lastCharIsWhitespace(StringBuilder sb) {
+        return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
+    }
 }

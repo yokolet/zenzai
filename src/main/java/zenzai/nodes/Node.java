@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
@@ -633,6 +634,45 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      */
     public Stream<Node> nodeStream() {
         return NodeUtils.stream(this, Node.class);
+    }
+
+    /**
+     * Clear (remove) each of the attributes in this node.
+     * @return this, for chaining
+     */
+    public Node clearAttributes() {
+        if (hasAttributes()) {
+            Iterator<Attribute> it = attributes().iterator();
+            while (it.hasNext()) {
+                it.next();
+                it.remove();
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Get this node's root node; that is, its topmost ancestor. If this node is the top ancestor, returns {@code this}.
+     * @return topmost ancestor.
+     */
+    public Node root() {
+        Node node = this;
+        while (node.parentNode != null)
+            node = node.parentNode;
+        return node;
+    }
+
+    /**
+     Perform the supplied action on this Node and each of its descendants, during a depth-first traversal. Nodes may be
+     inspected, changed, added, replaced, or removed.
+     @param action the function to perform on the node
+     @return this Node, for chaining
+     @see Element#forEach(Consumer)
+     */
+    public Node forEachNode(Consumer<? super Node> action) {
+        Validate.notNull(action);
+        nodeStream().forEach(action);
+        return this;
     }
 
     /**

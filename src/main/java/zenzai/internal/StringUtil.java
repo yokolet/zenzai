@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import zenzai.helper.Validate;
 
@@ -237,6 +239,73 @@ public final class StringUtil {
         for (int i = 0; i < width; i++)
             out[i] = ' ';
         return String.valueOf(out);
+    }
+
+    /**
+     * Return a {@link Collector} similar to the one returned by {@link Collectors#joining(CharSequence)},
+     * but backed by jsoup's {@link StringJoiner}, which allows for more efficient garbage collection.
+     *
+     * @param delimiter The delimiter for separating the strings.
+     * @return A {@code Collector} which concatenates CharSequence elements, separated by the specified delimiter
+     */
+    public static Collector<CharSequence, ?, String> joining(String delimiter) {
+        return Collector.of(() -> new StringJoiner(delimiter),
+                StringJoiner::add,
+                (j1, j2) -> {
+                    j1.append(j2.complete());
+                    return j1;
+                },
+                StringJoiner::complete);
+    }
+
+    /**
+     A StringJoiner allows incremental / filtered joining of a set of stringable objects.
+     @since 1.14.1
+     */
+    public static class StringJoiner {
+        @Nullable StringBuilder sb = new StringBuilder();
+        final String separator;
+        boolean first = true;
+
+        /**
+         Create a new joiner, that uses the specified separator. MUST call {@link #complete()} or will leak a thread
+         local string builder.
+
+         @param separator the token to insert between strings
+         */
+        public StringJoiner(String separator) {
+            this.separator = separator;
+        }
+
+        /**
+         Add another item to the joiner, will be separated
+         */
+        public StringJoiner add(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            if (!first)
+                sb.append(separator);
+            sb.append(stringy);
+            first = false;
+            return this;
+        }
+
+        /**
+         Append content to the current item; not separated
+         */
+        public StringJoiner append(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            sb.append(stringy);
+            return this;
+        }
+
+        /**
+         Return the joined string, and release the builder back to the pool. This joiner cannot be reused.
+         */
+        public String complete() {
+            String string = releaseBuilder(sb);
+            sb = null;
+            return string;
+        }
     }
 
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");
