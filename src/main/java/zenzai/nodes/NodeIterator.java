@@ -48,6 +48,19 @@ public class NodeIterator<T extends zenzai.nodes.Node> implements Iterator<T>{
         return result;
     }
 
+    @Override public void remove() {
+        current.remove();
+    }
+
+    /**
+     Create a NoteIterator that will iterate the supplied node, and all of its descendants. All node types will be
+     returned.
+     * @param start initial node
+     */
+    public static NodeIterator<Node> from(Node start) {
+        return new NodeIterator<>(start, Node.class);
+    }
+
     /**
      Restart this Iterator from the specified start node. Will act as if it were newly constructed. Useful for e.g. to
      save some GC if the iterator is used in a tight loop.
