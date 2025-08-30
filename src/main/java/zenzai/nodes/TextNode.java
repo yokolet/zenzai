@@ -18,6 +18,16 @@ public abstract class TextNode extends LeafNode implements Text {
         super(text);
     }
 
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
+
+    @Override
+    public TextNode clone() {
+        return (TextNode) super.clone();
+    }
+
     // org.w3c.dom.Node
     @Override
     public String getNodeName() {
@@ -33,7 +43,7 @@ public abstract class TextNode extends LeafNode implements Text {
         return getWholeText();
     }
 
-    // org.w3c.dom.Node
+    // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";
     }
@@ -134,6 +144,15 @@ public abstract class TextNode extends LeafNode implements Text {
     @Override
     void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         Entities.escape(accum, coreValue(), out, Entities.ForText);
+    }
+
+    static String normaliseWhitespace(String text) {
+        text = StringUtil.normaliseWhitespace(text);
+        return text;
+    }
+
+    static String stripLeadingWhitespace(String text) {
+        return text.replaceFirst("^\\s+", "");
     }
 
     static boolean lastCharIsWhitespace(StringBuilder sb) {
