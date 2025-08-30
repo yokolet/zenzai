@@ -4,7 +4,9 @@ import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
+import zenzai.nodes.Document.OutputSettings.Syntax;
 
 public abstract class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
     public static final String PUBLIC_KEY = "PUBLIC";
@@ -14,11 +16,12 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
 
+    // org.w3c.dom.DocumentType
     public abstract String getName();
     public abstract NamedNodeMap getEntities();
     public abstract NamedNodeMap getNotations();
-    public abstract String getPublicId();
-    public abstract String getSystemId();
+    public String getPublicId() { return publicId(); }
+    public String getSystemId() { return systemId(); }
     public abstract String getInternalSubset();
 
     /**
@@ -50,6 +53,15 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
         return null;
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return null; }
+
+    @Override
+    public String nodeName() {
+        return "#doctype";
+    }
+
     /**
      * Get this doctype's name (when set, or empty string)
      * @return doctype name
@@ -66,9 +78,36 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
         return attr(PublicId);
     }
 
+    /**
+     * Get this doctype's System ID (when set, or empty string)
+     * @return doctype System ID
+     */
+    public String systemId() {
+        return attr(SystemId);
+    }
+
     public void setPubSysKey(@Nullable String value) {
         if (value != null)
             attr(PubSysKey, value);
+    }
+
+    @Override
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        if (out.syntax() == Syntax.html && !has(PublicId) && !has(SystemId)) {
+            // looks like a html5 doctype, go lowercase for aesthetics
+            accum.append("<!doctype");
+        } else {
+            accum.append("<!DOCTYPE");
+        }
+        if (has(NameKey))
+            accum.append(" ").append(attr(NameKey));
+        if (has(PubSysKey))
+            accum.append(" ").append(attr(PubSysKey));
+        if (has(PublicId))
+            accum.append(" \"").append(attr(PublicId)).append('"');
+        if (has(SystemId))
+            accum.append(" \"").append(attr(SystemId)).append('"');
+        accum.append('>');
     }
 
     private void updatePubSyskey() {

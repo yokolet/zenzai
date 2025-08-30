@@ -1,7 +1,11 @@
 package zenzai.nodes;
 
+import java.util.List;
+
 import org.jspecify.annotations.Nullable;
+
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 
 public abstract class LeafNode extends zenzai.nodes.Node {
     Object value;
@@ -10,15 +14,21 @@ public abstract class LeafNode extends zenzai.nodes.Node {
         value = "";
     }
 
+    protected LeafNode(String coreValue) {
+        Validate.notNull(coreValue);
+        value = coreValue;
+    }
+
+    // org.w3c.dom.Node
+    // jsoup.nodes.Node
+    @Override public final boolean hasAttributes() {
+        return value instanceof Attributes;
+    }
+
     @Override
     public final Attributes attributes() {
         ensureAttributes();
         return (Attributes) value;
-    }
-
-    @Override @Nullable
-    public Element parent() {
-        return parentNode;
     }
 
     @Override
@@ -57,6 +67,42 @@ public abstract class LeafNode extends zenzai.nodes.Node {
         return super.removeAttr(key);
     }
 
+    @Override @Nullable
+    public Element parent() {
+        return parentNode;
+    }
+
+    @Override
+    public String absUrl(String key) {
+        ensureAttributes();
+        return super.absUrl(key);
+    }
+
+    @Override
+    public String baseUri() {
+        return parentNode != null ? parentNode.baseUri() : "";
+    }
+
+    @Override
+    protected void doSetBaseUri(String baseUri) {
+        // noop
+    }
+
+    @Override
+    public int childNodeSize() {
+        return 0;
+    }
+
+    @Override
+    public Node empty() {
+        return this;
+    }
+
+    @Override
+    protected List<Node> ensureChildNodes() {
+        return EmptyNodes;
+    }
+
     @Override
     protected LeafNode doClone(Node parent) {
         LeafNode clone = (LeafNode) super.doClone(parent);
@@ -68,10 +114,8 @@ public abstract class LeafNode extends zenzai.nodes.Node {
         return clone;
     }
 
-    protected LeafNode(String coreValue) {
-        Validate.notNull(coreValue);
-        value = coreValue;
-    }
+    @Override
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {}
 
     String coreValue() {
         return attr(nodeName());

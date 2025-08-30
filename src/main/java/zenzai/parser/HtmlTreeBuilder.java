@@ -1,15 +1,22 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.internal.Normalizer;
+import zenzai.internal.StringUtil;
+import zenzai.nodes.Attributes;
+import zenzai.nodes.CDataNode;
+import zenzai.nodes.Comment;
+import zenzai.nodes.DataNode;
+import zenzai.nodes.Document;
+import zenzai.nodes.Element;
+import zenzai.nodes.FormElement;
+import zenzai.nodes.Node;
+import zenzai.nodes.TextNode;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-
-import zenzai.helper.Validate;
-import zenzai.internal.Normalizer;
-import zenzai.internal.StringUtil;
-import zenzai.nodes.*;
 
 import static zenzai.internal.StringUtil.inSorted;
 import static zenzai.parser.HtmlTreeBuilderState.Constants.InTableFoster;
@@ -21,7 +28,8 @@ import static zenzai.parser.Parser.*;
  */
 public class HtmlTreeBuilder extends TreeBuilder {
     // tag searches. must be sorted, used in inSorted. HtmlTreeBuilderTest validates they're sorted.
-    static final String[] TagsSearchInScope = new String[]{ // a particular element in scope
+    // a particular element in scope
+    static final String[] TagsSearchInScope = new String[]{
             "applet", "caption", "html", "marquee", "object", "table", "td", "template", "th"
     };
     // math and svg namespaces for particular element in scope
@@ -39,13 +47,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
     static final String[] TagSearchEndTags = new String[]{"dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"};
     static final String[] TagThoroughSearchEndTags = new String[]{"caption", "colgroup", "dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc", "tbody", "td", "tfoot", "th", "thead", "tr"};
     static final String[] TagSearchSpecial = new String[]{
-            "address", "applet", "area", "article", "aside", "base", "basefont", "bgsound", "blockquote", "body", "br",
-            "button", "caption", "center", "col", "colgroup", "dd", "details", "dir", "div", "dl", "dt", "embed",
-            "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6",
-            "head", "header", "hgroup", "hr", "html", "iframe", "img", "input", "keygen", "li", "link", "listing", "main",
-            "marquee", "menu", "meta", "nav", "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext",
-            "pre", "script", "search", "section", "select", "source", "style", "summary", "table", "tbody", "td",
-            "template", "textarea", "tfoot", "th", "thead", "title", "tr", "track", "ul", "wbr", "xmp"};
+        "address", "applet", "area", "article", "aside", "base", "basefont", "bgsound", "blockquote", "body", "br",
+        "button", "caption", "center", "col", "colgroup", "dd", "details", "dir", "div", "dl", "dt", "embed",
+        "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6",
+        "head", "header", "hgroup", "hr", "html", "iframe", "img", "input", "keygen", "li", "link", "listing", "main",
+        "marquee", "menu", "meta", "nav", "noembed", "noframes", "noscript", "object", "ol", "p", "param", "plaintext",
+        "pre", "script", "search", "section", "select", "source", "style", "summary", "table", "tbody", "td",
+        "template", "textarea", "tfoot", "th", "thead", "title", "tr", "track", "ul", "wbr", "xmp"};
     static String[] TagSearchSpecialMath = {"annotation-xml", "mi", "mn", "mo", "ms", "mtext"}; // differs to MathML text integration point; adds annotation-xml
     static final String[] TagMathMlTextIntegration = new String[]{"mi", "mn", "mo", "ms", "mtext"};
     static final String[] TagSvgHtmlIntegration = new String[]{"desc", "foreignObject", "title"};
@@ -71,8 +79,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     private boolean fosterInserts; // if next inserts should be fostered
     private boolean fragmentParsing; // if parsing a fragment of html
 
-    @Override
-    ParseSettings defaultSettings() {
+    @Override ParseSettings defaultSettings() {
         return ParseSettings.htmlDefault;
     }
 
@@ -101,8 +108,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         fragmentParsing = false;
     }
 
-    @Override
-    void initialiseParseFragment(@Nullable Element context) {
+    @Override void initialiseParseFragment(@Nullable Element context) {
         // context may be null
         state = HtmlTreeBuilderState.Initial;
         fragmentParsing = true;
@@ -150,16 +156,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    @Override
-    List<zenzai.nodes.Node> completeParseFragment() {
+    @Override List<Node> completeParseFragment() {
         if (contextElement != null) {
             // depending on context and the input html, content may have been added outside of the root el
             // e.g. context=p, input=div, the div will have been pushed out.
-            List<zenzai.nodes.Node> nodes = contextElement.siblingNodes();
+            List<Node> nodes = contextElement.siblingNodes();
             if (!nodes.isEmpty())
                 contextElement.insertChildren(-1, nodes);
             return contextElement.childNodes();
-        } else
+        }
+        else
             return doc.childNodes();
     }
 
@@ -192,7 +198,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 return true;
         }
         // If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
-        if (NamespaceMathml.equals(ns)
+        if (Parser.NamespaceMathml.equals(ns)
                 && el.nameIs("annotation-xml")
                 && token.isStartTag()
                 && "svg".equals(token.asStartTag().normalName))
@@ -217,7 +223,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         A MathML ms element
         A MathML mtext element
          */
-        return (NamespaceMathml.equals(el.tag().namespace())
+        return (Parser.NamespaceMathml.equals(el.tag().namespace())
                 && StringUtil.inSorted(el.normalName(), TagMathMlTextIntegration));
     }
 
@@ -230,14 +236,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         An SVG desc element
         An SVG title element
          */
-        if (NamespaceMathml.equals(el.tag().namespace())
-                && el.nameIs("annotation-xml")) {
+        if (Parser.NamespaceMathml.equals(el.tag().namespace())
+            && el.nameIs("annotation-xml")) {
             String encoding = Normalizer.normalize(el.attr("encoding"));
             if (encoding.equals("text/html") || encoding.equals("application/xhtml+xml"))
                 return true;
         }
         // note using .tagName for case-sensitive hit here of foreignObject
-        return NamespaceSvg.equals(el.tag().namespace()) && StringUtil.in(el.tagName(), TagSvgHtmlIntegration);
+        return Parser.NamespaceSvg.equals(el.tag().namespace()) && StringUtil.in(el.tagName(), TagSvgHtmlIntegration);
     }
 
     boolean process(Token token, HtmlTreeBuilderState state) {
@@ -295,7 +301,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void error(HtmlTreeBuilderState state) {
         if (parser.getErrors().canAddError())
             parser.getErrors().add(new ParseError(reader, "Unexpected %s token [%s] when in state [%s]",
-                    currentToken.tokenType(), currentToken, state));
+                currentToken.tokenType(), currentToken, state));
     }
 
     Element createElementFor(Token.StartTag startTag, String namespace, boolean forcePreserveCase) {
@@ -311,16 +317,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
 
         Tag tag = tagFor(startTag.name(), startTag.normalName, namespace,
-                forcePreserveCase ? ParseSettings.preserveCase : settings);
+            forcePreserveCase ? ParseSettings.preserveCase : settings);
 
         return (tag.normalName().equals("form")) ?
-                new FormElement(tag, null, attributes) :
-                new Element(tag, null, attributes);
+            new FormElement(tag, null, attributes) :
+            new Element(tag, null, attributes);
     }
 
-    /**
-     * Inserts an HTML element for the given tag
-     */
+    /** Inserts an HTML element for the given tag */
     Element insertElementFor(final Token.StartTag startTag) {
         Element el = createElementFor(startTag, NamespaceHtml, false);
         doInsertElement(el);
@@ -343,7 +347,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     /**
-     * Inserts a foreign element. Preserves the case of the tag name and of the attributes.
+     Inserts a foreign element. Preserves the case of the tag name and of the attributes.
      */
     Element insertForeignElementFor(final Token.StartTag startTag, String namespace) {
         Element el = createElementFor(startTag, namespace, true);
@@ -368,7 +372,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         FormElement el = (FormElement) createElementFor(startTag, NamespaceHtml, false);
 
         if (checkTemplateStack) {
-            if (!onStack("template"))
+            if(!onStack("template"))
                 setFormElement(el);
         } else
             setFormElement(el);
@@ -378,10 +382,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return el;
     }
 
-    /**
-     * Inserts the Element onto the stack. All element inserts must run through this method. Performs any general
-     * tests on the Element before insertion.
-     *
+    /** Inserts the Element onto the stack. All element inserts must run through this method. Performs any general
+     tests on the Element before insertion.
      * @param el the Element to insert and make the current element
      */
     private void doInsertElement(Element el) {
@@ -406,19 +408,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
         onNodeInserted(node);
     }
 
-    /**
-     * Inserts the provided character token into the current element.
-     */
+    /** Inserts the provided character token into the current element. */
     void insertCharacterNode(Token.Character characterToken) {
         Element el = currentElement(); // will be doc if no current element; allows for whitespace to be inserted into the doc root object (not on the stack)
         insertCharacterToElement(characterToken, el);
     }
 
-    /**
-     * Inserts the provided character token into the provided element.
-     */
+    /** Inserts the provided character token into the provided element. */
     void insertCharacterToElement(Token.Character characterToken, Element el) {
-        final zenzai.nodes.Node node;
+        final Node node;
         final String data = characterToken.getData();
 
         if (characterToken.isCData())
@@ -439,15 +437,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return onStack(stack, el);
     }
 
-    /**
-     * Checks if there is an HTML element with the given name on the stack.
-     */
+    /** Checks if there is an HTML element with the given name on the stack. */
     boolean onStack(String elName) {
         return getFromStack(elName) != null;
     }
 
     private static final int maxQueueDepth = 256; // an arbitrary tension point between real HTML and crafted pain
-
     private static boolean onStack(ArrayList<Element> queue, Element element) {
         final int bottom = queue.size() - 1;
         final int upper = bottom >= maxQueueDepth ? bottom - maxQueueDepth : 0;
@@ -460,9 +455,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
-    /**
-     * Gets the nearest (lowest) HTML element with the given name from the stack.
-     */
+    /** Gets the nearest (lowest) HTML element with the given name from the stack. */
     @Nullable
     Element getFromStack(String elName) {
         final int bottom = stack.size() - 1;
@@ -477,7 +470,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean removeFromStack(Element el) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             if (next == el) {
                 stack.remove(pos);
@@ -488,12 +481,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return false;
     }
 
-    /**
-     * Pops the stack until the given HTML element is removed.
-     */
+    /** Pops the stack until the given HTML element is removed. */
     @Nullable
     Element popStackToClose(String elName) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
             if (el.elementIs(elName, NamespaceHtml)) {
                 return el;
@@ -502,12 +493,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return null;
     }
 
-    /**
-     * Pops the stack until an element with the supplied name is removed, irrespective of namespace.
-     */
+    /** Pops the stack until an element with the supplied name is removed, irrespective of namespace. */
     @Nullable
     Element popStackToCloseAnyNamespace(String elName) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
             if (el.nameIs(elName)) {
                 return el;
@@ -516,11 +505,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return null;
     }
 
-    /**
-     * Pops the stack until one of the given HTML elements is removed.
-     */
+    /** Pops the stack until one of the given HTML elements is removed. */
     void popStackToClose(String... elNames) { // elnames is sorted, comes from Constants
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = pop();
             if (inSorted(el.normalName(), elNames) && NamespaceHtml.equals(el.tag().namespace())) {
                 break;
@@ -540,14 +527,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
         clearStackToContext("tr", "template");
     }
 
-    /**
-     * Removes elements from the stack until one of the supplied HTML elements is removed.
-     */
+    /** Removes elements from the stack until one of the supplied HTML elements is removed. */
     private void clearStackToContext(String... nodeNames) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element next = stack.get(pos);
             if (NamespaceHtml.equals(next.tag().namespace()) &&
-                    (StringUtil.in(next.normalName(), nodeNames) || next.nameIs("html")))
+                (StringUtil.in(next.normalName(), nodeNames) || next.nameIs("html")))
                 break;
             else
                 pop();
@@ -555,19 +540,18 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     /**
-     * Gets the Element immediately above the supplied element on the stack. Which due to adoption, may not necessarily be
-     * its parent.
-     *
-     * @param el
-     * @return the Element immediately above the supplied element, or null if there is no such element.
+     Gets the Element immediately above the supplied element on the stack. Which due to adoption, may not necessarily be
+     its parent.
+
+     @param el
+     @return the Element immediately above the supplied element, or null if there is no such element.
      */
-    @Nullable
-    Element aboveOnStack(Element el) {
+    @Nullable Element aboveOnStack(Element el) {
         if (!onStack(el)) return null;
-        for (int pos = stack.size() - 1; pos > 0; pos--) {
+        for (int pos = stack.size() -1; pos > 0; pos--) {
             Element next = stack.get(pos);
             if (next == el) {
-                return stack.get(pos - 1);
+                return stack.get(pos-1);
             }
         }
         return null;
@@ -576,7 +560,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     void insertOnStackAfter(Element after, Element in) {
         int i = stack.lastIndexOf(after);
         Validate.isTrue(i != -1);
-        stack.add(i + 1, in);
+        stack.add(i+1, in);
     }
 
     void replaceOnStack(Element out, Element in) {
@@ -592,7 +576,6 @@ public class HtmlTreeBuilder extends TreeBuilder {
     /**
      * Reset the insertion mode, by searching up the stack for an appropriate insertion mode. The stack search depth
      * is limited to {@link #maxQueueDepth}.
-     *
      * @return true if the insertion mode was actually changed.
      */
     boolean resetInsertionMode() {
@@ -606,8 +589,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             transition(HtmlTreeBuilderState.InBody);
         }
 
-        LOOP:
-        for (int pos = bottom; pos >= upper; pos--) {
+        LOOP: for (int pos = bottom; pos >= upper; pos--) {
             Element node = stack.get(pos);
             if (pos == upper) {
                 last = true;
@@ -676,9 +658,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return state != origState;
     }
 
-    /**
-     * Places the body back onto the stack and moves to InBody, for cases in AfterBody / AfterAfterBody when more content comes
-     */
+    /** Places the body back onto the stack and moves to InBody, for cases in AfterBody / AfterAfterBody when more content comes */
     void resetBody() {
         if (!onStack("body")) {
             stack.add(doc.body()); // not onNodeInserted, as already seen
@@ -696,7 +676,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, @Nullable String[] extraTypes) {
         // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
-        final int bottom = stack.size() - 1;
+        final int bottom = stack.size() -1;
         final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
         // don't walk too far up the tree
         for (int pos = bottom; pos >= top; pos--) {
@@ -747,7 +727,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     boolean inSelectScope(String targetName) {
-        for (int pos = stack.size() - 1; pos >= 0; pos--) {
+        for (int pos = stack.size() -1; pos >= 0; pos--) {
             Element el = stack.get(pos);
             String elName = el.normalName();
             if (elName.equals(targetName))
@@ -755,15 +735,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (!inSorted(elName, TagSearchSelectScope)) // all elements except
                 return false;
         }
-        Validate.fail("Should not be reachable");
-        return false;
+        return false; // nothing left on stack
     }
 
-    /**
-     * Tests if there is some element on the stack that is not in the provided set.
-     */
+    /** Tests if there is some element on the stack that is not in the provided set. */
     boolean onStackNot(String[] allowedTags) {
-        final int bottom = stack.size() - 1;
+        final int bottom = stack.size() -1;
         final int top = bottom > MaxScopeSearchDepth ? bottom - MaxScopeSearchDepth : 0;
         // don't walk too far up the tree
 
@@ -791,8 +768,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         this.fosterInserts = fosterInserts;
     }
 
-    @Nullable
-    FormElement getFormElement() {
+    @Nullable FormElement getFormElement() {
         return formElement;
     }
 
@@ -815,15 +791,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     /**
-     * 13.2.6.3 Closing elements that have implied end tags
-     * When the steps below require the UA to generate implied end tags, then, while the current node is a dd element, a dt element, an li element, an optgroup element, an option element, a p element, an rb element, an rp element, an rt element, or an rtc element, the UA must pop the current node off the stack of open elements.
-     * <p>
-     * If a step requires the UA to generate implied end tags but lists an element to exclude from the process, then the UA must perform the above steps as if that element was not in the above list.
-     * <p>
-     * When the steps below require the UA to generate all implied end tags thoroughly, then, while the current node is a caption element, a colgroup element, a dd element, a dt element, an li element, an optgroup element, an option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot element, a th element, a thead element, or a tr element, the UA must pop the current node off the stack of open elements.
-     *
-     * @param excludeTag If a step requires the UA to generate implied end tags but lists an element to exclude from the
-     *                   process, then the UA must perform the above steps as if that element was not in the above list.
+     13.2.6.3 Closing elements that have implied end tags
+     When the steps below require the UA to generate implied end tags, then, while the current node is a dd element, a dt element, an li element, an optgroup element, an option element, a p element, an rb element, an rp element, an rt element, or an rtc element, the UA must pop the current node off the stack of open elements.
+
+     If a step requires the UA to generate implied end tags but lists an element to exclude from the process, then the UA must perform the above steps as if that element was not in the above list.
+
+     When the steps below require the UA to generate all implied end tags thoroughly, then, while the current node is a caption element, a colgroup element, a dd element, a dt element, an li element, an optgroup element, an option element, a p element, an rb element, an rp element, an rt element, an rtc element, a tbody element, a td element, a tfoot element, a th element, a thead element, or a tr element, the UA must pop the current node off the stack of open elements.
+
+     @param excludeTag If a step requires the UA to generate implied end tags but lists an element to exclude from the
+     process, then the UA must perform the above steps as if that element was not in the above list.
      */
     void generateImpliedEndTags(String excludeTag) {
         while (inSorted(currentElement().normalName(), TagSearchEndTags)) {
@@ -838,14 +814,13 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     /**
-     * Pops HTML elements off the stack according to the implied end tag rules
-     *
-     * @param thorough if we are thorough (includes table elements etc) or not
+     Pops HTML elements off the stack according to the implied end tag rules
+     @param thorough if we are thorough (includes table elements etc) or not
      */
     void generateImpliedEndTags(boolean thorough) {
         final String[] search = thorough ? TagThoroughSearchEndTags : TagSearchEndTags;
         while (NamespaceHtml.equals(currentElement().tag().namespace())
-                && inSorted(currentElement().normalName(), search)) {
+            && inSorted(currentElement().normalName(), search)) {
             pop();
         }
     }
@@ -872,11 +847,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     Element lastFormattingElement() {
-        return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size() - 1) : null;
+        return formattingElements.size() > 0 ? formattingElements.get(formattingElements.size()-1) : null;
     }
 
-    int positionOfElement(Element el) {
-        for (int i = 0; i < formattingElements.size(); i++) {
+    int positionOfElement(Element el){
+        for (int i = 0; i < formattingElements.size(); i++){
             if (el == formattingElements.get(i))
                 return i;
         }
@@ -886,7 +861,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     Element removeLastFormattingElement() {
         int size = formattingElements.size();
         if (size > 0)
-            return formattingElements.remove(size - 1);
+            return formattingElements.remove(size-1);
         else
             return null;
     }
@@ -897,7 +872,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(in);
     }
 
-    void pushWithBookmark(Element in, int bookmark) {
+    void pushWithBookmark(Element in, int bookmark){
         checkActiveFormattingElements(in);
         // catch any range errors and assume bookmark is incorrect - saves a redundant range check.
         try {
@@ -907,11 +882,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
         }
     }
 
-    void checkActiveFormattingElements(Element in) {
+    void checkActiveFormattingElements(Element in){
         int numSeen = 0;
-        final int size = formattingElements.size() - 1;
-        int ceil = size - maxUsedFormattingElements;
-        if (ceil < 0) ceil = 0;
+        final int size = formattingElements.size() -1;
+        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
 
         for (int pos = size; pos >= ceil; pos--) {
             Element el = formattingElements.get(pos);
@@ -945,8 +919,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
         Element entry = last;
         int size = formattingElements.size();
-        int ceil = size - maxUsedFormattingElements;
-        if (ceil < 0) ceil = 0;
+        int ceil = size - maxUsedFormattingElements; if (ceil <0) ceil = 0;
         int pos = size - 1;
         boolean skip = false;
         while (true) {
@@ -958,7 +931,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
             if (entry == null || onStack(entry)) // step 6 - neither marker nor on stack
                 break; // jump to 8, else continue back to 4
         }
-        while (true) {
+        while(true) {
             if (!skip) // step 7: on later than entry
                 entry = formattingElements.get(++pos);
             Validate.notNull(entry); // should not occur, as we break at last element
@@ -972,11 +945,10 @@ public class HtmlTreeBuilder extends TreeBuilder {
             formattingElements.set(pos, newEl);
 
             // 11
-            if (pos == size - 1) // if not last entry in list, jump to 7
+            if (pos == size-1) // if not last entry in list, jump to 7
                 break;
         }
     }
-
     private static final int maxUsedFormattingElements = 12; // limit how many elements get recreated
 
     void clearFormattingElementsToLastMarker() {
@@ -988,7 +960,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
     }
 
     void removeFromActiveFormattingElements(Element el) {
-        for (int pos = formattingElements.size() - 1; pos >= 0; pos--) {
+        for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
             Element next = formattingElements.get(pos);
             if (next == el) {
                 formattingElements.remove(pos);
@@ -1003,7 +975,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
 
     @Nullable
     Element getActiveFormattingElement(String nodeName) {
-        for (int pos = formattingElements.size() - 1; pos >= 0; pos--) {
+        for (int pos = formattingElements.size() -1; pos >= 0; pos--) {
             Element next = formattingElements.get(pos);
             if (next == null) // scope marker
                 break;
@@ -1021,7 +993,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         formattingElements.add(null);
     }
 
-    void insertInFosterParent(zenzai.nodes.Node in) {
+    void insertInFosterParent(Node in) {
         Element fosterParent;
         Element lastTable = getFromStack("table");
         boolean isLastTableParent = false;
@@ -1038,7 +1010,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (isLastTableParent) {
             Validate.notNull(lastTable); // last table cannot be null by this point.
             lastTable.before(in);
-        } else
+        }
+        else
             fosterParent.appendChild(in);
     }
 
@@ -1047,10 +1020,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
         tmplInsertMode.add(state);
     }
 
-    @Nullable
-    HtmlTreeBuilderState popTemplateMode() {
+    @Nullable HtmlTreeBuilderState popTemplateMode() {
         if (tmplInsertMode.size() > 0) {
-            return tmplInsertMode.remove(tmplInsertMode.size() - 1);
+            return tmplInsertMode.remove(tmplInsertMode.size() -1);
         } else {
             return null;
         }
@@ -1060,9 +1032,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
         return tmplInsertMode.size();
     }
 
-    @Nullable
-    HtmlTreeBuilderState currentTemplateMode() {
-        return (tmplInsertMode.size() > 0) ? tmplInsertMode.get(tmplInsertMode.size() - 1) : null;
+    @Nullable HtmlTreeBuilderState currentTemplateMode() {
+        return (tmplInsertMode.size() > 0) ? tmplInsertMode.get(tmplInsertMode.size() -1)  : null;
     }
 
     @Override
@@ -1073,4 +1044,5 @@ public class HtmlTreeBuilder extends TreeBuilder {
                 ", currentElement=" + currentElement() +
                 '}';
     }
+
 }

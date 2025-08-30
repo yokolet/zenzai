@@ -333,9 +333,9 @@ public class Tag implements Cloneable {
         if (!(o instanceof Tag)) return false;
         Tag tag = (Tag) o;
         return Objects.equals(tagName, tag.tagName) &&
-                Objects.equals(namespace, tag.namespace) &&
-                Objects.equals(normalName, tag.normalName) &&
-                options == tag.options;
+            Objects.equals(namespace, tag.namespace) &&
+            Objects.equals(normalName, tag.normalName) &&
+            options == tag.options;
     }
 
     /**

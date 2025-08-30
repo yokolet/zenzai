@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import zenzai.helper.Validate;
 
@@ -14,6 +16,10 @@ import zenzai.helper.Validate;
  notice.
  */
 public final class StringUtil {
+    static final String[] padding = {"", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ",
+            "         ", "          ", "           ", "            ", "             ", "              ", "               ",
+            "                ", "                 ", "                  ", "                   ", "                    "};
+
     /**
      * Tests if a string is blank: null, empty, or only whitespace (" ", \r\n, \t, etc)
      * @param string string to test
@@ -204,6 +210,102 @@ public final class StringUtil {
     public static boolean isInvisibleChar(int c) {
         return c == 8203 || c == 173; // zero width sp, soft hyphen
         // previously also included zw non join, zw join - but removing those breaks semantic meaning of text
+    }
+
+    /**
+     * Returns space padding (up to the default max of 30). Use {@link #padding(int, int)} to specify a different limit.
+     * @param width amount of padding desired
+     * @return string of spaces * width
+     * @see #padding(int, int)
+     */
+    public static String padding(int width) {
+        return padding(width, 30);
+    }
+
+    /**
+     * Returns space padding, up to a max of maxPaddingWidth.
+     * @param width amount of padding desired
+     * @param maxPaddingWidth maximum padding to apply. Set to {@code -1} for unlimited.
+     * @return string of spaces * width
+     */
+    public static String padding(int width, int maxPaddingWidth) {
+        Validate.isTrue(width >= 0, "width must be >= 0");
+        Validate.isTrue(maxPaddingWidth >= -1);
+        if (maxPaddingWidth != -1)
+            width = Math.min(width, maxPaddingWidth);
+        if (width < padding.length)
+            return padding[width];
+        char[] out = new char[width];
+        for (int i = 0; i < width; i++)
+            out[i] = ' ';
+        return String.valueOf(out);
+    }
+
+    /**
+     * Return a {@link Collector} similar to the one returned by {@link Collectors#joining(CharSequence)},
+     * but backed by jsoup's {@link StringJoiner}, which allows for more efficient garbage collection.
+     *
+     * @param delimiter The delimiter for separating the strings.
+     * @return A {@code Collector} which concatenates CharSequence elements, separated by the specified delimiter
+     */
+    public static Collector<CharSequence, ?, String> joining(String delimiter) {
+        return Collector.of(() -> new StringJoiner(delimiter),
+                StringJoiner::add,
+                (j1, j2) -> {
+                    j1.append(j2.complete());
+                    return j1;
+                },
+                StringJoiner::complete);
+    }
+
+    /**
+     A StringJoiner allows incremental / filtered joining of a set of stringable objects.
+     @since 1.14.1
+     */
+    public static class StringJoiner {
+        @Nullable StringBuilder sb = new StringBuilder();
+        final String separator;
+        boolean first = true;
+
+        /**
+         Create a new joiner, that uses the specified separator. MUST call {@link #complete()} or will leak a thread
+         local string builder.
+
+         @param separator the token to insert between strings
+         */
+        public StringJoiner(String separator) {
+            this.separator = separator;
+        }
+
+        /**
+         Add another item to the joiner, will be separated
+         */
+        public StringJoiner add(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            if (!first)
+                sb.append(separator);
+            sb.append(stringy);
+            first = false;
+            return this;
+        }
+
+        /**
+         Append content to the current item; not separated
+         */
+        public StringJoiner append(Object stringy) {
+            Validate.notNull(sb); // don't reuse
+            sb.append(stringy);
+            return this;
+        }
+
+        /**
+         Return the joined string, and release the builder back to the pool. This joiner cannot be reused.
+         */
+        public String complete() {
+            String string = releaseBuilder(sb);
+            sb = null;
+            return string;
+        }
     }
 
     private static final Pattern validUriScheme = Pattern.compile("^[a-zA-Z][a-zA-Z0-9+-.]*:");

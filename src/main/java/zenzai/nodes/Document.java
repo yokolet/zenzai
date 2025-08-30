@@ -2,10 +2,12 @@ package zenzai.nodes;
 
 import java.nio.charset.Charset;
 
+import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
+import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
@@ -17,10 +19,18 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
 
-    public abstract org.w3c.dom.DocumentType getDoctype();
+    public org.w3c.dom.DocumentType getDoctype() { return documentType(); }
     public abstract org.w3c.dom.DOMImplementation getImplementation();
     public abstract org.w3c.dom.Element getDocumentElement();
-    public abstract org.w3c.dom.Element createElement(String tagName) throws DOMException;
+
+    // org.w3c.dom.Document
+    // jsoup.nodes.Document
+    public Element createElement(String tagName) throws DOMException {
+        return new Element(
+                parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase),
+                searchUpForAttribute(this, BaseUriKey)
+        );
+    }
     public abstract org.w3c.dom.DocumentFragment createDocumentFragment();
     public abstract org.w3c.dom.Text createTextNode(String data);
     public abstract org.w3c.dom.Comment createComment(String data);
@@ -88,6 +98,44 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         return null;
     }
 
+    @Override
+    public String outerHtml() {
+        return super.html(); // no outer wrapper tag
+    }
+
+    @Override
+    public Document clone() {
+        Document clone = (Document) super.clone();
+        if (attributes != null) clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        // parser is pointer copy
+        return clone;
+    }
+
+    @Override
+    public Document shallowClone() {
+        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+        if (attributes != null) clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        return clone;
+    }
+
+    /**
+     Set the text of the {@code body} of this document. Any existing nodes within the body will be cleared.
+     @param text un-encoded text
+     @return this document
+     */
+    @Override
+    public Element text(String text) {
+        body().text(text); // overridden to not nuke doc structure
+        return this;
+    }
+
+    @Override
+    public String nodeName() {
+        return "#document";
+    }
+
     /**
      Create a valid, empty shell of an HTML document, suitable for adding more elements to.
      @param baseUri baseUri of document
@@ -102,6 +150,49 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         html.appendElement("body");
 
         return doc;
+    }
+
+    /**
+     * Get the URL this Document was parsed from. If the starting URL is a redirect,
+     * this will return the final URL from which the document was served from.
+     * <p>Will return an empty string if the location is unknown (e.g. if parsed from a String).
+     * @return location
+     */
+    public String location() {
+        return location;
+    }
+
+    /**
+     * Returns this Document's doctype.
+     * @return document type, or null if not set
+     */
+    public @Nullable DocumentType documentType() {
+        for (Node node : childNodes) {
+            if (node instanceof DocumentType)
+                return (DocumentType) node;
+            else if (!(node instanceof LeafNode)) // scans forward across comments, text, processing instructions etc
+                break;
+        }
+        return null;
+    }
+
+    /**
+     Get this document's {@code head} element.
+     <p>
+     As a side effect, if this Document does not already have an HTML structure, it will be created. If you do not want
+     that, use {@code #selectFirst("head")} instead.
+
+     @return {@code head} element.
+     */
+    public Element head() {
+        final Element html = htmlEl();
+        Element el = html.firstElementChild();
+        while (el != null) {
+            if (el.nameIs("head"))
+                return el;
+            el = el.nextElementSibling();
+        }
+        return html.prependElement("head");
     }
 
     /**
@@ -157,6 +248,16 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     }
 
     /**
+     Get the output character set of this Document. This method is equivalent to {@link OutputSettings#charset()}.
+
+     @return the current Charset
+     @see OutputSettings#charset()
+     */
+    public Charset charset() {
+        return outputSettings.charset();
+    }
+
+    /**
      Find the root HTML element, or create it if it doesn't exist.
      @return the root HTML element.
      */
@@ -170,12 +271,23 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         return appendElement("html");
     }
 
-    @Override
-    public Document shallowClone() {
-        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
-        if (attributes != null) clone.attributes = attributes.clone();
-        clone.outputSettings = this.outputSettings.clone();
-        return clone;
+    /**
+     * Get the document's current output settings.
+     * @return the document's current output settings.
+     */
+    public OutputSettings outputSettings() {
+        return outputSettings;
+    }
+
+    /**
+     * Set the document's output settings.
+     * @param outputSettings new output settings.
+     * @return this document, for chaining.
+     */
+    public Document outputSettings(OutputSettings outputSettings) {
+        Validate.notNull(outputSettings);
+        this.outputSettings = outputSettings;
+        return this;
     }
 
     /**
@@ -188,6 +300,10 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         public enum Syntax {html, xml}
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset = DataUtil.UTF_8;
+        private boolean prettyPrint = true;
+        private boolean outline = false;
+        private int indentAmount = 1;
+        private int maxPaddingWidth = 30;
         private Syntax syntax = Syntax.html;
 
         /**
@@ -228,6 +344,17 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         }
 
         /**
+         * Set the document's escape mode, which determines how characters are escaped when the output character set
+         * does not support a given character:- using either a named or a numbered escape.
+         * @param escapeMode the new escape mode to use
+         * @return the document's output settings, for chaining
+         */
+        public OutputSettings escapeMode(Entities.EscapeMode escapeMode) {
+            this.escapeMode = escapeMode;
+            return this;
+        }
+
+        /**
          * Get the document's current output charset, which is used to control which characters are escaped when
          * generating HTML (via the <code>html()</code> methods), and which are kept intact.
          * <p>
@@ -265,6 +392,99 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
          */
         public Syntax syntax() {
             return syntax;
+        }
+
+        /**
+         * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
+         * {@code xml}, with self-closing tags.
+         * <p>When set to {@link Document.OutputSettings.Syntax#xml xml}, the {@link #escapeMode() escapeMode} is
+         * automatically set to {@link Entities.EscapeMode#xhtml}, but may be subsequently changed if desired.</p>
+         * @param syntax serialization syntax
+         * @return the document's output settings, for chaining
+         */
+        public OutputSettings syntax(Syntax syntax) {
+            this.syntax = syntax;
+            if (syntax == Syntax.xml)
+                this.escapeMode(Entities.EscapeMode.xhtml);
+            return this;
+        }
+
+        /**
+         * Get if pretty printing is enabled. Default is true. If disabled, the HTML output methods will not re-format
+         * the output, and the output will generally look like the input.
+         * @return if pretty printing is enabled.
+         */
+        public boolean prettyPrint() {
+            return prettyPrint;
+        }
+
+        /**
+         * Enable or disable pretty printing.
+         * @param pretty new pretty print setting
+         * @return this, for chaining
+         */
+        public OutputSettings prettyPrint(boolean pretty) {
+            prettyPrint = pretty;
+            return this;
+        }
+
+        /**
+         * Get if outline mode is enabled. Default is false. If enabled, the HTML output methods will consider
+         * all tags as block.
+         * @return if outline mode is enabled.
+         */
+        public boolean outline() {
+            return outline;
+        }
+
+        /**
+         * Enable or disable HTML outline mode.
+         * @param outlineMode new outline setting
+         * @return this, for chaining
+         */
+        public OutputSettings outline(boolean outlineMode) {
+            outline = outlineMode;
+            return this;
+        }
+
+        /**
+         * Get the current tag indent amount, used when pretty printing.
+         * @return the current indent amount
+         */
+        public int indentAmount() {
+            return indentAmount;
+        }
+
+        /**
+         * Set the indent amount for pretty printing
+         * @param indentAmount number of spaces to use for indenting each level. Must be {@literal >=} 0.
+         * @return this, for chaining
+         */
+        public OutputSettings indentAmount(int indentAmount) {
+            Validate.isTrue(indentAmount >= 0);
+            this.indentAmount = indentAmount;
+            return this;
+        }
+
+        /**
+         * Get the current max padding amount, used when pretty printing
+         * so very deeply nested nodes don't get insane padding amounts.
+         * @return the current indent amount
+         */
+        public int maxPaddingWidth() {
+            return maxPaddingWidth;
+        }
+
+        /**
+         * Set the max padding amount for pretty printing so very deeply nested nodes don't get insane padding amounts.
+         * @param maxPaddingWidth number of spaces to use for indenting each level of nested nodes. Must be {@literal >=} -1.
+         *        Default is 30 and -1 means unlimited.
+         * @return this, for chaining
+         */
+        public OutputSettings maxPaddingWidth(int maxPaddingWidth) {
+            Validate.isTrue(maxPaddingWidth >= -1);
+            this.maxPaddingWidth = maxPaddingWidth;
+            return this;
         }
     }
 }

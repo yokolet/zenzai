@@ -1,19 +1,18 @@
 package zenzai.parser;
 
+import zenzai.helper.Validate;
+import zenzai.internal.SharedConstants;
+import zenzai.nodes.Attributes;
+import zenzai.nodes.Document;
+import zenzai.nodes.Element;
+import zenzai.nodes.Node;
+import zenzai.nodes.Range;
+import zenzai.select.NodeVisitor;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-
-import zenzai.helper.Validate;
-import zenzai.internal.SharedConstants;
-import zenzai.nodes.Attributes;
-import zenzai.nodes.Document;
-import zenzai.nodes.Node;
-import zenzai.nodes.Element;
-import zenzai.nodes.Range;
-import zenzai.select.NodeVisitor;
 
 import static zenzai.parser.Parser.NamespaceHtml;
 
@@ -192,7 +191,7 @@ abstract class TreeBuilder {
             return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName)
-                && current.tag().namespace().equals(NamespaceHtml);
+            && current.tag().namespace().equals(NamespaceHtml);
     }
 
     /**
@@ -206,7 +205,7 @@ abstract class TreeBuilder {
             return false;
         Element current = currentElement();
         return current != null && current.normalName().equals(normalName)
-                && current.tag().namespace().equals(namespace);
+            && current.tag().namespace().equals(namespace);
     }
 
     /**
@@ -298,9 +297,9 @@ abstract class TreeBuilder {
         }
 
         Range.Position startPosition = new Range.Position
-                (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
+            (startPos, reader.lineNumber(startPos), reader.columnNumber(startPos));
         Range.Position endPosition = new Range.Position
-                (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
+            (endPos, reader.lineNumber(endPos), reader.columnNumber(endPos));
         Range range = new Range(startPosition, endPosition);
         node.attributes().userData(isStart ? SharedConstants.RangeKey : SharedConstants.EndRangeKey, range);
     }

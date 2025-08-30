@@ -1,7 +1,9 @@
 package zenzai.nodes;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
@@ -14,6 +16,8 @@ import org.w3c.dom.TypeInfo;
 import zenzai.helper.Validate;
 import zenzai.internal.Normalizer;
 import zenzai.internal.QuietAppendable;
+import zenzai.internal.SharedConstants;
+import zenzai.internal.StringUtil;
 import zenzai.nodes.Document.OutputSettings.Syntax;
 
 public abstract class Attribute implements Cloneable, Attr {
@@ -26,6 +30,31 @@ public abstract class Attribute implements Cloneable, Attr {
     private String key;
     @Nullable private String val;
     @Nullable Attributes parent; // used to update the holding Attributes when the key / value is changed via this interface
+
+    /**
+     * Create a new attribute from unencoded (raw) key and value.
+     * @param key attribute key; case is preserved.
+     * @param value attribute value (may be null)
+     * @see #createFromEncoded
+     */
+    public Attribute(String key, @Nullable String value) {
+        this(key, value, null);
+    }
+
+    /**
+     * Create a new attribute from unencoded (raw) key and value.
+     * @param key attribute key; case is preserved.
+     * @param val attribute value (may be null)
+     * @param parent the containing Attributes (this Attribute is not automatically added to said Attributes)
+     * @see #createFromEncoded*/
+    public Attribute(String key, @Nullable String val, @Nullable Attributes parent) {
+        Validate.notNull(key);
+        key = key.trim();
+        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
+        this.key = key;
+        this.val = val;
+        this.parent = parent;
+    }
 
     // org.w3c.dom.Node
     @Override
@@ -90,6 +119,131 @@ public abstract class Attribute implements Cloneable, Attr {
         return getKey().toLowerCase().endsWith("id");
     }
 
+    /**
+     Get the string representation of this attribute, implemented as {@link #html()}.
+     @return string
+     */
+    @Override
+    public String toString() {
+        return html();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) { // note parent not considered
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Attribute attribute = (Attribute) o;
+        return Objects.equals(key, attribute.key) && Objects.equals(val, attribute.val);
+    }
+
+    @Override
+    public int hashCode() { // note parent not considered
+        return Objects.hash(key, val);
+    }
+
+    @Override
+    public Attribute clone() {
+        try {
+            return (Attribute) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     Get the attribute's key (aka name).
+     @return the attribute key
+     */
+    public String getKey() {
+        return key;
+    }
+
+    /**
+     Get the attribute value. Will return an empty string if the value is not set.
+     @return the attribute value
+     */
+    public String getValue() {
+        return Attributes.checkNotNull(val);
+    }
+
+    /**
+     Set the attribute value.
+     @param val the new attribute value; may be null (to set an enabled boolean attribute)
+     @return the previous value (if was null; an empty string)
+     */
+    public String setValueWithReturn(@Nullable String val) {
+        String oldVal = this.val;
+        if (parent != null) {
+            int i = parent.indexOfKey(this.key);
+            if (i != Attributes.NotFound) {
+                oldVal = parent.get(this.key); // trust the container more
+                parent.vals[i] = val;
+            }
+        }
+        this.val = val;
+        return Attributes.checkNotNull(oldVal);
+    }
+
+    /**
+     * Check if this Attribute has a value. Set boolean attributes have no value.
+     * @return if this is a boolean attribute / attribute without a value
+     */
+    public boolean hasDeclaredValue() {
+        return val != null;
+    }
+
+    /**
+     Get this attribute's key prefix, if it has one; else the empty string.
+     <p>For example, the attribute {@code og:title} has prefix {@code og}, and local {@code title}.</p>
+
+     @return the tag's prefix
+     @since 1.20.1
+     */
+    public String prefix() {
+        int pos = key.indexOf(':');
+        if (pos == -1) return "";
+        else return key.substring(0, pos);
+    }
+
+    /**
+     Get this attribute's local name. The local name is the name without the prefix (if any).
+     <p>For example, the attribute key {@code og:title} has local name {@code title}.</p>
+
+     @return the tag's local name
+     @since 1.20.1
+     */
+    public String localName() {
+        int pos = key.indexOf(':');
+        if (pos == -1) return key;
+        else return key.substring(pos + 1);
+    }
+
+    /**
+     Get this attribute's namespace URI, if the attribute was prefixed with a defined namespace name. Otherwise, returns
+     the empty string. These will only be defined if using the XML parser.
+     @return the tag's namespace URI, or empty string if not defined
+     @since 1.20.1
+     */
+    public String namespace() {
+        // set as el.attributes.userData(SharedConstants.XmlnsAttr + prefix, ns)
+        if (parent != null) {
+            String ns = (String) parent.userData(SharedConstants.XmlnsAttr + prefix());
+            if (ns != null)
+                return ns;
+        }
+        return "";
+    }
+
+    /**
+     Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+     @return HTML
+     */
+    public String html() {
+        StringBuilder sb = StringUtil.borrowBuilder();
+        html(QuietAppendable.wrap(sb), new Document.OutputSettings());
+        return StringUtil.releaseBuilder(sb);
+    }
+
     private static final Pattern xmlKeyReplace = Pattern.compile("[^-a-zA-Z0-9_:.]+");
     private static final Pattern htmlKeyReplace = Pattern.compile("[\\x00-\\x1f\\x7f-\\x9f \"'/=]+");
 
@@ -109,22 +263,6 @@ public abstract class Attribute implements Cloneable, Attr {
             return isValidHtmlKey(key) ? key : null; // null if could not be coerced
         }
         return key;
-    }
-
-    /**
-     Get the attribute's key (aka name).
-     @return the attribute key
-     */
-    public String getKey() {
-        return key;
-    }
-
-    /**
-     Get the attribute value. Will return an empty string if the value is not set.
-     @return the attribute value
-     */
-    public String getValue() {
-        return Attributes.checkNotNull(val);
     }
 
     /**
@@ -153,24 +291,6 @@ public abstract class Attribute implements Cloneable, Attr {
     }
 
     /**
-     Set the attribute value.
-     @param val the new attribute value; may be null (to set an enabled boolean attribute)
-     @return the previous value (if was null; an empty string)
-     */
-    public String setValueWithReturn(@Nullable String val) {
-        String oldVal = this.val;
-        if (parent != null) {
-            int i = parent.indexOfKey(this.key);
-            if (i != Attributes.NotFound) {
-                oldVal = parent.get(this.key); // trust the container more
-                parent.vals[i] = val;
-            }
-        }
-        this.val = val;
-        return Attributes.checkNotNull(oldVal);
-    }
-
-    /**
      Get the source ranges (start to end positions) in the original input source from which this attribute's <b>name</b>
      and <b>value</b> were parsed.
      <p>Position tracking must be enabled prior to parsing the content.</p>
@@ -194,6 +314,27 @@ public abstract class Attribute implements Cloneable, Attr {
         return Arrays.binarySearch(booleanAttributes, Normalizer.lowerCase(key)) >= 0;
     }
 
+    /**
+     * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
+     * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
+     * @param encodedValue HTML attribute encoded value
+     * @return attribute
+     */
+    public static Attribute createFromEncoded(String unencodedKey, String encodedValue) {
+        String value = Entities.unescape(encodedValue, true);
+        return new Attribute(unencodedKey, value, null); // parent will get set when Put
+    }
+
+    void html(QuietAppendable accum, Document.OutputSettings out) {
+        html(key, val, accum, out);
+    }
+
+    static void html(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
+        key = getValidKey(key, out.syntax());
+        if (key == null) return; // can't write it :(
+        htmlNoValidate(key, val, accum, out);
+    }
+
     static void htmlNoValidate(String key, @Nullable String val, QuietAppendable accum, Document.OutputSettings out) {
         // structured like this so that Attributes can check we can write first, so it can add whitespace correctly
         accum.append(key);
@@ -208,6 +349,14 @@ public abstract class Attribute implements Cloneable, Attr {
     protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final zenzai.nodes.Document.OutputSettings out) {
         return (out.syntax() == Syntax.html &&
                 (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+    }
+
+    protected boolean isDataAttribute() {
+        return isDataAttribute(key);
+    }
+
+    protected static boolean isDataAttribute(String key) {
+        return key.startsWith(Attributes.dataPrefix) && key.length() > Attributes.dataPrefix.length();
     }
 
     private static boolean isValidXmlKey(String key) {

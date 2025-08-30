@@ -3,6 +3,7 @@ package zenzai.nodes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Text;
 import zenzai.helper.Validate;
+import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 
 public abstract class TextNode extends LeafNode implements Text {
@@ -15,6 +16,16 @@ public abstract class TextNode extends LeafNode implements Text {
      */
     public TextNode(String text) {
         super(text);
+    }
+
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
+
+    @Override
+    public TextNode clone() {
+        return (TextNode) super.clone();
     }
 
     // org.w3c.dom.Node
@@ -32,7 +43,7 @@ public abstract class TextNode extends LeafNode implements Text {
         return getWholeText();
     }
 
-    // org.w3c.dom.Node
+    // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";
     }
@@ -128,5 +139,23 @@ public abstract class TextNode extends LeafNode implements Text {
     public static TextNode createFromEncoded(String encodedText) {
         String text = Entities.unescape(encodedText);
         return new TextNode(text);
+    }
+
+    @Override
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
+        Entities.escape(accum, coreValue(), out, Entities.ForText);
+    }
+
+    static String normaliseWhitespace(String text) {
+        text = StringUtil.normaliseWhitespace(text);
+        return text;
+    }
+
+    static String stripLeadingWhitespace(String text) {
+        return text.replaceFirst("^\\s+", "");
+    }
+
+    static boolean lastCharIsWhitespace(StringBuilder sb) {
+        return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
 }

@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import zenzai.parser.Tag;
 import zenzai.select.Elements;
 
-public abstract class FormElement extends Element{
+public abstract class FormElement extends Element {
     private final Elements linkedEls = new Elements();
 
     /**
@@ -18,6 +18,17 @@ public abstract class FormElement extends Element{
         super(tag, baseUri, attributes);
     }
 
+    @Override
+    public FormElement clone() {
+        return (FormElement) super.clone();
+    }
+
+    @Override
+    protected void removeChild(zenzai.nodes.Node out) {
+        super.removeChild(out);
+        linkedEls.remove(out);
+    }
+
     /**
      * Add a form control element to this form.
      * @param element form control to add
@@ -26,10 +37,5 @@ public abstract class FormElement extends Element{
     public FormElement addElement(Element element) {
         linkedEls.add(element);
         return this;
-    }
-
-    @Override
-    public FormElement clone() {
-        return (FormElement) super.clone();
     }
 }

@@ -20,6 +20,64 @@ public class Range {
         this.end = end;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Range range = (Range) o;
+
+        if (!start.equals(range.start)) return false;
+        return end.equals(range.end);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start, end);
+    }
+
+    /**
+     Gets a String presentation of this Range, in the format {@code line,column:pos-line,column:pos}.
+     * @return a String
+     */
+    @Override
+    public String toString() {
+        return start + "-" + end;
+    }
+
+    /**
+     Get the start position of this node.
+     * @return the start position
+     */
+    public Position start() {
+        return start;
+    }
+
+    /**
+     Get the starting cursor position of this range.
+     @return the 0-based start cursor position.
+     @since 1.17.1
+     */
+    public int startPos() {
+        return start.pos;
+    }
+
+    /**
+     Get the end position of this node.
+     * @return the end position
+     */
+    public Position end() {
+        return end;
+    }
+
+    /**
+     Get the ending cursor position of this range.
+     @return the 0-based ending cursor position.
+     @since 1.17.1
+     */
+    public int endPos() {
+        return end.pos;
+    }
 
     /**
      Test if this source range was tracked during parsing.
