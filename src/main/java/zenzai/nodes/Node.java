@@ -11,6 +11,7 @@ import zenzai.helper.Validate;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
+import zenzai.select.NodeFilter;
 import zenzai.select.NodeVisitor;
 
 public abstract class Node implements org.w3c.dom.Node, Cloneable {
@@ -26,10 +27,38 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
-     * Get each of the Element's attributes.
-     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
+     * Gets this node's outer HTML.
+     * @return outer HTML.
+     * @see #outerHtml()
      */
-    public abstract Attributes attributes();
+    @Override
+    public String toString() {
+        return outerHtml();
+    }
+
+    /**
+     * Check if this node is the same instance of another (object identity test).
+     * <p>For a node value equality check, see {@link #hasSameValue(Object)}</p>
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     * @see Node#hasSameValue(Object)
+     */
+    @Override
+    public boolean equals(@Nullable Object o) {
+        // implemented just so that javadoc is clear this is an identity test
+        return this == o;
+    }
+
+    /**
+     Provides a hashCode for this Node, based on its object identity. Changes to the Node's content will not impact the
+     result.
+     @return an object identity based hashcode for this Node
+     */
+    @Override
+    public int hashCode() {
+        // implemented so that javadoc and scanners are clear this is an identity test
+        return super.hashCode();
+    }
 
     @Override
     public zenzai.nodes.Node clone() {
@@ -52,6 +81,12 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         }
         return thisClone;
     }
+
+    /**
+     * Get each of the Element's attributes.
+     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
+     */
+    public abstract Attributes attributes();
 
     // org.w3c.dom.Node
     public abstract String getNodeName();
@@ -743,6 +778,17 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     /**
+     Returns a Stream of this and descendant nodes, containing only nodes of the specified type. The stream has document
+     order.
+     @return a stream of nodes filtered by type.
+     @see Element#stream()
+     @since 1.17.1
+     */
+    public <T extends Node> Stream<T> nodeStream(Class<T> type) {
+        return NodeUtils.stream(this, type);
+    }
+
+    /**
      * Clear (remove) each of the attributes in this node.
      * @return this, for chaining
      */
@@ -779,6 +825,30 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         Validate.notNull(action);
         nodeStream().forEach(action);
         return this;
+    }
+
+    /**
+     * Perform a depth-first controllable traversal through this node and its descendants.
+     * @param nodeFilter the filter callbacks to perform on each node
+     * @return this node, for chaining
+     */
+    public Node filter(NodeFilter nodeFilter) {
+        Validate.notNull(nodeFilter);
+        nodeFilter.traverse(this);
+        return this;
+    }
+
+    /**
+     * Check if this node has the same content as another node. A node is considered the same if its name, attributes and content match the
+     * other node; particularly its position in the tree does not influence its similarity.
+     * @param o other object to compare to
+     * @return true if the content of this node is the same as the other
+     */
+    public boolean hasSameValue(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        return this.outerHtml().equals(((Node) o).outerHtml());
     }
 
     /**
