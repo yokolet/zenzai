@@ -61,6 +61,12 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
 
     // org.w3c.dom.Node
     @Override
+    public short getNodeType() {
+        return Node.DOCUMENT_TYPE_NODE;
+    }
+
+    // org.w3c.dom.Node
+    @Override
     public NamedNodeMap getAttributes() { return null; }
 
     @Override

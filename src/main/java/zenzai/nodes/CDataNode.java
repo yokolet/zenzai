@@ -31,6 +31,12 @@ public abstract class CDataNode extends TextNode implements CDATASection {
         coreValue(value);
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public short getNodeType() {
+        return Node.CDATA_SECTION_NODE;
+    }
+
     @Override
     public String nodeName() {
         return "#cdata";
