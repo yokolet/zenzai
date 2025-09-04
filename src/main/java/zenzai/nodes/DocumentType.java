@@ -55,6 +55,12 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
 
     // org.w3c.dom.Node
     @Override
+    public void setNodeValue(String value) throws DOMException {
+        // no-op
+    }
+
+    // org.w3c.dom.Node
+    @Override
     public NamedNodeMap getAttributes() { return null; }
 
     @Override

@@ -123,6 +123,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        // no-op
+    }
+
+    // org.w3c.dom.Node
     // zenzai.nodes.Node
     @Override
     public boolean hasAttributes() {

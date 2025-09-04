@@ -43,6 +43,12 @@ public abstract class TextNode extends LeafNode implements Text {
         return getWholeText();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        coreValue(value);
+    }
+
     // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";

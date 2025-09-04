@@ -23,7 +23,14 @@ public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
     // org.w3d.dom.Node
     @Override
     public String getNodeValue() throws DOMException {
-        return getNodeValue();
+        return coreValue();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        // NO_MODIFICATION_ALLOWED_ERR will be raised when the node is readonly and if it is not defined to be null.
+        coreValue(value);
     }
 
     // org.w3c.dom.CharacterData
