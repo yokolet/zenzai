@@ -70,6 +70,13 @@ public abstract class Attribute implements Cloneable, Attr {
         return getValue();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        // NO_MODIFICATION_ALLOWED_ERR will be raised when the node is readonly and if not defined to be null.
+        setValueWithReturn(value);
+    }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name
