@@ -129,6 +129,20 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getFirstChild() {
+        if (childNodes == null || childNodes.getLength() == 0) return null;
+        return childNodes.item(0);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getLastChild() {
+        if (childNodes == null || childNodes.getLength() == 0) return null;
+        return childNodes.item(childNodes.getLength() - 1);
+    }
+
+    // org.w3c.dom.Node
     // zenzai.nodes.Node
     @Override
     public boolean hasAttributes() {

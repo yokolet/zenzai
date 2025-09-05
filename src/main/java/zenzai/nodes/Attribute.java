@@ -20,6 +20,8 @@ import zenzai.internal.SharedConstants;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.Document.OutputSettings.Syntax;
 
+// An attribute can have children if those are Text and EntityReference.
+// However, HTML attributes cannot contain children
 public abstract class Attribute implements Cloneable, Attr {
     private static final String[] booleanAttributes = {
             "allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled",
@@ -309,7 +311,7 @@ public abstract class Attribute implements Cloneable, Attr {
      <p>Position tracking must be enabled prior to parsing the content.</p>
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
-     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see zenzai.parser.Parser#setTrackPosition(boolean)
      @see Attributes#sourceRange(String)
      @see zenzai.nodes.Node#sourceRange()
      @see zenzai.nodes.Element#endSourceRange()
