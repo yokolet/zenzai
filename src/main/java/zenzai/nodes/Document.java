@@ -110,6 +110,12 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         return Node.DOCUMENT_NODE;
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getParentNode() {
+        return null;
+    }
+
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
