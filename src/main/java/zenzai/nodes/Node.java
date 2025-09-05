@@ -95,7 +95,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public org.w3c.dom.Node getLastChild() { return null; }
     public org.w3c.dom.Node getPreviousSibling() { return nextSibling(); }
     public org.w3c.dom.Node getNextSibling() { return previousSibling(); }
-    public abstract NamedNodeMap getAttributes();
+    public NamedNodeMap getAttributes() { return null; }
     public Document getOwnerDocument() { return ownerDocument(); }
     public abstract org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException;
     public abstract org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException;

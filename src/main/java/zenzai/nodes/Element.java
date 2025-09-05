@@ -143,15 +143,16 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return attributes(); }
+
+    // org.w3c.dom.Node
     // zenzai.nodes.Node
     @Override
     public boolean hasAttributes() {
         return attributes != null;
     }
 
-    // org.w3c.dom.Node
-    @Override
-    public NamedNodeMap getAttributes() { return attributes(); }
 
     // org.w3c.dom.Node
     /**

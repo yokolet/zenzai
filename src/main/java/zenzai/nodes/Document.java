@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 
+import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.parser.ParseSettings;
@@ -115,6 +116,10 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     public org.w3c.dom.Node getParentNode() {
         return null;
     }
+
+    // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return null; }
 
     @Override
     public String outerHtml() {
