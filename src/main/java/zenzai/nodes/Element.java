@@ -141,6 +141,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.NodeList getChildNodes() {
+        return childNodes;
+    }
+
+    // org.w3c.dom.Node
     // zenzai.nodes.Node
     @Override
     public boolean hasAttributes() {
@@ -1045,11 +1051,13 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             super(size);
         }
 
+        // org.w3c.dom.NodeList
         @Override
         public org.w3c.dom.Node item(int index) {
             return get(index);
         }
 
+        // org.w3c.dom.NodeList
         @Override
         public int getLength() {
             return size();

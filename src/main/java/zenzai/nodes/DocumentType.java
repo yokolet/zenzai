@@ -8,6 +8,7 @@ import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.Document.OutputSettings.Syntax;
 
+// TODO: from a view of DOM, Document Type is not a leaf node. It can have children such as entity or notation.
 public abstract class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
@@ -63,6 +64,13 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
     @Override
     public short getNodeType() {
         return Node.DOCUMENT_TYPE_NODE;
+    }
+
+    // TODO: Document Type can have child nodes
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.NodeList getChildNodes() {
+        return new Element.NodeList(0);
     }
 
     // org.w3c.dom.Node

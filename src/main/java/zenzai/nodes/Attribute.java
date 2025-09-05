@@ -89,6 +89,12 @@ public abstract class Attribute implements Cloneable, Attr {
         return null;
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.NodeList getChildNodes() {
+        return new zenzai.nodes.Element.NodeList(0);
+    }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name
