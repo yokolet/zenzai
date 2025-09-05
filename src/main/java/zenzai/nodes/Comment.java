@@ -39,12 +39,6 @@ public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
         return Node.COMMENT_NODE;
     }
 
-    // org.w3c.dom.Node
-    @Override
-    public org.w3c.dom.NodeList getChildNodes() {
-        return new Element.NodeList(0);
-    }
-
     // org.w3c.dom.CharacterData
     // nodes.Comment
     @Override

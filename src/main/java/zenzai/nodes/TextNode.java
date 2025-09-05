@@ -55,12 +55,6 @@ public abstract class TextNode extends LeafNode implements Text {
         return Node.TEXT_NODE;
     }
 
-    // org.w3c.dom.Node
-    @Override
-    public org.w3c.dom.NodeList getChildNodes() {
-        return new Element.NodeList(0);
-    }
-
     // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";

@@ -82,21 +82,17 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return thisClone;
     }
 
-    /**
-     * Get each of the Element's attributes.
-     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
-     */
-    public abstract Attributes attributes();
-
     // org.w3c.dom.Node
     public abstract String getNodeName();
-    public abstract String getNodeValue();
-    public abstract void setNodeValue(String nodeValue) throws DOMException;
+    public String getNodeValue() { return null; }
+    public void setNodeValue(String nodeValue) throws DOMException {
+        // no-op
+    }
     public abstract short getNodeType();
-    public abstract org.w3c.dom.Node getParentNode();
-    public abstract NodeList getChildNodes();
-    public abstract org.w3c.dom.Node getFirstChild();
-    public abstract org.w3c.dom.Node getLastChild();
+    public org.w3c.dom.Node getParentNode() { return parentNode; }
+    public NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
+    public org.w3c.dom.Node getFirstChild() { return null; }
+    public org.w3c.dom.Node getLastChild() { return null; }
     public abstract org.w3c.dom.Node getPreviousSibling();
     public abstract org.w3c.dom.Node getNextSibling();
     public abstract NamedNodeMap getAttributes();
@@ -126,6 +122,12 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public abstract Object getFeature(String feature, String version);
     public abstract Object setUserData(String key, Object data, UserDataHandler handler);
     public abstract Object getUserData(String key);
+
+    /**
+     * Get each of the Element's attributes.
+     * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
+     */
+    public abstract Attributes attributes();
 
     /**
      * Get the number of child nodes that this node holds.

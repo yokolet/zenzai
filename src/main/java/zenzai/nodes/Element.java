@@ -116,28 +116,10 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return tag.getName();
     }
 
-    // org.w3d.dom.Node
-    @Override
-    public String getNodeValue() throws DOMException {
-        return null;
-    }
-
-    // org.w3c.dom.Node
-    @Override
-    public void setNodeValue(String value) throws DOMException {
-        // no-op
-    }
-
     // org.w3c.dom.Node
     @Override
     public short getNodeType() {
         return Node.ELEMENT_NODE;
-    }
-
-    // org.w3c.dom.Node
-    @Override
-    public org.w3c.dom.Node getParentNode() {
-        return parentNode;
     }
 
     // org.w3c.dom.Node
