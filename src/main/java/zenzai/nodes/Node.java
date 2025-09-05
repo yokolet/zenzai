@@ -90,11 +90,11 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
     public abstract short getNodeType();
     public org.w3c.dom.Node getParentNode() { return parentNode; }
-    public NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
+    public org.w3c.dom.NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
     public org.w3c.dom.Node getFirstChild() { return null; }
     public org.w3c.dom.Node getLastChild() { return null; }
-    public abstract org.w3c.dom.Node getPreviousSibling();
-    public abstract org.w3c.dom.Node getNextSibling();
+    public org.w3c.dom.Node getPreviousSibling() { return nextSibling(); }
+    public org.w3c.dom.Node getNextSibling() { return previousSibling(); }
     public abstract NamedNodeMap getAttributes();
     public Document getOwnerDocument() { return ownerDocument(); }
     public abstract org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException;

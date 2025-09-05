@@ -85,6 +85,14 @@ public abstract class Attribute implements Cloneable, Attr {
         return Node.ATTRIBUTE_NODE;
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getPreviousSibling() { return null; }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getNextSibling() { return null; }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name
