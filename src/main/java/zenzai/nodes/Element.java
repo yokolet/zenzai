@@ -147,6 +147,28 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public NamedNodeMap getAttributes() { return attributes(); }
 
     // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
+        /*
+        DOMException - HIERARCHY_REQUEST_ERR: Raised if this node is of a type that does not allow children of the
+        type of the newChild node, or if the node to insert is one of this node's ancestors or this node itself, or
+        if this node is of type Document and the DOM application attempts to insert a second DocumentType or Element node.
+        WRONG_DOCUMENT_ERR: Raised if newChild was created from a different document than the one that created this node.
+        NO_MODIFICATION_ALLOWED_ERR: Raised if this node is readonly or if the parent of the node being inserted is readonly.
+        NOT_FOUND_ERR: Raised if refChild is not a child of this node.
+         */
+        if (ownerDocument() != newChild.getOwnerDocument()) {
+            throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, "Cannot insert the child since it was created by another document.");
+        }
+        if (refChild != null) {
+            ((zenzai.nodes.Node)refChild).before((zenzai.nodes.Node)newChild);
+        } else if (parentNode != null) {
+            parentNode.addChildren((zenzai.nodes.Node)newChild);
+        }
+        return null;
+    }
+
+    // org.w3c.dom.Node
     // zenzai.nodes.Node
     @Override
     public boolean hasAttributes() {

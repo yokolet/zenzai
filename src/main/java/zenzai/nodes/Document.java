@@ -121,6 +121,12 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     @Override
     public NamedNodeMap getAttributes() { return null; }
 
+    // org.w3c.dom.Node
+    @Override
+    public Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
