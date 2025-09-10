@@ -106,18 +106,25 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
         W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
         W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
-        W3CValidation.replacementSupported(this);
+        W3CValidation.operationSupported(this);
         replaceChild(oldChild, newChild);
         return oldChild;
     }
     public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
         W3CValidation.modificationAllowed(this, this);
         W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
-        W3CValidation.replacementSupported(this);
+        W3CValidation.operationSupported(this);
         removeChild(oldChild);
         return oldChild;
     }
-    public abstract org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException;
+    public org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException {
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.operationSupported(((zenzai.nodes.Node) newChild).parentNode());
+        addChildren((zenzai.nodes.Node)newChild);
+        return newChild;
+    }
     public abstract boolean hasChildNodes();
     public abstract org.w3c.dom.Node cloneNode(boolean deep);
     public abstract void normalize();

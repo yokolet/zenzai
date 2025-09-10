@@ -68,7 +68,7 @@ NOT_SUPPORTED_ERR: if the newChild node is a child of the Document node, this ex
         }
     }
 
-    public static void replacementSupported(Node base) {
+    public static void operationSupported(Node base) {
         if (base instanceof org.w3c.dom.Document) {
             throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot perform this operation because of not supported error.");
         }
