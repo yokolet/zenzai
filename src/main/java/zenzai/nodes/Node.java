@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
@@ -100,8 +101,22 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
     }
-    public abstract org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException;
-    public abstract org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException;
+    public org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException {
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
+        W3CValidation.replacementSupported(this);
+        replaceChild(oldChild, newChild);
+        return oldChild;
+    }
+    public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
+        W3CValidation.modificationAllowed(this, this);
+        W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
+        W3CValidation.replacementSupported(this);
+        removeChild(oldChild);
+        return oldChild;
+    }
     public abstract org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException;
     public abstract boolean hasChildNodes();
     public abstract org.w3c.dom.Node cloneNode(boolean deep);

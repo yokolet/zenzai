@@ -11,6 +11,7 @@ import org.w3c.dom.DOMException;
 
 import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
@@ -149,23 +150,17 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     // org.w3c.dom.Node
     @Override
     public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
-        /*
-        DOMException - HIERARCHY_REQUEST_ERR: Raised if this node is of a type that does not allow children of the
-        type of the newChild node, or if the node to insert is one of this node's ancestors or this node itself, or
-        if this node is of type Document and the DOM application attempts to insert a second DocumentType or Element node.
-        WRONG_DOCUMENT_ERR: Raised if newChild was created from a different document than the one that created this node.
-        NO_MODIFICATION_ALLOWED_ERR: Raised if this node is readonly or if the parent of the node being inserted is readonly.
-        NOT_FOUND_ERR: Raised if refChild is not a child of this node.
-         */
-        if (ownerDocument() != newChild.getOwnerDocument()) {
-            throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, "Cannot insert the child since it was created by another document.");
-        }
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+
         if (refChild != null) {
+            W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)refChild);
             ((zenzai.nodes.Node)refChild).before((zenzai.nodes.Node)newChild);
-        } else if (parentNode != null) {
-            parentNode.addChildren((zenzai.nodes.Node)newChild);
+        } else {
+            addChildren((zenzai.nodes.Node)newChild);
         }
-        return null;
+        return newChild;
     }
 
     // org.w3c.dom.Node
