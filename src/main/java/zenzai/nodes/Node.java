@@ -133,8 +133,8 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return cloned;
     }
     public abstract void normalize();
-    public abstract boolean isSupported(String feature, String version);
-    public abstract String getNamespaceURI();
+    public boolean isSupported(String feature, String version) { return false;}
+    public String getNamespaceURI() { return "http://www.w3.org/1999/xhtml"; }
     public abstract String getPrefix();
     public abstract void setPrefix(String prefix) throws DOMException;
     public abstract String getLocalName();
