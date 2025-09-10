@@ -125,8 +125,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         addChildren((zenzai.nodes.Node)newChild);
         return newChild;
     }
-    public abstract boolean hasChildNodes();
-    public abstract org.w3c.dom.Node cloneNode(boolean deep);
+    public boolean hasChildNodes() { return childNodeSize() > 0; }
+    public org.w3c.dom.Node cloneNode(boolean deep) {
+        Node cloned;
+        if (deep) { cloned = clone(); }
+        else { cloned = shallowClone(); }
+        return cloned;
+    }
     public abstract void normalize();
     public abstract boolean isSupported(String feature, String version);
     public abstract String getNamespaceURI();

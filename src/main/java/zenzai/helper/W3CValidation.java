@@ -5,7 +5,7 @@ import org.w3c.dom.DOMException;
 import zenzai.nodes.Node;
 
 public final class W3CValidation {
-    private W3CValidation() {}    
+    private W3CValidation() {}
 
     /*
     insertBefore
