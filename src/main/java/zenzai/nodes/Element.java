@@ -180,6 +180,15 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return childNodes != EmptyNodeList;
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        // TODO: check if calling text() is enough
+        // concatenation of the textContent attribute value of every child node, excluding COMMENT_NODE and
+        // PROCESSING_INSTRUCTION_NODE nodes. This is the empty string if the node has no children.
+        return text();
+    }
+
     @Override
     public int childNodeSize() {
         return childNodes.size();

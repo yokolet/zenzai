@@ -132,15 +132,28 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         else { cloned = shallowClone(); }
         return cloned;
     }
-    public abstract void normalize();
+    public void normalize() {
+        // TODO: implement this method
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/normalize
+        // no-op for now
+    }
     public boolean isSupported(String feature, String version) { return false;}
     public String getNamespaceURI() { return "http://www.w3.org/1999/xhtml"; }
-    public abstract String getPrefix();
-    public abstract void setPrefix(String prefix) throws DOMException;
-    public abstract String getLocalName();
-    public abstract boolean hasAttributes();
-    public abstract String getBaseURI();
-    public abstract short compareDocumentPosition(Node other) throws DOMException;
+    public String getPrefix() { return null; }
+    public void setPrefix(String prefix) throws DOMException {
+        // no-op
+    }
+    public String getLocalName() {
+        // TODO: check return values from ELEMENT_NODE and ATTRIBUTE_NODE
+        return null;
+    }
+    public boolean hasAttributes() { return false; }
+    public String getBaseURI() { return null; }
+    public short compareDocumentPosition(Node other) throws DOMException {
+        // TODO: decide if the implementation of this method is required
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
+        return 0;
+    }
     public abstract String getTextContent() throws DOMException;
     public abstract void setTextContent(String textContent) throws DOMException;
     public abstract boolean isSameNode(Node other);

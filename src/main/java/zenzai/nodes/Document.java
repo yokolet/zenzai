@@ -127,6 +127,12 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return null;
+    }
+
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
