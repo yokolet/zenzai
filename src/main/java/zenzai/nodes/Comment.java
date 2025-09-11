@@ -45,6 +45,12 @@ public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
         return coreValue();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        coreValue(textContent);
+    }
+
     // org.w3c.dom.CharacterData
     // nodes.Comment
     @Override

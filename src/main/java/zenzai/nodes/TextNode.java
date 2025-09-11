@@ -66,6 +66,12 @@ public abstract class TextNode extends LeafNode implements Text {
         return coreValue();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        coreValue(textContent);
+    }
+
     // org.w3c.dom.CharacterData
     public abstract String getData() throws DOMException;
     public abstract void setData(String data) throws DOMException;

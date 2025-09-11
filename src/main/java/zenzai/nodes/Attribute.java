@@ -93,6 +93,18 @@ public abstract class Attribute implements Cloneable, Attr {
     @Override
     public org.w3c.dom.Node getNextSibling() { return null; }
 
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return null;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        // no-op
+    }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name

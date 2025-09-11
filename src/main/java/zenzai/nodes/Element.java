@@ -189,6 +189,12 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return text();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        text(textContent);
+    }
+
     @Override
     public int childNodeSize() {
         return childNodes.size();
