@@ -30,9 +30,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
-    public abstract org.w3c.dom.Attr getAttributeNode(String name);
-    public abstract org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
-    public abstract org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
     public abstract org.w3c.dom.NodeList getElementsByTagName(String name);
     public abstract String getAttributeNS(String namespaceURI, String localName) throws DOMException;
     public abstract void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException;
@@ -209,6 +206,38 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public void removeAttribute(String name) throws DOMException {
         W3CValidation.modificationAllowed(this);
         removeAttr(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr getAttributeNode(String name) {
+        return attribute(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException {
+        if (getOwnerDocument() != attr.getOwnerDocument()) {
+            throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, "Cannot set attribute on non-owner document.");
+        }
+        W3CValidation.modificationAllowed(this);
+        if (this != ((zenzai.nodes.Attribute)attr).getOwnerDocument()) {
+            throw new DOMException(DOMException.INUSE_ATTRIBUTE_ERR, "Cannot set attribute on non-owner document.");
+        }
+        attributes().put((zenzai.nodes.Attribute)attr);
+        return attr;
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        String key = attr.getName();
+        if (!attributes().hasKey(key)) {
+            throw new DOMException(DOMException.NOT_FOUND_ERR, "Cannot remove attribute on non-owner document.");
+        }
+        attributes().remove(key);
+        return attr;
     }
 
     @Override
