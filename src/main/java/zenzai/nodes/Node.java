@@ -16,6 +16,7 @@ import zenzai.select.NodeFilter;
 import zenzai.select.NodeVisitor;
 
 public abstract class Node implements org.w3c.dom.Node, Cloneable {
+    static final String DefualtNamespaceURI = "http://www.w3.org/1999/xhtml";
     @Nullable Element parentNode; // Nodes don't always have parents
     static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
@@ -89,7 +90,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public void setNodeValue(String nodeValue) throws DOMException {
         // no-op
     }
-    public abstract short getNodeType();
+    public abstract short getNodeType(); // subclases implement this method
     public org.w3c.dom.Node getParentNode() { return parentNode; }
     public org.w3c.dom.NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
     public org.w3c.dom.Node getFirstChild() { return null; }
@@ -138,7 +139,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         // no-op for now
     }
     public boolean isSupported(String feature, String version) { return false;}
-    public String getNamespaceURI() { return "http://www.w3.org/1999/xhtml"; }
+    public String getNamespaceURI() { return DefualtNamespaceURI; }
     public String getPrefix() { return null; }
     public void setPrefix(String prefix) throws DOMException {
         // no-op
@@ -154,12 +155,14 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
         return 0;
     }
-    public abstract String getTextContent() throws DOMException;
-    public abstract void setTextContent(String textContent) throws DOMException;
-    public abstract boolean isSameNode(Node other);
-    public abstract String lookupPrefix(String namespaceURI);
-    public abstract boolean isDefaultNamespace(String namespaceURI);
-    public abstract String lookupNamespaceURI(String prefix);
+    public abstract String getTextContent() throws DOMException; // implementation leaves to subclasses
+    public abstract void setTextContent(String textContent) throws DOMException; // implementation leaves to subcalsses
+    public boolean isSameNode(Node other) {
+        return this.hashCode() == other.hashCode();
+    }
+    public String lookupPrefix(String namespaceURI) { return null; }
+    public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(DefualtNamespaceURI); }
+    public String lookupNamespaceURI(String prefix) { return null; }
     public abstract boolean isEqualNode(Node arg);
     public abstract Object getFeature(String feature, String version);
     public abstract Object setUserData(String key, Object data, UserDataHandler handler);
