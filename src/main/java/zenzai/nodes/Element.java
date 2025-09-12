@@ -30,14 +30,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
-    // org.w3c.dom.Element
-    public String getTagName() { return tagName(); }
-    public String getAttribute(String name) {
-        Attribute attr = attribute(name);
-        return attr == null ? null : attr.getValue();
-    }
-    public abstract void setAttribute(String name, String value) throws DOMException;
-    public abstract void removeAttribute(String name) throws DOMException;
     public abstract org.w3c.dom.Attr getAttributeNode(String name);
     public abstract org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
     public abstract org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
@@ -193,6 +185,30 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     @Override
     public void setTextContent(String textContent) throws DOMException {
         text(textContent);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public String getTagName() { return tagName(); }
+
+    // org.w3c.dom.Element
+    @Override
+    public String getAttribute(String name) {
+        Attribute attr = attribute(name);
+        return attr == null ? null : attr.getValue();
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public void setAttribute(String name, String value) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        attr(name, value);
+    }
+
+    // org.w3c.dom.Element
+    public void removeAttribute(String name) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        removeAttr(name);
     }
 
     @Override

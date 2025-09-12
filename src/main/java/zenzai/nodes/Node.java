@@ -112,7 +112,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return oldChild;
     }
     public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
-        W3CValidation.modificationAllowed(this, this);
+        W3CValidation.modificationAllowed(this);
         W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
         W3CValidation.operationSupported(this);
         removeChild(oldChild);

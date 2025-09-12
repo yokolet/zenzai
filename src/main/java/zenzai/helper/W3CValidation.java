@@ -51,10 +51,17 @@ public final class W3CValidation {
         Raised if this node is readonly.
     appendChild
         Raised if this node is readonly or if the previous parent of the node being inserted is readonly.
+    Element.setAttribute
+        Raised if this node is readonly.
+    Element.removeAttribute
+        Raised if this node is readonly.
      */
-    public static void modificationAllowed(Node base, Node other) {
-        if (base instanceof org.w3c.dom.DocumentType || base instanceof org.w3c.dom.Entity ||
-                other.parentNode() instanceof org.w3c.dom.DocumentType || other.parentNode() instanceof org.w3c.dom.Entity) {
+    public static void modificationAllowed(Node... nodes) {
+        if (nodes.length == 0) return;
+        if (nodes.length >= 1 && (nodes[0] instanceof org.w3c.dom.DocumentType || nodes[0] instanceof org.w3c.dom.Entity)) {
+            throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, "Cannot perform this operation because of no modification allowed error.");
+        }
+        if (nodes.length >= 2 && (nodes[1].parentNode() instanceof org.w3c.dom.DocumentType || nodes[1].parentNode() instanceof org.w3c.dom.Entity)) {
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, "Cannot perform this operation because of no modification allowed error.");
         }
     }
