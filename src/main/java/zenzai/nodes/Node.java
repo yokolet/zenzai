@@ -163,10 +163,25 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public String lookupPrefix(String namespaceURI) { return null; }
     public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(DefualtNamespaceURI); }
     public String lookupNamespaceURI(String prefix) { return null; }
-    public abstract boolean isEqualNode(Node arg);
-    public abstract Object getFeature(String feature, String version);
-    public abstract Object setUserData(String key, Object data, UserDataHandler handler);
-    public abstract Object getUserData(String key);
+    public boolean isEqualNode(Node arg) {
+        // TODO: check correctness of this method
+        if (getNodeType() != arg.getNodeType()) return false;
+        if (!getNodeName().equals(arg.getNodeName())) return false;
+        if (!getLocalName().equals(arg.getLocalName())) return false;
+        if (!getNodeValue().equals(arg.getNodeValue())) return false;
+        if (!getAttributes().equals(arg.getAttributes())) return false;
+        if (!childNodes().equals(arg.getChildNodes())) return false;
+        return true;
+    }
+    public Object getFeature(String feature, String version) { return null; }
+    public Object setUserData(String key, Object data, UserDataHandler handler) {
+        // TODO: guess HTML5 doesn't have user data feature
+        return null;
+    }
+    public Object getUserData(String key) {
+        // TODO: same as above. HTML5 doesn't have user data feature
+        return null;
+    }
 
     /**
      * Get each of the Element's attributes.
