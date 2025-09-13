@@ -1,7 +1,5 @@
 package zenzai.internal;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.Locale;
 
 public final class Normalizer {

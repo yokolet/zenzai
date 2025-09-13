@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
-
 import org.w3c.dom.NamedNodeMap;
+
 import zenzai.helper.Validate;
 import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
@@ -17,9 +17,12 @@ import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
+import zenzai.select.Collector;
 import zenzai.select.Elements;
+import zenzai.select.Evaluator;
 import zenzai.select.NodeVisitor;
 
+import static zenzai.internal.Normalizer.normalize;
 import static zenzai.nodes.TextNode.lastCharIsWhitespace;
 
 public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
@@ -30,7 +33,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
-    public abstract org.w3c.dom.NodeList getElementsByTagName(String name);
     public abstract String getAttributeNS(String namespaceURI, String localName) throws DOMException;
     public abstract void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException;
     public abstract void removeAttributeNS(String namespaceURI, String localName) throws DOMException;
@@ -240,6 +242,11 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return attr;
     }
 
+    // org.w3c.dom.Element
+    public org.w3c.dom.NodeList getElementsByTagName(String name) {
+        return getElementsByTag(name);
+    }
+
     @Override
     public int childNodeSize() {
         return childNodes.size();
@@ -260,7 +267,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public String normalName() {
         return tag.normalName();
     }
-
 
     @Override
     public Element clone() {
@@ -929,6 +935,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         Parser parser = NodeUtils.parser(this);
         tag = parser.tagSet().valueOf(tagName, namespace, parser.settings()); // maintains the case option of the original parse
         return this;
+    }
+
+    /**
+     * Finds elements, including and recursively under this element, with the specified tag name.
+     * @param tagName The tag name to search for (case insensitively).
+     * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
+     */
+    public Elements getElementsByTag(String tagName) {
+        Validate.notEmpty(tagName);
+        tagName = zenzai.internal.Normalizer.normalize(tagName);
+
+        return Collector.collect(new Evaluator.Tag(tagName), this);
     }
 
     /**
