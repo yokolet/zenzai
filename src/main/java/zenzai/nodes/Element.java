@@ -12,6 +12,7 @@ import org.w3c.dom.NamedNodeMap;
 
 import zenzai.helper.Validate;
 import zenzai.helper.W3CValidation;
+import zenzai.internal.Normalizer;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
@@ -22,19 +23,17 @@ import zenzai.select.Elements;
 import zenzai.select.Evaluator;
 import zenzai.select.NodeVisitor;
 
+import static zenzai.nodes.Document.OutputSettings.Syntax.xml;
+import static zenzai.parser.Parser.NamespaceHtml;
 import static zenzai.nodes.TextNode.lastCharIsWhitespace;
 
-public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
+public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
-
-    public abstract void setIdAttribute(String name, boolean isId) throws DOMException;
-    public abstract void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException;
-    public abstract void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException;
 
     /**
      * Create a new, standalone Element. (Standalone in that it has no parent.)
@@ -150,7 +149,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public boolean hasAttributes() {
         return attributes != null;
     }
-
 
     // org.w3c.dom.Node
     /**
@@ -270,6 +268,15 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
     }
     public boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttribute(String name, boolean isId) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException {
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
     }
 
@@ -1161,6 +1168,33 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return childNodes.validChildren;
     }
 
+    @Override
+    void outerHtmlHead(final QuietAppendable accum, Document.OutputSettings out) {
+        String tagName = safeTagName(out.syntax());
+        accum.append('<').append(tagName);
+        if (attributes != null) attributes.html(accum, out);
+
+        if (childNodes.isEmpty()) {
+            boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
+            if (xmlMode && (tag.is(org.jsoup.parser.Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
+                accum.append(" />");
+            } else if (!xmlMode && tag.isEmpty()) { // html void element
+                accum.append('>');
+            } else {
+                accum.append("></").append(tagName).append('>');
+            }
+        } else {
+            accum.append('>');
+        }
+    }
+
+    @Override
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {
+        if (!childNodes.isEmpty())
+            accum.append("</").append(safeTagName(out.syntax())).append('>');
+        // if empty, we have already closed in htmlHead
+    }
+
     static final class NodeList extends ArrayList<zenzai.nodes.Node> implements org.w3c.dom.NodeList {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
@@ -1320,6 +1354,11 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             if (node.nameIs("br")) return "\n";
             return "";
         }).collect(StringUtil.joining(""));
+    }
+
+    /* If XML syntax, normalizes < to _ in tag name. */
+    @Nullable private String safeTagName(Document.OutputSettings.Syntax syntax) {
+        return syntax == Document.OutputSettings.Syntax.xml ? Normalizer.xmlSafeTagName(tagName()) : tagName();
     }
 
     private static class TextAccumulator implements NodeVisitor {

@@ -150,20 +150,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
     public boolean hasAttributes() { return false; }
     public String getBaseURI() { return null; }
-    public short compareDocumentPosition(Node other) throws DOMException {
+    public short compareDocumentPosition(org.w3c.dom.Node other) throws DOMException {
         // TODO: decide if the implementation of this method is required
         // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
         return 0;
     }
     public abstract String getTextContent() throws DOMException; // implementation leaves to subclasses
     public abstract void setTextContent(String textContent) throws DOMException; // implementation leaves to subcalsses
-    public boolean isSameNode(Node other) {
+    public boolean isSameNode(org.w3c.dom.Node other) {
         return this.hashCode() == other.hashCode();
     }
     public String lookupPrefix(String namespaceURI) { return null; }
     public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(DefualtNamespaceURI); }
     public String lookupNamespaceURI(String prefix) { return null; }
-    public boolean isEqualNode(Node arg) {
+    public boolean isEqualNode(org.w3c.dom.Node arg) {
         // TODO: check correctness of this method
         if (getNodeType() != arg.getNodeType()) return false;
         if (!getNodeName().equals(arg.getNodeName())) return false;
