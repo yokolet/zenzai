@@ -22,7 +22,6 @@ import zenzai.select.Elements;
 import zenzai.select.Evaluator;
 import zenzai.select.NodeVisitor;
 
-import static zenzai.internal.Normalizer.normalize;
 import static zenzai.nodes.TextNode.lastCharIsWhitespace;
 
 public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
@@ -33,15 +32,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
 
-    public abstract String getAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException;
-    public abstract void removeAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.Attr setAttributeNodeNS(org.w3c.dom.Attr attr) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException;
-    public abstract boolean hasAttribute(String name);
-    public abstract boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.TypeInfo getSchemaTypeInfo();
     public abstract void setIdAttribute(String name, boolean isId) throws DOMException;
     public abstract void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException;
     public abstract void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException;
@@ -243,8 +233,44 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Element
+    @Override
     public org.w3c.dom.NodeList getElementsByTagName(String name) {
         return getElementsByTag(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public boolean hasAttribute(String name) {
+        return attributes().hasKey(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.TypeInfo getSchemaTypeInfo() {
+        return null;
+    }
+
+    // org.w3c.dom.Element
+    public String getAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void removeAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.Attr setAttributeNodeNS(org.w3c.dom.Attr attr) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
     }
 
     @Override
