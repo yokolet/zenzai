@@ -1,9 +1,10 @@
 package zenzai.nodes;
 
 import org.w3c.dom.DOMException;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 
-public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
+public class Comment extends LeafNode implements org.w3c.dom.Comment {
 
     /**
      * Create a new comment node.
@@ -54,23 +55,53 @@ public abstract class Comment extends LeafNode implements org.w3c.dom.Comment {
     // org.w3c.dom.CharacterData
     // nodes.Comment
     @Override
-    public String getData() throws DOMException {
-        return coreValue();
+    public String getData() throws DOMException { return coreValue(); }
+
+    // org.w3c.dom.CharacterData
+    @Override
+    public void setData(String data) throws DOMException { coreValue(data); }
+
+    // org.w3c.dom.CharacterData
+    @Override
+    public int getLength() { return coreValue().length(); }
+
+    // org.w3c.dom.CharacterData
+    @Override
+    public String substringData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        return coreValue().substring(offset, offset + count);
     }
 
-    public abstract void setData(String data) throws DOMException;
+    // org.w3c.dom.CharacterData
+    @Override
+    public void appendData(String data) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue(), data));
+    }
 
-    public abstract int getLength();
+    // org.w3c.dom.CharacterData
+    @Override
+    public void insertData(int offset, String data) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), data, coreValue().substring(offset)));
+    }
 
-    public abstract String substringData(int offset, int length) throws DOMException;
+    // org.w3c.dom.CharacterData
+    @Override
+    public void deleteData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), coreValue().substring(offset + count)));
+    }
 
-    public abstract void appendData(String data) throws DOMException;
-
-    public abstract void insertData(int offset, String data) throws DOMException;
-
-    public abstract void deleteData(int offset, int count) throws DOMException;
-
-    public abstract void replaceData(int offset, int count, String arg) throws DOMException;
+    // org.w3c.dom.CharacterData
+    @Override
+    public void replaceData(int offset, int count, String arg) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), arg.substring(0, count), coreValue().substring(offset + count)));
+    }
 
     @Override
     public Comment clone() {
