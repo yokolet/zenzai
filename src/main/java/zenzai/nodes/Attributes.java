@@ -1,8 +1,10 @@
 package zenzai.nodes;
 
 import org.jspecify.annotations.Nullable;
+import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
@@ -36,12 +38,6 @@ public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<A
 
     // org.w3c.dom.NamedNodeMap
     @Override
-    public int getLength() {
-        return size();
-    }
-
-    // org.w3c.dom.NamedNodeMap
-    @Override
     public org.w3c.dom.Node getNamedItem(String name) {
         return attribute(name);
     }
@@ -49,7 +45,10 @@ public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<A
     // org.w3c.dom.NamedNodeMap
     @Override
     public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg) throws DOMException {
-        if (arg instanceof Attribute) {
+        W3CValidation.wrongDocument(ownerElement, (zenzai.nodes.Node)arg);
+        W3CValidation.modificationAllowed(ownerElement);
+        W3CValidation.attrHierarchyRequest(ownerElement, (zenzai.nodes.Node)arg);
+        if (arg instanceof Attr) {
             Attribute attr = (Attribute) arg;
             Attribute existing = attribute(attr.getKey());
             put(attr);
@@ -57,6 +56,12 @@ public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<A
         } else {
             return null;
         }
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public int getLength() {
+        return size();
     }
 
     // org.w3c.dom.NamedNodeMap

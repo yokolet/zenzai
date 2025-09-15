@@ -29,6 +29,22 @@ public final class W3CValidation {
     }
 
     /*
+    NamedNodeMap.setNamedItem
+        Raised if an attempt is made to add a node doesn't belong in this NamedNodeMap. Examples would include trying
+        to insert something other than an Attr node into an Element's map of attributes, or a non-Entity node into the
+        DocumentType's map of Entities.
+     */
+    public static void attrHierarchyRequest(Node base, Node other) {
+        // TODO: elaborate this method
+        if (base instanceof org.w3c.dom.Element && !(other instanceof org.w3c.dom.Attr)) {
+            throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Cannot perform this operation because of hierarchy request error.");
+        }
+        if (base instanceof org.w3c.dom.DocumentType && !(other instanceof org.w3c.dom.Entity)) {
+            throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, "Cannot perform this operation because of hierarchy request error.");
+        }
+    }
+
+    /*
     insertBefore
         Raised if newChild was created from a different document than the one that created this node.
     replaceChild
@@ -59,6 +75,8 @@ public final class W3CValidation {
         Raised if this node is readonly.
     Text.splitText
         Raised if this node is readonly.
+    NamedNodeMap.setNamedItem
+        Raised if this map is readonly.
      */
     public static void modificationAllowed(Node... nodes) {
         if (nodes.length == 0) return;
