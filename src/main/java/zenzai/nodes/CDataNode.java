@@ -4,7 +4,7 @@ import org.w3c.dom.CDATASection;
 import org.w3c.dom.DOMException;
 import zenzai.internal.QuietAppendable;
 
-public abstract class CDataNode extends TextNode implements CDATASection {
+public class CDataNode extends TextNode implements CDATASection {
     public CDataNode(String text) {
         super(text);
     }
