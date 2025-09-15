@@ -55,6 +55,10 @@ public final class W3CValidation {
         Raised if this node is readonly.
     Element.removeAttribute
         Raised if this node is readonly.
+    CharacterData.appendData
+        Raised if this node is readonly.
+    Text.splitText
+        Raised if this node is readonly.
      */
     public static void modificationAllowed(Node... nodes) {
         if (nodes.length == 0) return;
@@ -97,6 +101,26 @@ public final class W3CValidation {
     public static void operationSupported(Node base) {
         if (base instanceof org.w3c.dom.Document) {
             throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Cannot perform this operation because of not supported error.");
+        }
+    }
+
+    /*
+    CharacterData.substringData
+        Raised if the specified offset is negative or greater than the number of 16-bit units in data, or if the
+        specified count is negative.
+    CharacterData.insertData
+        Raised if the specified offset is negative or greater than the number of 16-bit units in data.
+    Text.splitText
+        Raised if the specified offset is negative or greater than the number of 16-bit units in data.
+     */
+    public static void indexSizeWithinLength(Node base, int... args) {
+        if (base instanceof zenzai.nodes.TextNode || base instanceof org.w3c.dom.CDATASection || base instanceof org.w3c.dom.Comment) {
+            if (args.length > 0 && (args[0] < 0 || args[0] > base.nodeValue().length() - 1)) {
+                throw new DOMException(DOMException.INDEX_SIZE_ERR, "Cannot perform this operation because of index size error.");
+            }
+            if (args.length > 1 && args[1] < 0) {
+                throw new DOMException(DOMException.INDEX_SIZE_ERR, "Cannot perform this operation because of index size error.");
+            }
         }
     }
 }
