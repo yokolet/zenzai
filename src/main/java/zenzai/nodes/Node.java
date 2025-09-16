@@ -12,11 +12,11 @@ import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
+import zenzai.parser.Parser;
 import zenzai.select.NodeFilter;
 import zenzai.select.NodeVisitor;
 
 public abstract class Node implements org.w3c.dom.Node, Cloneable {
-    static final String DefualtNamespaceURI = "http://www.w3.org/1999/xhtml";
     @Nullable Element parentNode; // Nodes don't always have parents
     static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
@@ -139,7 +139,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         // no-op for now
     }
     public boolean isSupported(String feature, String version) { return false;}
-    public String getNamespaceURI() { return DefualtNamespaceURI; }
+    public String getNamespaceURI() { return Parser.NamespaceHtml; }
     public String getPrefix() { return null; }
     public void setPrefix(String prefix) throws DOMException {
         // no-op
@@ -161,7 +161,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return this.hashCode() == other.hashCode();
     }
     public String lookupPrefix(String namespaceURI) { return null; }
-    public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(DefualtNamespaceURI); }
+    public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(Parser.NamespaceHtml); }
     public String lookupNamespaceURI(String prefix) { return null; }
     public boolean isEqualNode(org.w3c.dom.Node arg) {
         // TODO: check correctness of this method

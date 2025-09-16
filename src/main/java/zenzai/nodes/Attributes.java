@@ -711,7 +711,7 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
             }
 
             @Override public Entry<String, String> next() {
-                return new Attribute(attr.getKey().substring(dataPrefix.length()), attr.getValue());
+                return Map.entry(attr.getKey().substring(dataPrefix.length()), attr.getValue());
             }
 
             @Override public void remove() {
