@@ -16,7 +16,7 @@ import static zenzai.internal.SharedConstants.UserDataKey;
 import static zenzai.internal.SharedConstants.AttrRangeKey;
 import static zenzai.nodes.Range.AttributeRange.UntrackedAttr;
 
-public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
+public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>, Cloneable {
     // Indicates an internal key. Can't be set via HTML. (It could be set via accessor, but not too worried about that. Suppressed from list, iter, size.)
     static final char InternalPrefix = '/';
     protected static final String dataPrefix = "data-"; // data attributes
@@ -60,14 +60,42 @@ public abstract class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<A
 
     // org.w3c.dom.NamedNodeMap
     @Override
+    public org.w3c.dom.Node removeNamedItem(String name) throws DOMException {
+        W3CValidation.attrInMap(ownerElement, name);
+        W3CValidation.modificationAllowed(ownerElement);
+        Attribute attr = attribute(name);
+        remove(name);
+        return attr;
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node item(int index) {
+        if (index < 0 || index >= size()) { return null; }
+        String key = keys[index];
+        return new zenzai.nodes.Attribute(key, checkNotNull(vals[index]), this);
+    }
+
+    // org.w3c.dom.NamedNodeMap
+    @Override
     public int getLength() {
         return size();
     }
 
     // org.w3c.dom.NamedNodeMap
     @Override
-    public org.w3c.dom.Node removeNamedItem(String name) {
-
+    public org.w3c.dom.Node getNamedItemNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node setNamedItemNS(org.w3c.dom.Node arg) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.dom.NamedNodeMap
+    @Override
+    public org.w3c.dom.Node removeNamedItemNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
     }
 
     @Override
