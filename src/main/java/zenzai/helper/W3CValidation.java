@@ -147,7 +147,7 @@ public final class W3CValidation {
         Raised if there is no node named name in this map.
      */
     public static void attrInMap(Node base, String name) {
-        if (base instanceof org.w3c.dom.Element && base.attributes() != null && base.attributes().hasKey(name)) {
+        if (base instanceof org.w3c.dom.Element && base.attributes() != null && !base.attributes().hasKey(name)) {
             throw new DOMException(DOMException.NOT_FOUND_ERR, "Cannot perform this operation because of not found error.");
         }
     }

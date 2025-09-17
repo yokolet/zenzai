@@ -20,46 +20,6 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private final String location;
 
-    public org.w3c.dom.DocumentType getDoctype() { return documentType(); }
-    public abstract org.w3c.dom.DOMImplementation getImplementation();
-    public abstract org.w3c.dom.Element getDocumentElement();
-
-    // org.w3c.dom.Document
-    // jsoup.nodes.Document
-    public Element createElement(String tagName) throws DOMException {
-        return new Element(
-                parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase),
-                searchUpForAttribute(this, BaseUriKey)
-        );
-    }
-    public abstract org.w3c.dom.DocumentFragment createDocumentFragment();
-    public abstract org.w3c.dom.Text createTextNode(String data);
-    public abstract org.w3c.dom.Comment createComment(String data);
-    public abstract org.w3c.dom.CDATASection createCDATASection(String data);
-    public abstract org.w3c.dom.ProcessingInstruction createProcessingInstruction(String target, String data) throws DOMException;
-    public abstract org.w3c.dom.Attr createAttribute(String name);
-    public abstract org.w3c.dom.EntityReference createEntityReference(String name) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagName(String tagName);
-    public abstract org.w3c.dom.Node importNode(Node importedNode, boolean deep) throws DOMException;
-    public abstract org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract org.w3c.dom.Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName);
-    public abstract org.w3c.dom.Element getElementById(String id);
-    public abstract String getInputEncoding();
-    public abstract String getXmlEncoding();
-    public abstract boolean getXmlStandalone();
-    public abstract void setXmlStandalone(boolean xmlStandalone);
-    public abstract String getXmlVersion();
-    public abstract void setXmlVersion(String xmlVersion) throws DOMException;
-    public abstract boolean getStrictErrorChecking();
-    public abstract void setStrictErrorChecking(boolean strictErrorChecking);
-    public abstract String getDocumentURI();
-    public abstract void setDocumentURI(String documentURI);
-    public abstract org.w3c.dom.Node adoptNode(Node node) throws DOMException;
-    public abstract org.w3c.dom.DOMConfiguration getDomConfig();
-    public abstract void normalizeDocument();
-    public abstract org.w3c.dom.Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException;
-
     /**
      Create a new, empty Document, in the specified namespace.
      @param namespace the namespace of this Document's root node.
@@ -85,6 +45,23 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         super(new Tag("#root", namespace), baseUri);
         this.location = baseUri;
         this.parser = parser;
+    }
+
+    @Override
+    public Document clone() {
+        Document clone = (Document) super.clone();
+        if (attributes != null) clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        // parser is pointer copy
+        return clone;
+    }
+
+    @Override
+    public Document shallowClone() {
+        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
+        if (attributes != null) clone.attributes = attributes.clone();
+        clone.outputSettings = this.outputSettings.clone();
+        return clone;
     }
 
     // org.w3c.dom.Node
@@ -139,26 +116,82 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         // no-op
     }
 
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.DocumentType getDoctype() { return documentType(); }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.DOMImplementation getImplementation() { return null; }
+    public org.w3c.dom.Element getDocumentElement() { return getElementsByTag("html").getFirst(); }
+
+    // org.w3c.dom.Document
+    // zenzai.nodes.Document
+    @Override
+    public Element createElement(String tagName) throws DOMException {
+        Element element =  new Element(
+                parser.tagSet().valueOf(tagName, parser.defaultNamespace(), ParseSettings.preserveCase),
+                searchUpForAttribute(this, BaseUriKey)
+        );
+        element.setOwnerDocument(this);
+        return element;
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.DocumentFragment createDocumentFragment() {
+        // TODO: create DocumentFragment class and implement this method
+        return null;
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Text createTextNode(String data) {
+        TextNode textNode = new TextNode(data);
+        textNode.setOwnerDocument(this);
+        return textNode;
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Comment createComment(String data) {
+        Comment comment = new Comment(data);
+        comment.setOwnerDocument(this);
+        return comment;
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.CDATASection createCDATASection(String data) {
+        CDataNode cDataNode = new CDataNode(data);
+        cDataNode.setOwnerDocument(this);
+        return cDataNode;
+    }
+    public org.w3c.dom.ProcessingInstruction createProcessingInstruction(String target, String data) throws DOMException {
+        // TODO: create ProcessingInstruction class and implement this method
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    public abstract org.w3c.dom.Attr createAttribute(String name);
+    public abstract org.w3c.dom.EntityReference createEntityReference(String name) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagName(String tagName);
+    public abstract org.w3c.dom.Node importNode(Node importedNode, boolean deep) throws DOMException;
+    public abstract org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException;
+    public abstract org.w3c.dom.Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException;
+    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName);
+    public abstract org.w3c.dom.Element getElementById(String id);
+    public abstract String getInputEncoding();
+    public abstract String getXmlEncoding();
+    public abstract boolean getXmlStandalone();
+    public abstract void setXmlStandalone(boolean xmlStandalone);
+    public abstract String getXmlVersion();
+    public abstract void setXmlVersion(String xmlVersion) throws DOMException;
+    public abstract boolean getStrictErrorChecking();
+    public abstract void setStrictErrorChecking(boolean strictErrorChecking);
+    public abstract String getDocumentURI();
+    public abstract void setDocumentURI(String documentURI);
+    public abstract org.w3c.dom.Node adoptNode(Node node) throws DOMException;
+    public abstract org.w3c.dom.DOMConfiguration getDomConfig();
+    public abstract void normalizeDocument();
+    public abstract org.w3c.dom.Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException;
+
     @Override
     public String outerHtml() {
         return super.html(); // no outer wrapper tag
-    }
-
-    @Override
-    public Document clone() {
-        Document clone = (Document) super.clone();
-        if (attributes != null) clone.attributes = attributes.clone();
-        clone.outputSettings = this.outputSettings.clone();
-        // parser is pointer copy
-        return clone;
-    }
-
-    @Override
-    public Document shallowClone() {
-        Document clone = new Document(this.tag().namespace(), baseUri(), parser); // preserves parser pointer
-        if (attributes != null) clone.attributes = attributes.clone();
-        clone.outputSettings = this.outputSettings.clone();
-        return clone;
     }
 
     /**

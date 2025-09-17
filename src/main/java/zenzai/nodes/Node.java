@@ -21,6 +21,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
     int siblingIndex;
+    org.w3c.dom.Document document;
 
     /**
      * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
@@ -348,9 +349,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return the Document associated with this Node, or null if there is no such Document.
      */
     public @Nullable Document ownerDocument() {
+        if (document != null) { return (zenzai.nodes.Document)document; }
         zenzai.nodes.Node node = this;
         while (node != null) {
-            if (node instanceof Document) return (Document) node;
+            if (node instanceof Document) {
+                document = (Document)node;
+                return (Document) node;
+            }
             node = node.parentNode;
         }
         return null;
@@ -911,6 +916,10 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (o == null || getClass() != o.getClass()) return false;
 
         return this.outerHtml().equals(((Node) o).outerHtml());
+    }
+
+    protected void setOwnerDocument(Document ownerDocument) {
+        document = ownerDocument;
     }
 
     /**
