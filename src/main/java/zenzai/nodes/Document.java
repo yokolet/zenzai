@@ -8,13 +8,14 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
 
 import static zenzai.parser.Parser.NamespaceHtml;
 
-public abstract class Document extends Element implements org.w3c.dom.Document {
+public class Document extends Element implements org.w3c.dom.Document {
     private OutputSettings outputSettings = new OutputSettings();
     private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
@@ -187,7 +188,11 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         return super.getElementsByTagName(tagName);
     }
     // org.w3c.dom.Document
-    public abstract org.w3c.dom.Node importNode(org.w3c.dom.Node importedNode, boolean deep) throws DOMException;
+    @Override
+    public org.w3c.dom.Node importNode(org.w3c.dom.Node importedNode, boolean deep) throws DOMException {
+        // TODO: implement this method
+        return null;
+    }
     // org.w3c.dom.Document
     @Override
     public org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException {
@@ -242,6 +247,8 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     // org.w3c.dom.Document
     @Override
     public boolean getStrictErrorChecking() { return false;}
+    // org.w3c.dom.Document
+    @Override
     public void setStrictErrorChecking(boolean strictErrorChecking) {
         // no-op
     }
@@ -251,16 +258,38 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     // org.w3c.dom.Document
     @Override
     public void setDocumentURI(String documentURI) { setBaseUri(documentURI); }
-    public abstract org.w3c.dom.Node adoptNode(org.w3c.dom.Node node) throws DOMException;
+    // org.w3c.dom.Document
+    public org.w3c.dom.Node adoptNode(org.w3c.dom.Node node) throws DOMException {
+        // TODO: implement this method
+        return null;
+    }
+    // org.w3c.dom.Document
+    @Override
     public org.w3c.dom.DOMConfiguration getDomConfig() {
         // TODO: this config will be used for canonicalization
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
     }
+    // org.w3c.dom.Document
+    @Override
     public void normalizeDocument() {
         // TODO: implement this
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
     }
-    public abstract org.w3c.dom.Node renameNode(org.w3c.dom.Node n, String namespaceURI, String qualifiedName) throws DOMException;
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Node renameNode(org.w3c.dom.Node n, String namespaceURI, String qualifiedName) throws DOMException {
+        if (n.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+            W3CValidation.wrongDocument(this, (zenzai.nodes.Node)n);
+            Element el = (zenzai.nodes.Element) n;
+            return el.tagName(qualifiedName, namespaceURI);
+        } else if (n.getNodeType() == org.w3c.dom.Node.ATTRIBUTE_NODE) {
+            Attribute attr = (Attribute) n;
+            attr.setKey(qualifiedName);
+            return attr;
+        } else {
+            throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+        }
+    }
 
     @Override
     public String outerHtml() {
