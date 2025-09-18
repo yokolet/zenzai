@@ -122,7 +122,9 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
     // org.w3c.dom.Document
     @Override
     public org.w3c.dom.DOMImplementation getImplementation() { return null; }
-    public org.w3c.dom.Element getDocumentElement() { return getElementsByTag("html").getFirst(); }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Element getDocumentElement() { return htmlEl(); }
 
     // org.w3c.dom.Document
     // zenzai.nodes.Document
@@ -162,32 +164,103 @@ public abstract class Document extends Element implements org.w3c.dom.Document {
         cDataNode.setOwnerDocument(this);
         return cDataNode;
     }
+    // org.w3c.dom.Document
+    @Override
     public org.w3c.dom.ProcessingInstruction createProcessingInstruction(String target, String data) throws DOMException {
         // TODO: create ProcessingInstruction class and implement this method
         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
     }
-    public abstract org.w3c.dom.Attr createAttribute(String name);
-    public abstract org.w3c.dom.EntityReference createEntityReference(String name) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagName(String tagName);
-    public abstract org.w3c.dom.Node importNode(Node importedNode, boolean deep) throws DOMException;
-    public abstract org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract org.w3c.dom.Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName);
-    public abstract org.w3c.dom.Element getElementById(String id);
-    public abstract String getInputEncoding();
-    public abstract String getXmlEncoding();
-    public abstract boolean getXmlStandalone();
-    public abstract void setXmlStandalone(boolean xmlStandalone);
-    public abstract String getXmlVersion();
-    public abstract void setXmlVersion(String xmlVersion) throws DOMException;
-    public abstract boolean getStrictErrorChecking();
-    public abstract void setStrictErrorChecking(boolean strictErrorChecking);
-    public abstract String getDocumentURI();
-    public abstract void setDocumentURI(String documentURI);
-    public abstract org.w3c.dom.Node adoptNode(Node node) throws DOMException;
-    public abstract org.w3c.dom.DOMConfiguration getDomConfig();
-    public abstract void normalizeDocument();
-    public abstract org.w3c.dom.Node renameNode(Node n, String namespaceURI, String qualifiedName) throws DOMException;
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Attr createAttribute(String name) {
+        return new Attribute(name, null, null);
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.EntityReference createEntityReference(String name) throws DOMException {
+        // TODO: create EntityReference class and implement this method
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.NodeList getElementsByTagName(String tagName) {
+        return super.getElementsByTagName(tagName);
+    }
+    // org.w3c.dom.Document
+    public abstract org.w3c.dom.Node importNode(org.w3c.dom.Node importedNode, boolean deep) throws DOMException;
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Attr createAttributeNS(String namespaceURI, String qualifiedName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public org.w3c.dom.Element getElementById(String id) {
+        org.w3c.dom.NodeList nodeList = super.getElementsByTagName(id);
+        return nodeList.getLength() > 0 ? (org.w3c.dom.Element)nodeList.item(0) : null;
+    }
+    // org.w3c.dom.Document
+    @Override
+    public String getInputEncoding() {
+        return charset().displayName();
+    }
+    // org.w3c.dom.Document
+    @Override
+    public String getXmlEncoding() {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public boolean getXmlStandalone() {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public void setXmlStandalone(boolean xmlStandalone) {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public String getXmlVersion() {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public void setXmlVersion(String xmlVersion) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    // org.w3c.dom.Document
+    @Override
+    public boolean getStrictErrorChecking() { return false;}
+    public void setStrictErrorChecking(boolean strictErrorChecking) {
+        // no-op
+    }
+    // org.w3c.dom.Document
+    @Override
+    public String getDocumentURI() { return baseUri(); }
+    // org.w3c.dom.Document
+    @Override
+    public void setDocumentURI(String documentURI) { setBaseUri(documentURI); }
+    public abstract org.w3c.dom.Node adoptNode(org.w3c.dom.Node node) throws DOMException;
+    public org.w3c.dom.DOMConfiguration getDomConfig() {
+        // TODO: this config will be used for canonicalization
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    public void normalizeDocument() {
+        // TODO: implement this
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    public abstract org.w3c.dom.Node renameNode(org.w3c.dom.Node n, String namespaceURI, String qualifiedName) throws DOMException;
 
     @Override
     public String outerHtml() {
