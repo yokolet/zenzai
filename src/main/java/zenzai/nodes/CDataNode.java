@@ -4,7 +4,7 @@ import org.w3c.dom.CDATASection;
 import org.w3c.dom.DOMException;
 import zenzai.internal.QuietAppendable;
 
-public abstract class CDataNode extends TextNode implements CDATASection {
+public class CDataNode extends TextNode implements CDATASection {
     public CDataNode(String text) {
         super(text);
     }
@@ -13,6 +13,28 @@ public abstract class CDataNode extends TextNode implements CDATASection {
     @Override
     public String getNodeName() {
         return "#cdata-section";
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        // TODO: check if a string length limit exists
+        // DOMException.DOMSTRING_SIZE_ERR is raised when it would return more characters than fit in
+        // a DOMString variable on the implementation platform. It depends on a web browser implementation.
+        return getWholeText();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        // NO_MODIFICATION_ALLOWED_ERR will be raised when the node is readonly and if it is not defined to be null.
+        coreValue(value);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public short getNodeType() {
+        return Node.CDATA_SECTION_NODE;
     }
 
     @Override

@@ -1,8 +1,11 @@
 package zenzai.nodes;
 
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.DOMException;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 
-public abstract class DataNode extends LeafNode {
+public class DataNode extends LeafNode implements CharacterData {
 
     /**
      Create a new DataNode.
@@ -12,13 +15,96 @@ public abstract class DataNode extends LeafNode {
         super(data);
     }
 
-    @Override public String nodeName() {
-        return "#data";
-    }
-
     @Override
     public DataNode clone() {
         return (DataNode) super.clone();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public String getNodeName() {
+        return "#text";
+    }
+
+    // org.w3d.dom.Node
+    @Override
+    public String getNodeValue() throws DOMException {
+        // TODO: check if a string length limit exists
+        // DOMException.DOMSTRING_SIZE_ERR is raised when it would return more characters than fit in
+        // a DOMString variable on the implementation platform. It depends on a web browser implementation.
+        return getWholeData();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        coreValue(value);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public short getNodeType() {
+        return Node.TEXT_NODE;
+    }
+
+    // jsoup.nodes.Node
+    @Override public String nodeName() {
+        return "#text";
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return coreValue();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        coreValue(textContent);
+    }
+
+    // org.w3c.dom.CharacterData
+    @Override
+    public String getData() throws DOMException { return coreValue(); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void setData(String data) throws DOMException { coreValue(data); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public int getLength() { return coreValue().length(); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public String substringData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        return coreValue().substring(offset, offset + count);
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void appendData(String data) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue(), data));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void insertData(int offset, String data) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), data, coreValue().substring(offset)));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void deleteData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), coreValue().substring(offset + count)));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void replaceData(int offset, int count, String arg) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), arg.substring(0, count), coreValue().substring(offset + count)));
     }
 
     /**

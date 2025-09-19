@@ -5,6 +5,8 @@ import org.jspecify.annotations.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -256,6 +258,55 @@ public final class StringUtil {
                     return j1;
                 },
                 StringJoiner::complete);
+    }
+
+    /**
+     * Join a collection of strings by a separator
+     * @param strings collection of string objects
+     * @param sep string to place between strings
+     * @return joined string
+     */
+    public static String join(Collection<?> strings, String sep) {
+        return join(strings.iterator(), sep);
+    }
+
+    /**
+     * Join a collection of strings by a separator
+     * @param strings iterator of string objects
+     * @param sep string to place between strings
+     * @return joined string
+     */
+    public static String join(Iterator<?> strings, String sep) {
+        if (!strings.hasNext())
+            return "";
+
+        String start = strings.next().toString();
+        if (!strings.hasNext()) // only one, avoid builder
+            return start;
+
+        org.jsoup.internal.StringUtil.StringJoiner j = new org.jsoup.internal.StringUtil.StringJoiner(sep);
+        j.add(start);
+        while (strings.hasNext()) {
+            j.add(strings.next());
+        }
+        return j.complete();
+    }
+
+    /**
+     * Tests if a string is numeric, i.e. contains only ASCII digit characters
+     * @param string string to test
+     * @return true if only digit chars, false if empty or null or contains non-digit chars
+     */
+    public static boolean isNumeric(String string) {
+        if (string == null || string.length() == 0)
+            return false;
+
+        int l = string.length();
+        for (int i = 0; i < l; i++) {
+            if (!isDigit(string.charAt(i)))
+                return false;
+        }
+        return true;
     }
 
     /**

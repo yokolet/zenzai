@@ -8,9 +8,11 @@ import org.jspecify.annotations.Nullable;
 import org.w3c.dom.*;
 
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
+import zenzai.parser.Parser;
 import zenzai.select.NodeFilter;
 import zenzai.select.NodeVisitor;
 
@@ -19,6 +21,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     static final List<Node> EmptyNodes = Collections.emptyList();
     static final String EmptyString = "";
     int siblingIndex;
+    org.w3c.dom.Document document;
 
     /**
      * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
@@ -82,50 +85,110 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return thisClone;
     }
 
+    // org.w3c.dom.Node
+    public abstract String getNodeName();
+    public String getNodeValue() { return null; }
+    public void setNodeValue(String nodeValue) throws DOMException {
+        // no-op
+    }
+    public abstract short getNodeType(); // subclases implement this method
+    public org.w3c.dom.Node getParentNode() { return parentNode; }
+    public org.w3c.dom.NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
+    public org.w3c.dom.Node getFirstChild() { return null; }
+    public org.w3c.dom.Node getLastChild() { return null; }
+    public org.w3c.dom.Node getPreviousSibling() { return nextSibling(); }
+    public org.w3c.dom.Node getNextSibling() { return previousSibling(); }
+    public NamedNodeMap getAttributes() { return null; }
+    public Document getOwnerDocument() { return ownerDocument(); }
+    public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+    }
+    public org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException {
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
+        W3CValidation.operationSupported(this);
+        replaceChild(oldChild, newChild);
+        return oldChild;
+    }
+    public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
+        W3CValidation.operationSupported(this);
+        removeChild(oldChild);
+        return oldChild;
+    }
+    public org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException {
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.operationSupported(((zenzai.nodes.Node) newChild).parentNode());
+        addChildren((zenzai.nodes.Node)newChild);
+        return newChild;
+    }
+    public boolean hasChildNodes() { return childNodeSize() > 0; }
+    public org.w3c.dom.Node cloneNode(boolean deep) {
+        Node cloned;
+        if (deep) { cloned = clone(); }
+        else { cloned = shallowClone(); }
+        return cloned;
+    }
+    public void normalize() {
+        // TODO: implement this method
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/normalize
+        // no-op for now
+    }
+    public boolean isSupported(String feature, String version) { return false;}
+    public String getNamespaceURI() { return Parser.NamespaceHtml; }
+    public String getPrefix() { return null; }
+    public void setPrefix(String prefix) throws DOMException {
+        // no-op
+    }
+    public String getLocalName() {
+        // TODO: check return values from ELEMENT_NODE and ATTRIBUTE_NODE
+        return null;
+    }
+    public boolean hasAttributes() { return false; }
+    public String getBaseURI() { return null; }
+    public short compareDocumentPosition(org.w3c.dom.Node other) throws DOMException {
+        // TODO: decide if the implementation of this method is required
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
+        return 0;
+    }
+    public abstract String getTextContent() throws DOMException; // implementation leaves to subclasses
+    public abstract void setTextContent(String textContent) throws DOMException; // implementation leaves to subcalsses
+    public boolean isSameNode(org.w3c.dom.Node other) {
+        return this.hashCode() == other.hashCode();
+    }
+    public String lookupPrefix(String namespaceURI) { return null; }
+    public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(Parser.NamespaceHtml); }
+    public String lookupNamespaceURI(String prefix) { return null; }
+    public boolean isEqualNode(org.w3c.dom.Node arg) {
+        // TODO: check correctness of this method
+        if (getNodeType() != arg.getNodeType()) return false;
+        if (!getNodeName().equals(arg.getNodeName())) return false;
+        if (!getLocalName().equals(arg.getLocalName())) return false;
+        if (!getNodeValue().equals(arg.getNodeValue())) return false;
+        if (!getAttributes().equals(arg.getAttributes())) return false;
+        if (!childNodes().equals(arg.getChildNodes())) return false;
+        return true;
+    }
+    public Object getFeature(String feature, String version) { return null; }
+    public Object setUserData(String key, Object data, UserDataHandler handler) {
+        // TODO: guess HTML5 doesn't have user data feature
+        return null;
+    }
+    public Object getUserData(String key) {
+        // TODO: same as above. HTML5 doesn't have user data feature
+        return null;
+    }
+
     /**
      * Get each of the Element's attributes.
      * @return attributes (which implements Iterable, with the same order as presented in the original HTML).
      */
     public abstract Attributes attributes();
-
-    // org.w3c.dom.Node
-    public abstract String getNodeName();
-    public abstract String getNodeValue();
-    public abstract void setNodeValue(String nodeValue) throws DOMException;
-    public abstract short getNodeType();
-    public abstract org.w3c.dom.Node getParentNode();
-    public abstract NodeList getChildNodes();
-    public abstract org.w3c.dom.Node getFirstChild();
-    public abstract org.w3c.dom.Node getLastChild();
-    public abstract org.w3c.dom.Node getPreviousSibling();
-    public abstract org.w3c.dom.Node getNextSibling();
-    public abstract NamedNodeMap getAttributes();
-    public Document getOwnerDocument() { return ownerDocument(); }
-    public abstract org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException;
-    public abstract org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException;
-    public abstract org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException;
-    public abstract org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException;
-    public abstract boolean hasChildNodes();
-    public abstract org.w3c.dom.Node cloneNode(boolean deep);
-    public abstract void normalize();
-    public abstract boolean isSupported(String feature, String version);
-    public abstract String getNamespaceURI();
-    public abstract String getPrefix();
-    public abstract void setPrefix(String prefix) throws DOMException;
-    public abstract String getLocalName();
-    public abstract boolean hasAttributes();
-    public abstract String getBaseURI();
-    public abstract short compareDocumentPosition(Node other) throws DOMException;
-    public abstract String getTextContent() throws DOMException;
-    public abstract void setTextContent(String textContent) throws DOMException;
-    public abstract boolean isSameNode(Node other);
-    public abstract String lookupPrefix(String namespaceURI);
-    public abstract boolean isDefaultNamespace(String namespaceURI);
-    public abstract String lookupNamespaceURI(String prefix);
-    public abstract boolean isEqualNode(Node arg);
-    public abstract Object getFeature(String feature, String version);
-    public abstract Object setUserData(String key, Object data, UserDataHandler handler);
-    public abstract Object getUserData(String key);
 
     /**
      * Get the number of child nodes that this node holds.
@@ -286,9 +349,13 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return the Document associated with this Node, or null if there is no such Document.
      */
     public @Nullable Document ownerDocument() {
+        if (document != null) { return (zenzai.nodes.Document)document; }
         zenzai.nodes.Node node = this;
         while (node != null) {
-            if (node instanceof Document) return (Document) node;
+            if (node instanceof Document) {
+                document = (Document)node;
+                return (Document) node;
+            }
             node = node.parentNode;
         }
         return null;
@@ -849,6 +916,10 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         if (o == null || getClass() != o.getClass()) return false;
 
         return this.outerHtml().equals(((Node) o).outerHtml());
+    }
+
+    protected void setOwnerDocument(Document ownerDocument) {
+        document = ownerDocument;
     }
 
     /**

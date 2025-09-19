@@ -8,21 +8,15 @@ import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.Document.OutputSettings.Syntax;
 
-public abstract class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
+// From a DOM perspective, Document Type is not a leaf node. It can have children such as entity or notation.
+// However, HTML Document Type <!DOCTYPE html> cannot have children.
+public class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
     public static final String PUBLIC_KEY = "PUBLIC";
     public static final String SYSTEM_KEY = "SYSTEM";
     private static final String NameKey = "name";
     private static final String PubSysKey = "pubSysKey"; // PUBLIC or SYSTEM
     private static final String PublicId = "publicId";
     private static final String SystemId = "systemId";
-
-    // org.w3c.dom.DocumentType
-    public abstract String getName();
-    public abstract NamedNodeMap getEntities();
-    public abstract NamedNodeMap getNotations();
-    public String getPublicId() { return publicId(); }
-    public String getSystemId() { return systemId(); }
-    public abstract String getInternalSubset();
 
     /**
      * Create a new doctype element.
@@ -47,15 +41,48 @@ public abstract class DocumentType extends LeafNode implements org.w3c.dom.Docum
         return attr(NameKey);
     }
 
-    // org.w3d.dom.Node
+    // org.w3c.dom.Node
     @Override
-    public String getNodeValue() throws DOMException {
-        return null;
+    public short getNodeType() {
+        return Node.DOCUMENT_TYPE_NODE;
     }
 
     // org.w3c.dom.Node
     @Override
     public NamedNodeMap getAttributes() { return null; }
+
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return null;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        // no-op
+    }
+
+    // org.w3c.dom.DocumentType
+    @Override
+    public String getName() { return name(); }
+    public NamedNodeMap getEntities() {
+        // TODO: create Entity class and implement this method
+        return null;
+    }
+    public NamedNodeMap getNotations() {
+        // TODO: create Notation class and implement this method
+        return null;
+    }
+    // org.w3c.dom.DocumentType
+    @Override
+    public String getPublicId() { return publicId(); }
+    // org.w3c.dom.DocumentType
+    @Override
+    public String getSystemId() { return systemId(); }
+    // org.w3c.dom.DocumentType
+    @Override
+    public String getInternalSubset() { return null;}
 
     @Override
     public String nodeName() {

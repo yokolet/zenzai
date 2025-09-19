@@ -1,5 +1,7 @@
 package zenzai.internal;
 
+import zenzai.nodes.Attribute;
+import zenzai.nodes.Document;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
@@ -22,5 +24,11 @@ public final class Normalizer {
     @Deprecated
     public static String normalize(final String input, boolean isStringLiteral) {
         return isStringLiteral ? lowerCase(input) : normalize(input);
+    }
+
+    /** Minimal helper to get an otherwise OK HTML name like "foo&lt;bar" to "foo_bar". */
+    @Nullable
+    public static String xmlSafeTagName(final String tagname) {
+        return Attribute.getValidKey(tagname, Document.OutputSettings.Syntax.xml); // Reuses the Attribute key normal, which is same for xml tag names
     }
 }

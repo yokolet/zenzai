@@ -1,6 +1,5 @@
 package zenzai.nodes;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -8,19 +7,21 @@ import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Element;
-import org.w3c.dom.TypeInfo;
+import org.w3c.dom.*;
 
+import org.w3c.dom.Element;
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.Normalizer;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.SharedConstants;
 import zenzai.internal.StringUtil;
 import zenzai.nodes.Document.OutputSettings.Syntax;
+import zenzai.parser.Parser;
 
-public abstract class Attribute implements Cloneable, Attr {
+// An attribute can have children if those are Text and EntityReference.
+// However, HTML attributes cannot contain children
+public class Attribute implements Cloneable, Attr {
     private static final String[] booleanAttributes = {
             "allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled",
             "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize",
@@ -70,6 +71,159 @@ public abstract class Attribute implements Cloneable, Attr {
         return getValue();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        // NO_MODIFICATION_ALLOWED_ERR will be raised when the node is readonly and if not defined to be null.
+        setValueWithReturn(value);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public short getNodeType() {
+        return Node.ATTRIBUTE_NODE;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getPreviousSibling() { return null; }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getNextSibling() { return null; }
+
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return null;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        // no-op
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getParentNode() { return parent.ownerElement; }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.NodeList getChildNodes() { return new zenzai.nodes.Element.NodeList(0); }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getFirstChild() { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getLastChild() { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public Document getOwnerDocument() { return parent != null ? parent.ownerElement.getOwnerDocument() : null; }
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.dom.Node
+    public org.w3c.dom.Node replaceChild(org.w3c.dom.Node newChild, org.w3c.dom.Node oldChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.doom.Node
+    @Override
+    public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node appendChild(org.w3c.dom.Node newChild) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation");
+    }
+    // org.w3c.dom.Node
+    @Override
+    public boolean hasChildNodes() { return false; }
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node cloneNode(boolean deep) { return clone(); }
+    // org.w3c.dom.Node
+    @Override
+    public void normalize() {
+        // TODO: implement this
+    }
+    // org.w3c.dom.Node
+    @Override
+    public boolean isSupported(String feature, String version) { return false; }
+    // org.w3c.dom.Node
+    @Override
+    public String getNamespaceURI() { return namespace(); }
+    // org.w3c.dom.Node
+    @Override
+    public String getPrefix() { return prefix(); }
+    // org.w3c.dom.Node
+    @Override
+    public void setPrefix(String prefix) throws DOMException {
+        // no-op
+    }
+    // org.w3c.dom.Node
+    @Override
+    public String getLocalName() { return localName(); }
+    // org.w3c.dom.Node
+    @Override
+    public boolean hasAttributes() { return false; }
+    // org.w3c.dom.Node
+    @Override
+    public String getBaseURI() { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public short compareDocumentPosition(org.w3c.dom.Node other) throws DOMException {
+        // TODO: decide if the implementation of this method is required
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/Node/compareDocumentPosition
+        return 0;
+    }
+    // org.w3c.dom.Node
+    @Override
+    public boolean isSameNode(org.w3c.dom.Node other) {
+        return this.hashCode() == other.hashCode();
+    }
+    // org.w3c.dom.Node
+    @Override
+    public String lookupPrefix(String namespaceURI) { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public boolean isDefaultNamespace(String namespaceURI) { return namespaceURI.equals(Parser.NamespaceHtml); }
+    @Override
+    public String lookupNamespaceURI(String prefix) { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public boolean isEqualNode(org.w3c.dom.Node arg) {
+        // TODO: check correctness of this method
+        if (getNodeType() != arg.getNodeType()) return false;
+        if (!getNodeName().equals(arg.getNodeName())) return false;
+        if (!getLocalName().equals(arg.getLocalName())) return false;
+        if (!getNodeValue().equals(arg.getNodeValue())) return false;
+        if (!getAttributes().equals(arg.getAttributes())) return false;
+        return true;
+    }
+    // org.w3c.dom.Node
+    @Override
+    public Object getFeature(String feature, String version) { return null; }
+    // org.w3c.dom.Node
+    @Override
+    public Object setUserData(String key, Object data, UserDataHandler handler) {
+        // TODO: guess HTML5 doesn't have user data feature
+        return null;
+    }
+    // org.w3c.dom.Node
+    @Override
+    public Object getUserData(String key) {
+        // TODO: same as above. HTML5 doesn't have user data feature
+        return null;
+    }
+
     /**
      * Returns the name of this attribute. If Node.localName is different from null, this attribute is a qualified name.
      * @return the attribute name
@@ -95,8 +249,20 @@ public abstract class Attribute implements Cloneable, Attr {
     }
 
     // org.w3c.dom.Attr
+    // zenzai.nodes.Attribute
+    /**
+     Get the attribute value. Will return an empty string if the value is not set.
+     @return the attribute value
+     */
+    @Override
+    public String getValue() {
+        return Attributes.checkNotNull(val);
+    }
+
+    // org.w3c.dom.Attr
     @Override
     public void setValue(String value) throws DOMException {
+        W3CValidation.modificationAllowed(parent.ownerElement);
         setValueWithReturn(value);
     }
 
@@ -116,7 +282,7 @@ public abstract class Attribute implements Cloneable, Attr {
     // org.w3c.dom.Attr
     @Override
     public boolean isId() {
-        return getKey().toLowerCase().endsWith("id");
+        return getKey().equalsIgnoreCase("id");
     }
 
     /**
@@ -156,14 +322,6 @@ public abstract class Attribute implements Cloneable, Attr {
      */
     public String getKey() {
         return key;
-    }
-
-    /**
-     Get the attribute value. Will return an empty string if the value is not set.
-     @return the attribute value
-     */
-    public String getValue() {
-        return Attributes.checkNotNull(val);
     }
 
     /**
@@ -296,7 +454,7 @@ public abstract class Attribute implements Cloneable, Attr {
      <p>Position tracking must be enabled prior to parsing the content.</p>
      @return the ranges for the attribute's name and value, or {@code untracked} if the attribute does not exist or its range
      was not tracked.
-     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see zenzai.parser.Parser#setTrackPosition(boolean)
      @see Attributes#sourceRange(String)
      @see zenzai.nodes.Node#sourceRange()
      @see zenzai.nodes.Element#endSourceRange()

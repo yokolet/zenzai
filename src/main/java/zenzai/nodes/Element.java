@@ -8,51 +8,33 @@ import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
-
 import org.w3c.dom.NamedNodeMap;
+
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
+import zenzai.internal.Normalizer;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
+import zenzai.select.Collector;
 import zenzai.select.Elements;
+import zenzai.select.Evaluator;
 import zenzai.select.NodeVisitor;
+import zenzai.select.Selector;
 
+import static zenzai.nodes.Document.OutputSettings.Syntax.xml;
+import static zenzai.parser.Parser.NamespaceHtml;
 import static zenzai.nodes.TextNode.lastCharIsWhitespace;
 
-public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
+public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, Iterable<Element> {
     private static final List<Element> EmptyChildren = Collections.emptyList();
     private static final NodeList EmptyNodeList = new NodeList(0);
     static final String BaseUriKey = Attributes.internalKey("baseUri");
     Tag tag;
     NodeList childNodes;
     @Nullable Attributes attributes; // field is nullable but all methods for attributes are non-null
-
-    // org.w3c.dom.Element
-    public String getTagName() { return tagName(); }
-    public String getAttribute(String name) {
-        Attribute attr = attribute(name);
-        return attr == null ? null : attr.getValue();
-    }
-    public abstract void setAttribute(String name, String value) throws DOMException;
-    public abstract void removeAttribute(String name) throws DOMException;
-    public abstract org.w3c.dom.Attr getAttributeNode(String name);
-    public abstract org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
-    public abstract org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagName(String name);
-    public abstract String getAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException;
-    public abstract void removeAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.Attr setAttributeNodeNS(org.w3c.dom.Attr attr) throws DOMException;
-    public abstract org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException;
-    public abstract boolean hasAttribute(String name);
-    public abstract boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException;
-    public abstract org.w3c.dom.TypeInfo getSchemaTypeInfo();
-    public abstract void setIdAttribute(String name, boolean isId) throws DOMException;
-    public abstract void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException;
-    public abstract void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException;
 
     /**
      * Create a new, standalone Element. (Standalone in that it has no parent.)
@@ -116,10 +98,50 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return tag.getName();
     }
 
-    // org.w3d.dom.Node
+    // org.w3c.dom.Node
     @Override
-    public String getNodeValue() throws DOMException {
-        return null;
+    public short getNodeType() {
+        return Node.ELEMENT_NODE;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.NodeList getChildNodes() {
+        return childNodes;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getFirstChild() {
+        if (childNodes == null || childNodes.getLength() == 0) return null;
+        return childNodes.item(0);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getLastChild() {
+        if (childNodes == null || childNodes.getLength() == 0) return null;
+        return childNodes.item(childNodes.getLength() - 1);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public NamedNodeMap getAttributes() { return attributes(); }
+
+    // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node insertBefore(org.w3c.dom.Node newChild, org.w3c.dom.Node refChild) throws DOMException {
+        W3CValidation.hierarchyRequest(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.wrongDocument(this, (zenzai.nodes.Node)newChild);
+        W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
+
+        if (refChild != null) {
+            W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)refChild);
+            ((zenzai.nodes.Node)refChild).before((zenzai.nodes.Node)newChild);
+        } else {
+            addChildren((zenzai.nodes.Node)newChild);
+        }
+        return newChild;
     }
 
     // org.w3c.dom.Node
@@ -130,16 +152,133 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     // org.w3c.dom.Node
-    @Override
-    public NamedNodeMap getAttributes() { return attributes(); }
-
-    // org.w3c.dom.Node
     /**
      Internal test to check if a nodelist object has been created.
      */
     @Override
     public boolean hasChildNodes() {
         return childNodes != EmptyNodeList;
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        // TODO: check if calling text() is enough
+        // concatenation of the textContent attribute value of every child node, excluding COMMENT_NODE and
+        // PROCESSING_INSTRUCTION_NODE nodes. This is the empty string if the node has no children.
+        return text();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        text(textContent);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public String getTagName() { return tagName(); }
+
+    // org.w3c.dom.Element
+    @Override
+    public String getAttribute(String name) {
+        Attribute attr = attribute(name);
+        return attr == null ? null : attr.getValue();
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public void setAttribute(String name, String value) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        attr(name, value);
+    }
+
+    // org.w3c.dom.Element
+    public void removeAttribute(String name) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        removeAttr(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr getAttributeNode(String name) {
+        return attribute(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr setAttributeNode(org.w3c.dom.Attr attr) throws DOMException {
+        if (getOwnerDocument() != attr.getOwnerDocument()) {
+            throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, "Cannot set attribute on non-owner document.");
+        }
+        W3CValidation.modificationAllowed(this);
+        if (this != ((zenzai.nodes.Attribute)attr).getOwnerDocument()) {
+            throw new DOMException(DOMException.INUSE_ATTRIBUTE_ERR, "Cannot set attribute on non-owner document.");
+        }
+        attributes().put((zenzai.nodes.Attribute)attr);
+        return attr;
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.Attr removeAttributeNode(org.w3c.dom.Attr attr) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        String key = attr.getName();
+        if (!attributes().hasKey(key)) {
+            throw new DOMException(DOMException.NOT_FOUND_ERR, "Cannot remove attribute on non-owner document.");
+        }
+        attributes().remove(key);
+        return attr;
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.NodeList getElementsByTagName(String name) {
+        return getElementsByTag(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public boolean hasAttribute(String name) {
+        return attributes().hasKey(name);
+    }
+
+    // org.w3c.dom.Element
+    @Override
+    public org.w3c.dom.TypeInfo getSchemaTypeInfo() {
+        return null;
+    }
+
+    // org.w3c.dom.Element
+    public String getAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setAttributeNS(String namespaceURI, String qualifiedName, String value) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void removeAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.Attr getAttributeNodeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.Attr setAttributeNodeNS(org.w3c.dom.Attr attr) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public org.w3c.dom.NodeList getElementsByTagNameNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public boolean hasAttributeNS(String namespaceURI, String localName) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttribute(String name, boolean isId) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttributeNS(String namespaceURI, String qualifiedName, boolean isId) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
+    }
+    public void setIdAttributeNode(org.w3c.dom.Attr idAttr, boolean isId) throws DOMException {
+        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported operation in HTML");
     }
 
     @Override
@@ -162,7 +301,6 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     public String normalName() {
         return tag.normalName();
     }
-
 
     @Override
     public Element clone() {
@@ -834,6 +972,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     * Finds elements, including and recursively under this element, with the specified tag name.
+     * @param tagName The tag name to search for (case insensitively).
+     * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
+     */
+    public Elements getElementsByTag(String tagName) {
+        Validate.notEmpty(tagName);
+        tagName = zenzai.internal.Normalizer.normalize(tagName);
+
+        return Collector.collect(new Evaluator.Tag(tagName), this);
+    }
+
+    /**
      Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
@@ -888,6 +1038,18 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
     }
 
     /**
+     * Gets the first Element sibling of this element. That may be this element.
+     * @return the first sibling that is an element (aka the parent's first element child)
+     */
+    public Element firstElementSibling() {
+        if (parent() != null) {
+            //noinspection DataFlowIssue (not nullable, would be this is no other sibs)
+            return parent().firstElementChild();
+        } else
+            return this; // orphan is its own first sibling
+    }
+
+    /**
      Gets the last child of this Element that is an Element, or @{code null} if there is none.
      @return the last Element child node, or null.
      @see #lastChild()
@@ -900,6 +1062,16 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             if (node instanceof Element) return (Element) node;
         }
         return null;
+    }
+
+    /**
+     * Get the list index of this element in its element sibling list. I.e. if this is the first element
+     * sibling, returns 0.
+     * @return position in element sibling list
+     */
+    public int elementSiblingIndex() {
+        if (parent() == null) return 0;
+        return indexInList(this, parent().childElementsList());
     }
 
     /**
@@ -1003,6 +1175,101 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return StringUtil.releaseBuilder(sb);
     }
 
+    /**
+     * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
+     * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
+     * execution stops on the first hit.</p>
+     * <p>Also known as {@code querySelector()} in the Web DOM.</p>
+     * @param cssQuery cssQuery a {@link Selector} CSS-like query
+     * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     * @see #expectFirst(String)
+     */
+    public @Nullable Element selectFirst(String cssQuery) {
+        return Selector.selectFirst(cssQuery, this);
+    }
+
+    /**
+     * Finds the first Element that matches the supplied Evaluator, with this element as the starting context, or
+     * {@code null} if none match.
+     *
+     * @param evaluator an element evaluator
+     * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
+     * match.
+     */
+    public @Nullable Element selectFirst(Evaluator evaluator) {
+        return Collector.findFirst(evaluator, this);
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param cssQuery a {@link org.jsoup.select.Selector} CSS-like query
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.2
+     */
+    public Element expectFirst(String cssQuery) {
+        return Validate.expectNotNull(
+                Selector.selectFirst(cssQuery, this),
+                parent() != null ?
+                        "No elements matched the query '%s' on element '%s'." :
+                        "No elements matched the query '%s' in the document."
+                , cssQuery, this.tagName()
+        );
+    }
+
+    /**
+     * Tests if this element has a class. Case-insensitive.
+     * @param className name of class to check for
+     * @return true if it does, false if not
+     */
+    // performance sensitive
+    public boolean hasClass(String className) {
+        if (attributes == null)
+            return false;
+
+        final String classAttr = attributes.getIgnoreCase("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
+
+        if (len == 0 || len < wantLen) {
+            return false;
+        }
+
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
+            return className.equalsIgnoreCase(classAttr);
+        }
+
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+
+        // check the last entry
+        if (inClass && len - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
+        }
+
+        return false;
+    }
+
     void reindexChildren() {
         final int size = childNodes.size();
         for (int i = 0; i < size; i++) {
@@ -1019,6 +1286,33 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         return childNodes.validChildren;
     }
 
+    @Override
+    void outerHtmlHead(final QuietAppendable accum, Document.OutputSettings out) {
+        String tagName = safeTagName(out.syntax());
+        accum.append('<').append(tagName);
+        if (attributes != null) attributes.html(accum, out);
+
+        if (childNodes.isEmpty()) {
+            boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
+            if (xmlMode && (tag.is(org.jsoup.parser.Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
+                accum.append(" />");
+            } else if (!xmlMode && tag.isEmpty()) { // html void element
+                accum.append('>');
+            } else {
+                accum.append("></").append(tagName).append('>');
+            }
+        } else {
+            accum.append('>');
+        }
+    }
+
+    @Override
+    void outerHtmlTail(QuietAppendable accum, Document.OutputSettings out) {
+        if (!childNodes.isEmpty())
+            accum.append("</").append(safeTagName(out.syntax())).append('>');
+        // if empty, we have already closed in htmlHead
+    }
+
     static final class NodeList extends ArrayList<zenzai.nodes.Node> implements org.w3c.dom.NodeList {
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
@@ -1027,11 +1321,13 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             super(size);
         }
 
+        // org.w3c.dom.NodeList
         @Override
         public org.w3c.dom.Node item(int index) {
             return get(index);
         }
 
+        // org.w3c.dom.NodeList
         @Override
         public int getLength() {
             return size();
@@ -1147,6 +1443,15 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
         }
     }
 
+    private static <E extends Element> int indexInList(Element search, List<E> elements) {
+        final int size = elements.size();
+        for (int i = 0; i < size; i++) {
+            if (elements.get(i) == search)
+                return i;
+        }
+        return 0;
+    }
+
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
         if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
@@ -1176,6 +1481,11 @@ public abstract class Element extends zenzai.nodes.Node implements org.w3c.dom.E
             if (node.nameIs("br")) return "\n";
             return "";
         }).collect(StringUtil.joining(""));
+    }
+
+    /* If XML syntax, normalizes < to _ in tag name. */
+    @Nullable private String safeTagName(Document.OutputSettings.Syntax syntax) {
+        return syntax == Document.OutputSettings.Syntax.xml ? Normalizer.xmlSafeTagName(tagName()) : tagName();
     }
 
     private static class TextAccumulator implements NodeVisitor {

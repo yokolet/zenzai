@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 import zenzai.parser.Tag;
 import zenzai.select.Elements;
 
-public abstract class FormElement extends Element {
+public class FormElement extends Element {
     private final Elements linkedEls = new Elements();
 
     /**

@@ -3,10 +3,11 @@ package zenzai.nodes;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Text;
 import zenzai.helper.Validate;
+import zenzai.helper.W3CValidation;
 import zenzai.internal.QuietAppendable;
 import zenzai.internal.StringUtil;
 
-public abstract class TextNode extends LeafNode implements Text {
+public class TextNode extends LeafNode implements Text {
 
     /**
      Create a new TextNode representing the supplied (unencoded) text).
@@ -43,20 +44,77 @@ public abstract class TextNode extends LeafNode implements Text {
         return getWholeText();
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public void setNodeValue(String value) throws DOMException {
+        coreValue(value);
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public short getNodeType() {
+        return Node.TEXT_NODE;
+    }
+
     // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";
     }
 
+    // org.w3c.dom.Node
+    @Override
+    public String getTextContent() throws DOMException {
+        return coreValue();
+    }
+
+    // org.w3c.dom.Node
+    @Override
+    public void setTextContent(String textContent) throws DOMException {
+        coreValue(textContent);
+    }
+
     // org.w3c.dom.CharacterData
-    public abstract String getData() throws DOMException;
-    public abstract void setData(String data) throws DOMException;
-    public abstract int getLength();
-    public abstract String substringData(int offset, int length) throws DOMException;
-    public abstract void appendData(String data) throws DOMException;
-    public abstract void insertData(int offset, String data) throws DOMException;
-    public abstract void deleteData(int offset, int count) throws DOMException;
-    public abstract void replaceData(int offset, int count, String arg) throws DOMException;
+    @Override
+    public String getData() throws DOMException { return coreValue(); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void setData(String data) throws DOMException { coreValue(data); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public int getLength() { return coreValue().length(); }
+    // org.w3c.dom.CharacterData
+    @Override
+    public String substringData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        return coreValue().substring(offset, offset + count);
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void appendData(String data) throws DOMException {
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue(), data));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void insertData(int offset, String data) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), data, coreValue().substring(offset)));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void deleteData(int offset, int count) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), coreValue().substring(offset + count)));
+    }
+    // org.w3c.dom.CharacterData
+    @Override
+    public void replaceData(int offset, int count, String arg) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset, count);
+        W3CValidation.modificationAllowed(this);
+        coreValue(String.join(coreValue().substring(0, offset), arg.substring(0, count), coreValue().substring(offset + count)));
+    }
 
     // org.w3c.dom.Text
     /**
@@ -67,6 +125,8 @@ public abstract class TextNode extends LeafNode implements Text {
      */
     @Override
     public Text splitText(int offset) throws DOMException {
+        W3CValidation.indexSizeWithinLength(this, offset);
+        W3CValidation.modificationAllowed(this);
         final String text = coreValue();
         Validate.isTrue(offset >= 0, "Split offset must be not be negative");
         Validate.isTrue(offset < text.length(), "Split offset must not be greater than current text length");
@@ -100,6 +160,7 @@ public abstract class TextNode extends LeafNode implements Text {
     // org.w3c.dom.Text
     @Override
     public Text replaceWholeText(String content) throws DOMException {
+        W3CValidation.modificationAllowed(this);
         coreValue(content);
         return this;
     }

@@ -20,6 +20,12 @@ public abstract class LeafNode extends zenzai.nodes.Node {
     }
 
     // org.w3c.dom.Node
+    @Override
+    public org.w3c.dom.Node getParentNode() {
+        return parent();
+    }
+
+    // org.w3c.dom.Node
     // jsoup.nodes.Node
     @Override public final boolean hasAttributes() {
         return value instanceof Attributes;
