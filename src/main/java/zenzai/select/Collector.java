@@ -2,6 +2,7 @@ package zenzai.select;
 
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import zenzai.nodes.Element;
 import zenzai.nodes.LeafNode;
 import zenzai.nodes.Node;
@@ -60,5 +61,16 @@ public class Collector {
     public static <T extends Node> Stream<T> streamNodes(Evaluator evaluator, Element root, Class<T> type) {
         evaluator.reset();
         return root.nodeStream(type).filter(evaluator.asNodePredicate(root));
+    }
+
+    /**
+     Finds the first Element that matches the Evaluator that descends from the root, and stops the query once that first
+     match is found.
+     @param eval Evaluator to test elements against
+     @param root root of tree to descend
+     @return the first match; {@code null} if none
+     */
+    public static @Nullable Element findFirst(zenzai.select.Evaluator eval, Element root) {
+        return stream(eval, root).findFirst().orElse(null);
     }
 }

@@ -22,6 +22,7 @@ import zenzai.select.Collector;
 import zenzai.select.Elements;
 import zenzai.select.Evaluator;
 import zenzai.select.NodeVisitor;
+import zenzai.select.Selector;
 
 import static zenzai.nodes.Document.OutputSettings.Syntax.xml;
 import static zenzai.parser.Parser.NamespaceHtml;
@@ -1037,6 +1038,18 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
     }
 
     /**
+     * Gets the first Element sibling of this element. That may be this element.
+     * @return the first sibling that is an element (aka the parent's first element child)
+     */
+    public Element firstElementSibling() {
+        if (parent() != null) {
+            //noinspection DataFlowIssue (not nullable, would be this is no other sibs)
+            return parent().firstElementChild();
+        } else
+            return this; // orphan is its own first sibling
+    }
+
+    /**
      Gets the last child of this Element that is an Element, or @{code null} if there is none.
      @return the last Element child node, or null.
      @see #lastChild()
@@ -1049,6 +1062,16 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
             if (node instanceof Element) return (Element) node;
         }
         return null;
+    }
+
+    /**
+     * Get the list index of this element in its element sibling list. I.e. if this is the first element
+     * sibling, returns 0.
+     * @return position in element sibling list
+     */
+    public int elementSiblingIndex() {
+        if (parent() == null) return 0;
+        return indexInList(this, parent().childElementsList());
     }
 
     /**
@@ -1150,6 +1173,101 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
             }
         });
         return StringUtil.releaseBuilder(sb);
+    }
+
+    /**
+     * Find the first Element that matches the {@link Selector} CSS query, with this element as the starting context.
+     * <p>This is effectively the same as calling {@code element.select(query).first()}, but is more efficient as query
+     * execution stops on the first hit.</p>
+     * <p>Also known as {@code querySelector()} in the Web DOM.</p>
+     * @param cssQuery cssQuery a {@link Selector} CSS-like query
+     * @return the first matching element, or <b>{@code null}</b> if there is no match.
+     * @see #expectFirst(String)
+     */
+    public @Nullable Element selectFirst(String cssQuery) {
+        return Selector.selectFirst(cssQuery, this);
+    }
+
+    /**
+     * Finds the first Element that matches the supplied Evaluator, with this element as the starting context, or
+     * {@code null} if none match.
+     *
+     * @param evaluator an element evaluator
+     * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
+     * match.
+     */
+    public @Nullable Element selectFirst(Evaluator evaluator) {
+        return Collector.findFirst(evaluator, this);
+    }
+
+    /**
+     Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
+     is useful if you want to simply abort processing on a failed match.
+     @param cssQuery a {@link org.jsoup.select.Selector} CSS-like query
+     @return the first matching element
+     @throws IllegalArgumentException if no match is found
+     @since 1.15.2
+     */
+    public Element expectFirst(String cssQuery) {
+        return Validate.expectNotNull(
+                Selector.selectFirst(cssQuery, this),
+                parent() != null ?
+                        "No elements matched the query '%s' on element '%s'." :
+                        "No elements matched the query '%s' in the document."
+                , cssQuery, this.tagName()
+        );
+    }
+
+    /**
+     * Tests if this element has a class. Case-insensitive.
+     * @param className name of class to check for
+     * @return true if it does, false if not
+     */
+    // performance sensitive
+    public boolean hasClass(String className) {
+        if (attributes == null)
+            return false;
+
+        final String classAttr = attributes.getIgnoreCase("class");
+        final int len = classAttr.length();
+        final int wantLen = className.length();
+
+        if (len == 0 || len < wantLen) {
+            return false;
+        }
+
+        // if both lengths are equal, only need compare the className with the attribute
+        if (len == wantLen) {
+            return className.equalsIgnoreCase(classAttr);
+        }
+
+        // otherwise, scan for whitespace and compare regions (with no string or arraylist allocations)
+        boolean inClass = false;
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(classAttr.charAt(i))) {
+                if (inClass) {
+                    // white space ends a class name, compare it with the requested one, ignore case
+                    if (i - start == wantLen && classAttr.regionMatches(true, start, className, 0, wantLen)) {
+                        return true;
+                    }
+                    inClass = false;
+                }
+            } else {
+                if (!inClass) {
+                    // we're in a class name : keep the start of the substring
+                    inClass = true;
+                    start = i;
+                }
+            }
+        }
+
+        // check the last entry
+        if (inClass && len - start == wantLen) {
+            return classAttr.regionMatches(true, start, className, 0, wantLen);
+        }
+
+        return false;
     }
 
     void reindexChildren() {
@@ -1323,6 +1441,15 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
                 accum.append(" ");
             }
         }
+    }
+
+    private static <E extends Element> int indexInList(Element search, List<E> elements) {
+        final int size = elements.size();
+        for (int i = 0; i < size; i++) {
+            if (elements.get(i) == search)
+                return i;
+        }
+        return 0;
     }
 
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {

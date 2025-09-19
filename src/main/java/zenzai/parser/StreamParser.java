@@ -1,13 +1,13 @@
 package zenzai.parser;
 
 import org.jsoup.Connection;
-import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.NodeVisitor;
-import org.jsoup.select.Selector;
+import zenzai.helper.Validate;
+import zenzai.nodes.Document;
+import zenzai.nodes.Element;
+import zenzai.nodes.Node;
+import zenzai.select.Evaluator;
+import zenzai.select.NodeVisitor;
+import zenzai.select.Selector;
 import org.jspecify.annotations.Nullable;
 
 import java.io.Closeable;
