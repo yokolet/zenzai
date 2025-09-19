@@ -1,4 +1,4 @@
-package org.jsoup.parser;
+package zenzai.parser;
 
 import org.jsoup.Connection;
 import org.jsoup.helper.Validate;
