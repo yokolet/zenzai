@@ -49,7 +49,9 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
         Validate.notNull(tag);
         childNodes = EmptyNodeList;
         this.attributes = attributes;
-        this.attributes.setOwnerElement(this);
+        if (this.attributes != null) {
+            this.attributes.setOwnerElement(this);
+        }
         this.tag = tag;
         if (!StringUtil.isBlank(baseUri)) this.setBaseUri(baseUri);
     }
