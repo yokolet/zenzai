@@ -2,6 +2,7 @@ package zenzai.select;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import zenzai.nodes.Element;
 
 public class Elements extends Nodes<Element> {
@@ -29,5 +30,23 @@ public class Elements extends Nodes<Element> {
             element.tagName(tagName);
         }
         return this;
+    }
+
+    /**
+     Get the first matched element.
+     @return The first matched element, or <code>null</code> if contents is empty.
+     */
+    @Override
+    public @Nullable Element first() {
+        return super.first();
+    }
+
+    /**
+     Get the last matched element.
+     @return The last matched element, or <code>null</code> if contents is empty.
+     */
+    @Override
+    public @Nullable Element last() {
+        return super.last();
     }
 }

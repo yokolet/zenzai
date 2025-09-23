@@ -9,6 +9,7 @@ import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.helper.W3CValidation;
+import zenzai.internal.StringUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
@@ -445,6 +446,30 @@ public class Document extends Element implements org.w3c.dom.Document {
             el = el.nextElementSibling();
         }
         return appendElement("html");
+    }
+
+    /**
+     Get the string contents of the document's {@code title} element.
+     @return Trimmed title, or empty string if none set.
+     */
+    public String title() {
+        // title is a preserve whitespace tag (for document output), but normalised here
+        Element titleEl = head().selectFirst(titleEval);
+        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+    }
+    private static final zenzai.select.Evaluator titleEval = new zenzai.select.Evaluator.Tag("title");
+
+    /**
+     Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
+     not present
+     @param title string to set as title
+     */
+    public void title(String title) {
+        Validate.notNull(title);
+        Element titleEl = head().selectFirst(titleEval);
+        if (titleEl == null) // add to head
+            titleEl = head().appendElement("title");
+        titleEl.text(title);
     }
 
     /**

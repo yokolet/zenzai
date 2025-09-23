@@ -989,7 +989,7 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
      Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
-     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see zenzai.parser.Parser#setTrackPosition(boolean)
      @see zenzai.nodes.Node#sourceRange()
      @see Range#isImplicit()
      @since 1.15.2
@@ -1198,14 +1198,14 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
      * match.
      */
-    public @Nullable Element selectFirst(Evaluator evaluator) {
+    public @Nullable Element selectFirst(zenzai.select.Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
     }
 
     /**
      Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
      is useful if you want to simply abort processing on a failed match.
-     @param cssQuery a {@link org.jsoup.select.Selector} CSS-like query
+     @param cssQuery a {@link zenzai.select.Selector} CSS-like query
      @return the first matching element
      @throws IllegalArgumentException if no match is found
      @since 1.15.2
@@ -1218,6 +1218,10 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
                         "No elements matched the query '%s' in the document."
                 , cssQuery, this.tagName()
         );
+    }
+
+    public Elements select(String cssQuery) {
+        return Selector.select(cssQuery, this);
     }
 
     /**
@@ -1296,7 +1300,7 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
 
         if (childNodes.isEmpty()) {
             boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
-            if (xmlMode && (tag.is(org.jsoup.parser.Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
+            if (xmlMode && (tag.is(Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
                 accum.append(" />");
             } else if (!xmlMode && tag.isEmpty()) { // html void element
                 accum.append('>');
