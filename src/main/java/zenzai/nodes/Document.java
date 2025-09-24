@@ -434,6 +434,22 @@ public class Document extends Element implements org.w3c.dom.Document {
         return outputSettings.charset();
     }
 
+    public void charset(Charset charset) {
+        outputSettings.charset(charset);
+        ensureMetaCharsetElement();
+    }
+
+    /**
+     Get the string contents of the document's {@code title} element.
+     @return Trimmed title, or empty string if none set.
+     */
+    public String title() {
+        // title is a preserve whitespace tag (for document output), but normalised here
+        Element titleEl = head().selectFirst(titleEval);
+        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+    }
+    private static final zenzai.select.Evaluator titleEval = new zenzai.select.Evaluator.Tag("title");
+
     /**
      Find the root HTML element, or create it if it doesn't exist.
      @return the root HTML element.
@@ -448,16 +464,34 @@ public class Document extends Element implements org.w3c.dom.Document {
         return appendElement("html");
     }
 
-    /**
-     Get the string contents of the document's {@code title} element.
-     @return Trimmed title, or empty string if none set.
-     */
-    public String title() {
-        // title is a preserve whitespace tag (for document output), but normalised here
-        Element titleEl = head().selectFirst(titleEval);
-        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+    private void ensureMetaCharsetElement() {
+        OutputSettings.Syntax syntax = outputSettings().syntax();
+
+        if (syntax == OutputSettings.Syntax.html) {
+            Element metaCharset = selectFirst("meta[charset]");
+            if (metaCharset != null) {
+                metaCharset.attr("charset", charset().displayName());
+            } else {
+                head().appendElement("meta").attr("charset", charset().displayName());
+            }
+            select("meta[name=charset]").remove(); // Remove obsolete elements
+        } else if (syntax == OutputSettings.Syntax.xml) {
+            XmlDeclaration decl = ensureXmlDecl();
+            decl.attr("version", "1.0");
+            decl.attr("encoding", charset().displayName());
+        }
     }
-    private static final zenzai.select.Evaluator titleEval = new zenzai.select.Evaluator.Tag("title");
+
+    private XmlDeclaration ensureXmlDecl() {
+        Node node = firstChild();
+        if (node instanceof XmlDeclaration) {
+            XmlDeclaration decl = (XmlDeclaration) node;
+            if (decl.name().equals("xml")) return decl;
+        }
+        XmlDeclaration decl = new XmlDeclaration("xml", false);
+        prependChild(decl);
+        return decl;
+    }
 
     /**
      Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if

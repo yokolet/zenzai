@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
+import zenzai.nodes.Element;
 import zenzai.nodes.Node;
 
 public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.NodeList  {
@@ -47,4 +49,26 @@ public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.N
         return isEmpty() ? null : get(size() - 1);
     }
 
+    /**
+     Remove each matched node from the DOM.
+     <p>The nodes will still be retained in this list, in case further processing of them is desired.</p>
+     <p>
+     E.g. HTML: {@code <div><p>Hello</p> <p>there</p> <img></div>}<br>
+     <code>doc.select("p").remove();</code><br>
+     HTML = {@code <div> <img></div>}
+     <p>
+     Note that this method should not be used to clean user-submitted HTML; rather, use {@link org.jsoup.safety.Cleaner}
+     to clean HTML.
+
+     @return this, for chaining
+     @see Element#empty()
+     @see Elements#empty()
+     @see #clear()
+     */
+    public Nodes<T> remove() {
+        for (T node : this) {
+            node.remove();
+        }
+        return this;
+    }
 }
