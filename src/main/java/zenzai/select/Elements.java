@@ -1,9 +1,11 @@
 package zenzai.select;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import zenzai.nodes.Element;
+import zenzai.nodes.FormElement;
 
 public class Elements extends Nodes<Element> {
     public Elements() {
@@ -86,5 +88,18 @@ public class Elements extends Nodes<Element> {
             element.empty();
         }
         return this;
+    }
+
+    /**
+     * Get the {@link FormElement} forms from the selected elements, if any.
+     * @return a list of {@link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
+     * no forms.
+     */
+    public List<FormElement> forms() {
+        ArrayList<FormElement> forms = new ArrayList<>();
+        for (Element el: this)
+            if (el instanceof FormElement)
+                forms.add((FormElement) el);
+        return forms;
     }
 }

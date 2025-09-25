@@ -1225,6 +1225,18 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
     }
 
     /**
+     * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
+     * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
+     * repeatedly parsing the CSS query.
+     * @param evaluator an element evaluator
+     * @return an {@link zenzai.select.Elements} list containing elements that match the query (empty if none match)
+     * @see zenzai.select.Selector#evaluatorOf(String css)
+     */
+    public Elements select(Evaluator evaluator) {
+        return Selector.select(evaluator, this);
+    }
+
+    /**
      * Tests if this element has a class. Case-insensitive.
      * @param className name of class to check for
      * @return true if it does, false if not

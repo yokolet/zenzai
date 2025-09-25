@@ -1,14 +1,18 @@
 package zenzai.nodes;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.List;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import zenzai.TextUtil;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
-
-import java.io.StringWriter;
-import java.nio.charset.Charset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -137,18 +141,6 @@ public class DocumentTest {
                 TextUtil.stripNewlines(clone.html()));
     }
 
-//    @Test public void testLocation() throws IOException {
-//        // tests location vs base href
-//        File in = ParseTest.getFile("/htmltests/basehref.html");
-//        Document doc = Jsoup.parse(in, "UTF-8", "http://example.com/");
-//        String location = doc.location();
-//        String baseUri = doc.baseUri();
-//        assertEquals("http://example.com/", location);
-//        assertEquals("https://example.com/path/file.html?query", baseUri);
-//        assertEquals("./anotherfile.html", doc.expectFirst("a").attr("href"));
-//        assertEquals("https://example.com/path/anotherfile.html", doc.expectFirst("a").attr("abs:href"));
-//    }
-
     @Test
     public void testLocationFromString() {
         Document doc = Parser.parse("<p>Hello", "");
@@ -250,6 +242,54 @@ public class DocumentTest {
         assertEquals(expected, doc.toString());
         assertEquals(charsetUtf8, doc.charset().name());
         assertEquals(doc.charset(), doc.outputSettings().charset());
+    }
+
+    @Test
+    public void testMetaCharsetUpdateIso8859() {
+        Document doc = createHtmlDocument("changeThis");
+        doc.charset(Charset.forName(charsetIso8859));
+        String expected =
+                "<html>\n" +
+                " <head>\n" +
+                "  <meta charset=\"" + charsetIso8859 + "\">\n" +
+                " </head>\n" +
+                " <body></body>\n" +
+                "</html>";
+        assertEquals(expected, doc.toString());
+        assertEquals(charsetIso8859, doc.charset().name());
+        assertEquals(doc.charset(), doc.outputSettings().charset());
+    }
+
+    @Test
+    public void testWithoutMetaCharset() {
+        Document doc = Document.createShell("");
+        String expected =
+                "<html>\n" +
+                " <head></head>\n" +
+                " <body></body>\n" +
+                "</html>";
+        assertEquals(expected, doc.toString());
+    }
+
+    @Test
+    public void testDocumentTypeGet() {
+        String html = "\n\n<!-- comment -->  <!doctype html><p>One</p>";
+        Document doc = Parser.parse(html, "");
+        DocumentType docType = doc.documentType();
+        assertNotNull(docType);
+        assertEquals("html", docType.name());
+    }
+
+    @Test
+    public void testForms() {
+        String html = "<body><form id=1><input name=foo></form><form id=2><input name=bar>";
+        Document doc = Parser.parse(html, "");
+        List<FormElement> forms = doc.forms();
+        assertEquals(2, forms.size());
+
+        FormElement form = forms.get(1);
+        assertEquals(1, form.elements().size());
+        assertEquals("bar", form.elements().first().attr("name"));
     }
 
     private Document createHtmlDocument(String charset) {

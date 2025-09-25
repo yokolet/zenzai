@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
@@ -10,6 +11,7 @@ import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.helper.W3CValidation;
 import zenzai.internal.StringUtil;
+import zenzai.select.Elements;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
@@ -504,6 +506,17 @@ public class Document extends Element implements org.w3c.dom.Document {
         if (titleEl == null) // add to head
             titleEl = head().appendElement("title");
         titleEl.text(title);
+    }
+
+    /**
+     Get each of the {@code <form>} elements contained in this document.
+     @return a List of FormElement objects, which will be empty if there are none.
+     @see Elements#forms()
+     @see FormElement#elements()
+     @since 1.15.4
+     */
+    public List<FormElement> forms() {
+        return select("form").forms();
     }
 
     /**
