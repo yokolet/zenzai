@@ -986,6 +986,20 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
     }
 
     /**
+     * Find an element by ID, including or under this element.
+     * <p>
+     * Note that this finds the first matching ID, starting with this element. If you search down from a different
+     * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
+     * use {@link zenzai.nodes.Document#getElementById(String)}
+     * @param id The ID to search for.
+     * @return The first matching element by ID, starting with this element, or null if none found.
+     */
+    public Element getElementById(String id) {
+        Validate.notEmpty(id);
+        return Collector.findFirst(new Evaluator.Id(id), this);
+    }
+
+    /**
      Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
@@ -1064,6 +1078,18 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
             if (node instanceof Element) return (Element) node;
         }
         return null;
+    }
+
+    /**
+     * Gets the last element sibling of this element. That may be this element.
+     * @return the last sibling that is an element (aka the parent's last element child)
+     */
+    public Element lastElementSibling() {
+        if (parent() != null) {
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parent().lastElementChild();
+        } else
+            return this;
     }
 
     /**

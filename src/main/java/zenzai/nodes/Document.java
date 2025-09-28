@@ -213,9 +213,8 @@ public class Document extends Element implements org.w3c.dom.Document {
     }
     // org.w3c.dom.Document
     @Override
-    public org.w3c.dom.Element getElementById(String id) {
-        org.w3c.dom.NodeList nodeList = super.getElementsByTagName(id);
-        return nodeList.getLength() > 0 ? (org.w3c.dom.Element)nodeList.item(0) : null;
+    public Element getElementById(String id) {
+        return super.getElementById(id);
     }
     // org.w3c.dom.Document
     @Override
