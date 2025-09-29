@@ -20,6 +20,19 @@ public class Elements extends Nodes<Element> {
     }
 
     /**
+     * Creates a deep copy of these elements.
+     * @return a deep copy
+     */
+    @Override
+    public Elements clone() {
+        super.clone();
+        Elements clone = new Elements(size());
+        for (Element e : this)
+            clone.add(e.clone());
+        return clone;
+    }
+
+    /**
      * Update (rename) the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
      * {@code doc.select("i").tagName("em");}
      *

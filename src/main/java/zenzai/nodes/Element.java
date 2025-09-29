@@ -326,6 +326,15 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
         return attributes;
     }
 
+    /**
+     * Find all elements under this element (including self, and children of children).
+     *
+     * @return all elements
+     */
+    public Elements getAllElements() {
+        return Collector.collect(new Evaluator.AllElements(), this);
+    }
+
     @Override
     public String baseUri() {
         String baseUri = searchUpForAttribute(this, BaseUriKey);

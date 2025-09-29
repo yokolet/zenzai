@@ -20,6 +20,19 @@ public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.N
         super(nodes);
     }
 
+    /**
+     * Creates a deep copy of these nodes.
+     * @return a deep copy
+     */
+    @Override
+    public Nodes<T> clone() {
+        super.clone();
+        Nodes<T> clone = new Nodes<>(size());
+        for (T node : this)
+            clone.add((T) node.clone());
+        return clone;
+    }
+
     // org.w3c.dom.NodeList
     @Override
     public org.w3c.dom.Node item(int index) {

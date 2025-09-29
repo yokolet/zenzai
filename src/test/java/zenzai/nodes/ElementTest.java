@@ -5,7 +5,9 @@ import zenzai.TextUtil;
 import zenzai.parser.Parser;
 import zenzai.select.Elements;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -233,5 +235,180 @@ public class ElementTest {
         Element div = doc.getElementById("1");
         div.html("<p>there</p><p>now</p>");
         assertEquals("<p>there</p><p>now</p>", TextUtil.stripNewlines(div.html()));
+    }
+
+    @Test
+    public void testDataset() {
+        String html = "<div id=1 data-name=jsoup class=new data-package=jar>Hello</div><p id=2>Hello</p>";
+        Document doc = Parser.parse(html, "");
+        Element div = doc.getElementById("1");
+        Map<String, String> dataset = div.dataset();
+        Attributes attributes = div.attributes();
+
+        assertEquals(2, dataset.size());
+        assertEquals(4, attributes.size());
+        assertEquals("jsoup", dataset.get("name"));
+        assertEquals("jar", dataset.get("package"));
+
+        dataset.put("name", "jsoup updated");
+        dataset.put("language", "java");
+        dataset.remove("package");
+
+        assertEquals(2, dataset.size());
+        assertEquals(4, attributes.size());
+        assertEquals("jsoup updated", attributes.get("data-name"));
+        assertEquals("jsoup updated", dataset.get("name"));
+        assertEquals("java", attributes.get("data-language"));
+        assertEquals("java", dataset.get("language"));
+
+        Element el = doc.getElementById("2");
+        assertEquals(0, el.dataset().size());
+    }
+
+    @Test
+    public void testClone() {
+        Document doc = Parser.parse("<div><p>One<p><span>Two</div>", "");
+        Element p = doc.getElementsByTag("p").get(1);
+        Element clone = p.clone();
+
+        assertNotNull(clone.parentNode);
+        assertEquals(1, clone.parentNode.childNodeSize());
+        assertSame(clone.ownerDocument(), clone.parentNode);
+
+        assertEquals(0, clone.siblingIndex);
+        assertEquals(1, p.siblingIndex);
+        assertNotNull(p.parent());
+
+        clone.append("<span>Three");
+        assertEquals("<p><span>Two</span><span>Three</span></p>", TextUtil.stripNewlines(clone.outerHtml()));
+        assertEquals("<div><p>One</p><p><span>Two</span></p></div>", TextUtil.stripNewlines(doc.body().html())); // not modified
+    }
+
+    @Test
+    public void testShallowClone() {
+        String baseUri = "http://example.com/";
+        Document doc = Parser.parse("<div id=1 class=one><p id=2 class=two>One", baseUri);
+        Element div = doc.getElementById("1");
+        Element p = doc.getElementById("2");
+        TextNode text = p.textNodes().get(0);
+
+        Element div2 = div.shallowClone();
+        Element p2 = p.shallowClone();
+        TextNode text2 = (TextNode) text.shallowClone();
+
+        assertEquals(1, div.childNodeSize());
+        assertEquals(0, div2.childNodeSize());
+
+        assertEquals(1, p.childNodeSize());
+        assertEquals(0, p2.childNodeSize());
+
+        assertEquals("", p2.text());
+        assertEquals("One", text2.text());
+
+        assertEquals(baseUri, div2.baseUri());
+    }
+
+    @Test
+    public void testMoveByAppend() {
+        Document doc = Parser.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>", "");
+        Element div1 = doc.getElementById("1");
+        Element div2 = doc.getElementById("2");
+
+        assertEquals(4, div1.childNodeSize());
+        assertEquals(0, div2.childNodeSize());
+
+        List<Node> children = div1.childNodes();
+        assertEquals(4, children.size());
+
+        div2.insertChildren(0, children);
+
+        assertEquals(4, children.size());
+        assertEquals(0, div1.childNodeSize());
+        assertEquals(4, div2.childNodeSize());
+        String expected = "<div id=\"1\"></div>\n<div id=\"2\">\n Text\n <p>One</p>\n Text\n <p>Two</p>\n</div>";
+        assertEquals(expected, doc.body().html());
+    }
+
+    @Test
+    public void testInsertChildrenArgument() {
+        Document doc = Parser.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>", "");
+        Element div1 = doc.getElementById("1");
+        Element div2 = doc.getElementById("2");
+        List<Node> children = div1.childNodes();
+
+        assertThrows(IllegalArgumentException.class, () -> div2.insertChildren(6, children));
+        assertThrows(IllegalArgumentException.class, () -> div2.insertChildren(-5, children));
+        assertThrows(IllegalArgumentException.class, () -> div2.insertChildren(0, (Collection<? extends Node>) null));
+    }
+
+    @Test
+    public void testInsertCopiedChildren() {
+        Document doc = Parser.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>", "");
+        Element div1 = doc.getElementById("1");
+        Element div2 = doc.getElementById("2");
+        Elements children = doc.getElementsByTag("p").clone();
+        children.first().text("One cloned");
+        div2.insertChildren(-1, children);
+
+        assertEquals(4, div1.childNodeSize());
+        assertEquals(2, div2.childNodeSize());
+        String expected = "<div id=\"1\">\n Text\n <p>One</p>\n Text\n <p>Two</p>\n</div>\n<div id=\"2\">\n <p>One cloned</p>\n <p>Two</p>\n</div>";
+        assertEquals(expected, doc.body().html());
+    }
+
+    @Test
+    public void testRemoveAttributes() {
+        String html = "<a one two three four>Text</a><p foo>Two</p>";
+        Document doc = Parser.parse(html, "");
+        for (Element el : doc.getAllElements()) {
+            el.clearAttributes();
+        }
+
+        assertEquals("<a>Text</a>\n<p>Two</p>", doc.body().html());
+    }
+
+    @Test
+    public void testRemoveAttr() {
+        Element el = new Element("a")
+                .attr("href", "http://example.com")
+                .attr("id", "1")
+                .text("Hello");
+        assertEquals("<a href=\"http://example.com\" id=\"1\">Hello</a>", el.outerHtml());
+        Element el2 = el.removeAttr("href");
+        assertSame(el, el2);
+        assertEquals("<a id=\"1\">Hello</a>", el2.outerHtml());
+    }
+
+    @Test
+    public void testRoot() {
+        Element el = new Element("a");
+        el.append("<span>Hello</span>");
+        assertEquals("<a><span>Hello</span></a>", el.outerHtml());
+
+        Element span = el.getElementsByTag("span").get(0);
+        assertNotNull(span);
+        assertSame(el, span.root());
+
+        Document doc = Parser.parse("<div><p>One<p>Two<p>Three", "");
+        Element div = doc.getElementsByTag("div").get(0);
+        assertSame(doc, div.root());
+        assertSame(doc, div.ownerDocument());
+    }
+
+    @Test
+    public void testChildIndex() {
+        Document doc = Parser.parse("<div>One <p>Two</p> Three <p>Four</p> Five <p>Six</p>", "");
+        Element div = doc.getElementsByTag("div").get(0);
+        Element child0 = div.child(0);
+        Element child1 = div.child(1);
+        Element child2 = div.child(2);
+        assertNull(div.cachedChildren());
+
+        assertEquals("Two", child0.text());
+        assertEquals("Four", child1.text());
+        assertEquals("Six", child2.text());
+
+        Elements children = div.children();
+        assertNotNull(div.cachedChildren());;
     }
 }
