@@ -284,12 +284,22 @@ public final class StringUtil {
         if (!strings.hasNext()) // only one, avoid builder
             return start;
 
-        org.jsoup.internal.StringUtil.StringJoiner j = new org.jsoup.internal.StringUtil.StringJoiner(sep);
+        StringUtil.StringJoiner j = new StringUtil.StringJoiner(sep);
         j.add(start);
         while (strings.hasNext()) {
             j.add(strings.next());
         }
         return j.complete();
+    }
+
+    /**
+     * Join an array of strings by a separator
+     * @param strings collection of string objects
+     * @param sep string to place between strings
+     * @return joined string
+     */
+    public static String join(String[] strings, String sep) {
+        return join(Arrays.asList(strings), sep);
     }
 
     /**

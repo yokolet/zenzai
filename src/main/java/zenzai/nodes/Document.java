@@ -1,6 +1,7 @@
 package zenzai.nodes;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
@@ -9,6 +10,8 @@ import org.w3c.dom.NamedNodeMap;
 import zenzai.helper.DataUtil;
 import zenzai.helper.Validate;
 import zenzai.helper.W3CValidation;
+import zenzai.internal.StringUtil;
+import zenzai.select.Elements;
 import zenzai.parser.ParseSettings;
 import zenzai.parser.Parser;
 import zenzai.parser.Tag;
@@ -210,9 +213,8 @@ public class Document extends Element implements org.w3c.dom.Document {
     }
     // org.w3c.dom.Document
     @Override
-    public org.w3c.dom.Element getElementById(String id) {
-        org.w3c.dom.NodeList nodeList = super.getElementsByTagName(id);
-        return nodeList.getLength() > 0 ? (org.w3c.dom.Element)nodeList.item(0) : null;
+    public Element getElementById(String id) {
+        return super.getElementById(id);
     }
     // org.w3c.dom.Document
     @Override
@@ -433,6 +435,22 @@ public class Document extends Element implements org.w3c.dom.Document {
         return outputSettings.charset();
     }
 
+    public void charset(Charset charset) {
+        outputSettings.charset(charset);
+        ensureMetaCharsetElement();
+    }
+
+    /**
+     Get the string contents of the document's {@code title} element.
+     @return Trimmed title, or empty string if none set.
+     */
+    public String title() {
+        // title is a preserve whitespace tag (for document output), but normalised here
+        Element titleEl = head().selectFirst(titleEval);
+        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+    }
+    private static final zenzai.select.Evaluator titleEval = new zenzai.select.Evaluator.Tag("title");
+
     /**
      Find the root HTML element, or create it if it doesn't exist.
      @return the root HTML element.
@@ -445,6 +463,59 @@ public class Document extends Element implements org.w3c.dom.Document {
             el = el.nextElementSibling();
         }
         return appendElement("html");
+    }
+
+    private void ensureMetaCharsetElement() {
+        OutputSettings.Syntax syntax = outputSettings().syntax();
+
+        if (syntax == OutputSettings.Syntax.html) {
+            Element metaCharset = selectFirst("meta[charset]");
+            if (metaCharset != null) {
+                metaCharset.attr("charset", charset().displayName());
+            } else {
+                head().appendElement("meta").attr("charset", charset().displayName());
+            }
+            select("meta[name=charset]").remove(); // Remove obsolete elements
+        } else if (syntax == OutputSettings.Syntax.xml) {
+            XmlDeclaration decl = ensureXmlDecl();
+            decl.attr("version", "1.0");
+            decl.attr("encoding", charset().displayName());
+        }
+    }
+
+    private XmlDeclaration ensureXmlDecl() {
+        Node node = firstChild();
+        if (node instanceof XmlDeclaration) {
+            XmlDeclaration decl = (XmlDeclaration) node;
+            if (decl.name().equals("xml")) return decl;
+        }
+        XmlDeclaration decl = new XmlDeclaration("xml", false);
+        prependChild(decl);
+        return decl;
+    }
+
+    /**
+     Set the document's {@code title} element. Updates the existing element, or adds {@code title} to {@code head} if
+     not present
+     @param title string to set as title
+     */
+    public void title(String title) {
+        Validate.notNull(title);
+        Element titleEl = head().selectFirst(titleEval);
+        if (titleEl == null) // add to head
+            titleEl = head().appendElement("title");
+        titleEl.text(title);
+    }
+
+    /**
+     Get each of the {@code <form>} elements contained in this document.
+     @return a List of FormElement objects, which will be empty if there are none.
+     @see Elements#forms()
+     @see FormElement#elements()
+     @since 1.15.4
+     */
+    public List<FormElement> forms() {
+        return select("form").forms();
     }
 
     /**

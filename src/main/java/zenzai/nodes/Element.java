@@ -49,7 +49,9 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
         Validate.notNull(tag);
         childNodes = EmptyNodeList;
         this.attributes = attributes;
-        this.attributes.setOwnerElement(this);
+        if (this.attributes != null) {
+            this.attributes.setOwnerElement(this);
+        }
         this.tag = tag;
         if (!StringUtil.isBlank(baseUri)) this.setBaseUri(baseUri);
     }
@@ -322,6 +324,15 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
             attributes.setOwnerElement(this);
         }
         return attributes;
+    }
+
+    /**
+     * Find all elements under this element (including self, and children of children).
+     *
+     * @return all elements
+     */
+    public Elements getAllElements() {
+        return Collector.collect(new Evaluator.AllElements(), this);
     }
 
     @Override
@@ -984,10 +995,24 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
     }
 
     /**
+     * Find an element by ID, including or under this element.
+     * <p>
+     * Note that this finds the first matching ID, starting with this element. If you search down from a different
+     * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
+     * use {@link zenzai.nodes.Document#getElementById(String)}
+     * @param id The ID to search for.
+     * @return The first matching element by ID, starting with this element, or null if none found.
+     */
+    public Element getElementById(String id) {
+        Validate.notEmpty(id);
+        return Collector.findFirst(new Evaluator.Id(id), this);
+    }
+
+    /**
      Get the source range (start and end positions) of the end (closing) tag for this Element. Position tracking must be
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
-     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see zenzai.parser.Parser#setTrackPosition(boolean)
      @see zenzai.nodes.Node#sourceRange()
      @see Range#isImplicit()
      @since 1.15.2
@@ -1062,6 +1087,18 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
             if (node instanceof Element) return (Element) node;
         }
         return null;
+    }
+
+    /**
+     * Gets the last element sibling of this element. That may be this element.
+     * @return the last sibling that is an element (aka the parent's last element child)
+     */
+    public Element lastElementSibling() {
+        if (parent() != null) {
+            //noinspection DataFlowIssue (not nullable, would be this if no other sibs)
+            return parent().lastElementChild();
+        } else
+            return this;
     }
 
     /**
@@ -1196,14 +1233,14 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
      * match.
      */
-    public @Nullable Element selectFirst(Evaluator evaluator) {
+    public @Nullable Element selectFirst(zenzai.select.Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
     }
 
     /**
      Just like {@link #selectFirst(String)}, but if there is no match, throws an {@link IllegalArgumentException}. This
      is useful if you want to simply abort processing on a failed match.
-     @param cssQuery a {@link org.jsoup.select.Selector} CSS-like query
+     @param cssQuery a {@link zenzai.select.Selector} CSS-like query
      @return the first matching element
      @throws IllegalArgumentException if no match is found
      @since 1.15.2
@@ -1216,6 +1253,22 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
                         "No elements matched the query '%s' in the document."
                 , cssQuery, this.tagName()
         );
+    }
+
+    public Elements select(String cssQuery) {
+        return Selector.select(cssQuery, this);
+    }
+
+    /**
+     * Find elements that match the supplied Evaluator. This has the same functionality as {@link #select(String)}, but
+     * may be useful if you are running the same query many times (on many documents) and want to save the overhead of
+     * repeatedly parsing the CSS query.
+     * @param evaluator an element evaluator
+     * @return an {@link zenzai.select.Elements} list containing elements that match the query (empty if none match)
+     * @see zenzai.select.Selector#evaluatorOf(String css)
+     */
+    public Elements select(Evaluator evaluator) {
+        return Selector.select(evaluator, this);
     }
 
     /**
@@ -1294,7 +1347,7 @@ public class Element extends zenzai.nodes.Node implements org.w3c.dom.Element, I
 
         if (childNodes.isEmpty()) {
             boolean xmlMode = out.syntax() == xml || !tag.namespace().equals(NamespaceHtml);
-            if (xmlMode && (tag.is(org.jsoup.parser.Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
+            if (xmlMode && (tag.is(Tag.SeenSelfClose) || (tag.isKnownTag() && (tag.isEmpty() || tag.isSelfClosing())))) {
                 accum.append(" />");
             } else if (!xmlMode && tag.isEmpty()) { // html void element
                 accum.append('>');

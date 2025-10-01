@@ -455,6 +455,16 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
 
     /**
      * Check if these attributes contain an attribute with a value for this key.
+     * @param key key to check for
+     * @return true if key exists, and it has a value
+     */
+    public boolean hasDeclaredValueForKey(String key) {
+        int i = indexOfKey(key);
+        return i != NotFound && vals[i] != null;
+    }
+
+    /**
+     * Check if these attributes contain an attribute with a value for this key.
      * @param key case-insensitive key to check for
      * @return true if key exists, and it has a value
      */
