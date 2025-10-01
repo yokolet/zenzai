@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+import zenzai.internal.StringUtil;
 import zenzai.nodes.Element;
 import zenzai.nodes.FormElement;
 
@@ -114,5 +115,32 @@ public class Elements extends Nodes<Element> {
             if (el instanceof FormElement)
                 forms.add((FormElement) el);
         return forms;
+    }
+
+    /**
+     * Get the combined text of all the matched elements.
+     * <p>
+     * Note that it is possible to get repeats if the matched elements contain both parent elements and their own
+     * children, as the Element.text() method returns the combined text of a parent and all its children.
+     * @return string of all text: unescaped and no HTML.
+     * @see Element#text()
+     * @see #eachText()
+     */
+    public String text() {
+        return stream()
+                .map(Element::text)
+                .collect(StringUtil.joining(" "));
+    }
+
+    /**
+     * Get the combined inner HTML of all matched elements.
+     * @return string of all element's inner HTML.
+     * @see #text()
+     * @see #outerHtml()
+     */
+    public String html() {
+        return stream()
+                .map(Element::html)
+                .collect(StringUtil.joining("\n"));
     }
 }

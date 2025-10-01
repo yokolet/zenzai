@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 
+import zenzai.internal.StringUtil;
 import zenzai.nodes.Element;
 import zenzai.nodes.Node;
 
@@ -83,5 +84,18 @@ public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.N
             node.remove();
         }
         return this;
+    }
+
+    /**
+     Get the combined outer HTML of all matched nodes.
+
+     @return string of all node's outer HTML.
+     @see Elements#text()
+     @see Elements#html()
+     */
+    public String outerHtml() {
+        return stream()
+                .map(Node::outerHtml)
+                .collect(StringUtil.joining("\n"));
     }
 }

@@ -109,7 +109,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         W3CValidation.modificationAllowed(this, (zenzai.nodes.Node)newChild);
         W3CValidation.nodeInChildren(this, (zenzai.nodes.Node)oldChild);
         W3CValidation.operationSupported(this);
-        replaceChild(oldChild, newChild);
+        replaceChild((zenzai.nodes.Node)oldChild, (zenzai.nodes.Node)newChild);
         return oldChild;
     }
     public org.w3c.dom.Node removeChild(org.w3c.dom.Node oldChild) throws DOMException {
@@ -1009,6 +1009,22 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         child.setParentNode(this);
     }
 
+    protected void replaceChild(zenzai.nodes.Node out, zenzai.nodes.Node in) {
+        Validate.isTrue(out.parentNode == this);
+        Validate.notNull(in);
+        if (out == in) return; // no-op self replacement
+
+        if (in.parentNode != null)
+            in.parentNode.removeChild(in);
+
+        final int index = out.siblingIndex();
+        ensureChildNodes().set(index, in);
+        in.parentNode = (Element) this;
+        in.setSiblingIndex(index);
+        out.parentNode = null;
+
+        ((Element) this).childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
+    }
 
     protected void removeChild(Node out) {
         Validate.isTrue(out.parentNode == this);
