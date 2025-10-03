@@ -1,14 +1,14 @@
 package nokogiri.internals.html.select;
 
-import nokogiri.internals.html.internal.StringUtil;
-import nokogiri.internals.html.nodes.Element;
-import nokogiri.internals.html.nodes.LeafNode;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+
+import nokogiri.internals.html.internal.StringUtil;
+import nokogiri.internals.html.nodes.Element;
+import nokogiri.internals.html.nodes.LeafNode;
 
 /**
  * Base combining (and, or) evaluator.

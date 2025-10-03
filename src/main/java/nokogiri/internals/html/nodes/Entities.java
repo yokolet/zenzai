@@ -1,5 +1,12 @@
 package nokogiri.internals.html.nodes;
 
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+
 import nokogiri.internals.html.helper.DataUtil;
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.QuietAppendable;
@@ -7,13 +14,6 @@ import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Document.OutputSettings;
 import nokogiri.internals.html.parser.CharacterReader;
 import nokogiri.internals.html.parser.Parser;
-
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 
 import static nokogiri.internals.html.nodes.Entities.EscapeMode.base;
 import static nokogiri.internals.html.nodes.Entities.EscapeMode.extended;
@@ -208,7 +208,7 @@ public class Entities {
         }
     }
 
-    static void escape(QuietAppendable accum, String data, nokogiri.internals.html.nodes.Document.OutputSettings out, int options) {
+    static void escape(QuietAppendable accum, String data, Document.OutputSettings out, int options) {
         doEscape(data, accum, out.escapeMode(), out.charset(), options);
     }
 

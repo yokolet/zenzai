@@ -1,11 +1,11 @@
 package nokogiri.internals.html.select;
 
+import java.util.regex.Pattern;
+
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.LeafNode;
 import nokogiri.internals.html.nodes.Node;
-
-import java.util.regex.Pattern;
 
 import static nokogiri.internals.html.internal.Normalizer.lowerCase;
 import static nokogiri.internals.html.internal.StringUtil.normaliseWhitespace;

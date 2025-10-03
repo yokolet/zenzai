@@ -3,6 +3,7 @@ package nokogiri.internals.html.nodes;
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.QuietAppendable;
 import nokogiri.internals.html.internal.StringUtil;

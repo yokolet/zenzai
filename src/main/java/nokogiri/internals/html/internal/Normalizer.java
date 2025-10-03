@@ -1,10 +1,11 @@
 package nokogiri.internals.html.internal;
 
-import nokogiri.internals.html.nodes.Attribute;
-import nokogiri.internals.html.nodes.Document;
+import java.util.Locale;
+
 import org.jspecify.annotations.Nullable;
 
-import java.util.Locale;
+import nokogiri.internals.html.nodes.Attribute;
+import nokogiri.internals.html.nodes.Document;
 
 public final class Normalizer {
     /** Drops the input string to lower case. */

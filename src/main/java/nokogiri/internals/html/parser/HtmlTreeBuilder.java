@@ -1,5 +1,11 @@
 package nokogiri.internals.html.parser;
 
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.Normalizer;
 import nokogiri.internals.html.internal.StringUtil;
@@ -12,11 +18,6 @@ import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.FormElement;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.TextNode;
-import org.jspecify.annotations.Nullable;
-
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
 
 import static nokogiri.internals.html.internal.StringUtil.inSorted;
 import static nokogiri.internals.html.parser.HtmlTreeBuilderState.Constants.InTableFoster;

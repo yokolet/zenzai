@@ -1,14 +1,15 @@
 package nokogiri.internals.html.parser;
 
-import nokogiri.internals.html.helper.Validate;
-import nokogiri.internals.html.internal.SharedConstants;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import org.jspecify.annotations.Nullable;
+
+import nokogiri.internals.html.helper.Validate;
+import nokogiri.internals.html.internal.SharedConstants;
 
 import static nokogiri.internals.html.parser.Parser.NamespaceHtml;
 import static nokogiri.internals.html.parser.Parser.NamespaceMathml;

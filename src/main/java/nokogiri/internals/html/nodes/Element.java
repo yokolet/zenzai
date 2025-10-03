@@ -216,10 +216,10 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, "Cannot set attribute on non-owner document.");
         }
         W3CValidation.modificationAllowed(this);
-        if (this != ((nokogiri.internals.html.nodes.Attribute)attr).getOwnerDocument()) {
+        if (this != ((Attribute)attr).getOwnerDocument()) {
             throw new DOMException(DOMException.INUSE_ATTRIBUTE_ERR, "Cannot set attribute on non-owner document.");
         }
-        attributes().put((nokogiri.internals.html.nodes.Attribute)attr);
+        attributes().put((Attribute)attr);
         return attr;
     }
 
@@ -316,7 +316,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
         // simpler than implementing a clone version with no child copy
         String baseUri = baseUri();
         if (baseUri.isEmpty()) baseUri = null; // saves setting a blank internal attribute
-        return new nokogiri.internals.html.nodes.Element(tag, baseUri, attributes == null ? null : attributes.clone());
+        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     @Override
@@ -790,7 +790,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
         int currentSize = childNodeSize();
         if (index < 0) index += currentSize +1; // roll around
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
-        addChildren(index, children.toArray(new nokogiri.internals.html.nodes.Node[0]));
+        addChildren(index, children.toArray(new Node[0]));
         return this;
     }
 
@@ -1010,7 +1010,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
      */
     public Elements getElementsByTag(String tagName) {
         Validate.notEmpty(tagName);
-        tagName = nokogiri.internals.html.internal.Normalizer.normalize(tagName);
+        tagName = Normalizer.normalize(tagName);
 
         return Collector.collect(new Evaluator.Tag(tagName), this);
     }
@@ -1020,7 +1020,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
      * <p>
      * Note that this finds the first matching ID, starting with this element. If you search down from a different
      * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
-     * use {@link nokogiri.internals.html.nodes.Document#getElementById(String)}
+     * use {@link Document#getElementById(String)}
      * @param id The ID to search for.
      * @return The first matching element by ID, starting with this element, or null if none found.
      */
@@ -1034,7 +1034,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
      enabled prior to parsing the content.
      @return the range of the closing tag for this element, or {@code untracked} if its range was not tracked.
      @see nokogiri.internals.html.parser.Parser#setTrackPosition(boolean)
-     @see nokogiri.internals.html.nodes.Node#sourceRange()
+     @see Node#sourceRange()
      @see Range#isImplicit()
      @since 1.15.2
      */
@@ -1077,7 +1077,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
     public @Nullable Element firstElementChild() {
         int size = childNodes.size();
         for (int i = 0; i < size; i++) {
-            nokogiri.internals.html.nodes.Node node = childNodes.get(i);
+            Node node = childNodes.get(i);
             if (node instanceof Element) return (Element) node;
         }
         return null;
@@ -1254,7 +1254,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
      * @return the first matching element (walking down the tree, starting from this element), or {@code null} if none
      * match.
      */
-    public @Nullable Element selectFirst(nokogiri.internals.html.select.Evaluator evaluator) {
+    public @Nullable Element selectFirst(Evaluator evaluator) {
         return Collector.findFirst(evaluator, this);
     }
 

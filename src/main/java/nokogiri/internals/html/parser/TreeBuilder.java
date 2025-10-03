@@ -1,5 +1,11 @@
 package nokogiri.internals.html.parser;
 
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.SharedConstants;
 import nokogiri.internals.html.nodes.Attributes;
@@ -8,11 +14,6 @@ import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.Range;
 import nokogiri.internals.html.select.NodeVisitor;
-import org.jspecify.annotations.Nullable;
-
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
 
 import static nokogiri.internals.html.parser.Parser.NamespaceHtml;
 

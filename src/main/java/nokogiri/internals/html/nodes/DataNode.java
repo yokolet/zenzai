@@ -2,6 +2,7 @@ package nokogiri.internals.html.nodes;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
+
 import nokogiri.internals.html.helper.W3CValidation;
 import nokogiri.internals.html.internal.QuietAppendable;
 

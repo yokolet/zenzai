@@ -1,15 +1,16 @@
 package nokogiri.internals.html.parser;
 
-import nokogiri.internals.html.helper.Validate;
-import nokogiri.internals.html.nodes.Document;
-import nokogiri.internals.html.nodes.Element;
-import nokogiri.internals.html.nodes.Node;
-import org.jspecify.annotations.Nullable;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.jspecify.annotations.Nullable;
+
+import nokogiri.internals.html.helper.Validate;
+import nokogiri.internals.html.nodes.Document;
+import nokogiri.internals.html.nodes.Element;
+import nokogiri.internals.html.nodes.Node;
 
 /**
  Parses HTML or XML into a {@link nokogiri.internals.html.nodes.Document}. Generally, it is simpler to use one of the parse methods in

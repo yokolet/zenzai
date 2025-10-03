@@ -1,5 +1,11 @@
 package nokogiri.internals.html.select;
 
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.nodes.CDataNode;
@@ -9,11 +15,6 @@ import nokogiri.internals.html.nodes.LeafNode;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.TextNode;
 import nokogiri.internals.html.parser.TokenQueue;
-import org.jspecify.annotations.Nullable;
-
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static nokogiri.internals.html.select.StructuralEvaluator.ImmediateParentRun;
 import static nokogiri.internals.html.internal.Normalizer.normalize;

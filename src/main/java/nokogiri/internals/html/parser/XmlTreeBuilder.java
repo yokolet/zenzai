@@ -1,5 +1,14 @@
 package nokogiri.internals.html.parser;
 
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.SharedConstants;
 import nokogiri.internals.html.nodes.Attribute;
@@ -16,14 +25,6 @@ import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.TextNode;
 import nokogiri.internals.html.nodes.XmlDeclaration;
 import nokogiri.internals.html.select.Elements;
-import org.jspecify.annotations.Nullable;
-
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static nokogiri.internals.html.parser.Parser.NamespaceXml;
 

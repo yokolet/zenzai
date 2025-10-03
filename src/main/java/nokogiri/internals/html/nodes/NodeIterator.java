@@ -8,10 +8,10 @@ import org.jspecify.annotations.Nullable;
 import nokogiri.internals.html.helper.Validate;
 
 public class NodeIterator<T extends nokogiri.internals.html.nodes.Node> implements Iterator<T>{
-    private nokogiri.internals.html.nodes.Node root;         // root / starting node
+    private Node root;         // root / starting node
     private @Nullable T next;               // the next node to return
-    private nokogiri.internals.html.nodes.Node current;      // the current (last emitted) node
-    private nokogiri.internals.html.nodes.Node previous;     // the previously emitted node; used to recover from structural changes
+    private Node current;      // the current (last emitted) node
+    private Node previous;     // the previously emitted node; used to recover from structural changes
     private @Nullable Node currentParent;   // the current node's parent; used to detect structural changes
     private final Class<T> type;            // the desired node class type
 
@@ -89,7 +89,7 @@ public class NodeIterator<T extends nokogiri.internals.html.nodes.Node> implemen
     }
 
     private @Nullable T findNextNode() {
-        nokogiri.internals.html.nodes.Node node = current;
+        Node node = current;
         while (true) {
             if (node.childNodeSize() > 0)
                 node = node.childNode(0);                   // descend children

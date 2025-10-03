@@ -1,10 +1,11 @@
 package nokogiri.internals.html.parser;
 
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.Normalizer;
 import nokogiri.internals.html.nodes.Attributes;
 import nokogiri.internals.html.nodes.Range;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Parse tokens for the Tokeniser.

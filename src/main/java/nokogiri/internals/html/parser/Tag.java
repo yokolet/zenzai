@@ -1,8 +1,8 @@
 package nokogiri.internals.html.parser;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.Objects;
+
+import org.jspecify.annotations.Nullable;
 
 import static nokogiri.internals.html.parser.Parser.NamespaceHtml;
 

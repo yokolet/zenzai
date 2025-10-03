@@ -1,15 +1,16 @@
 package nokogiri.internals.html.nodes;
 
+import java.util.*;
+
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMException;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.helper.W3CValidation;
 import nokogiri.internals.html.internal.QuietAppendable;
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.parser.ParseSettings;
-
-import java.util.*;
 
 import static nokogiri.internals.html.internal.Normalizer.lowerCase;
 import static nokogiri.internals.html.internal.SharedConstants.UserDataKey;
@@ -73,7 +74,7 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
     public org.w3c.dom.Node item(int index) {
         if (index < 0 || index >= size()) { return null; }
         String key = keys[index];
-        return new nokogiri.internals.html.nodes.Attribute(key, checkNotNull(vals[index]), this);
+        return new Attribute(key, checkNotNull(vals[index]), this);
     }
 
     // org.w3c.dom.NamedNodeMap
@@ -372,7 +373,7 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
      was not tracked.
      @see org.jsoup.parser.Parser#setTrackPosition(boolean)
      @see Attribute#sourceRange()
-     @see nokogiri.internals.html.nodes.Node#sourceRange()
+     @see Node#sourceRange()
      @see Element#endSourceRange()
      @since 1.17.1
      */
@@ -624,7 +625,7 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
             addObject(key, value);
     }
 
-    final void html(final QuietAppendable accum, final nokogiri.internals.html.nodes.Document.OutputSettings out) {
+    final void html(final QuietAppendable accum, final Document.OutputSettings out) {
         final int sz = size;
         for (int i = 0; i < sz; i++) {
             String key = keys[i];
