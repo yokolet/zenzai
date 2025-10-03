@@ -1,7 +1,7 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import org.junit.jupiter.api.Test;
-import zenzai.internal.QuietAppendable;
+import nokogiri.internals.html.internal.QuietAppendable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DataNodeTest {

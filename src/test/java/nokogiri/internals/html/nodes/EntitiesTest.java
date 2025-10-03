@@ -1,11 +1,11 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import org.junit.jupiter.api.Test;
-import zenzai.parser.Parser;
+import nokogiri.internals.html.parser.Parser;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static zenzai.nodes.Document.OutputSettings;
-import static zenzai.nodes.Entities.EscapeMode.*;
+import static nokogiri.internals.html.nodes.Document.OutputSettings;
+import static nokogiri.internals.html.nodes.Entities.EscapeMode.*;
 
 public class EntitiesTest {
     @Test

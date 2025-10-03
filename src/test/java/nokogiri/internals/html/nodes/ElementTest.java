@@ -1,9 +1,9 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import org.junit.jupiter.api.Test;
-import zenzai.TextUtil;
-import zenzai.parser.Parser;
-import zenzai.select.Elements;
+import nokogiri.internals.html.TextUtil;
+import nokogiri.internals.html.parser.Parser;
+import nokogiri.internals.html.select.Elements;
 
 import java.util.Collection;
 import java.util.List;

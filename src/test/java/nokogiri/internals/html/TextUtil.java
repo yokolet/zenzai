@@ -1,4 +1,4 @@
-package zenzai;
+package nokogiri.internals.html;
 
 import java.util.regex.Pattern;
 

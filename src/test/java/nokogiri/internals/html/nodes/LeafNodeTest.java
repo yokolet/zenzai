@@ -1,8 +1,8 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import org.junit.jupiter.api.Test;
-import zenzai.parser.Parser;
-import zenzai.select.NodeFilter;
+import nokogiri.internals.html.parser.Parser;
+import nokogiri.internals.html.select.NodeFilter;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,8 +1,8 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import org.junit.jupiter.api.Test;
-import zenzai.TextUtil;
-import zenzai.parser.Parser;
+import nokogiri.internals.html.TextUtil;
+import nokogiri.internals.html.parser.Parser;
 
 import static org.junit.jupiter.api.Assertions.*;
 

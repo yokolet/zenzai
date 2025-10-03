@@ -1,4 +1,4 @@
-package zenzai.nodes;
+package nokogiri.internals.html.nodes;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +9,10 @@ import java.util.List;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import zenzai.TextUtil;
-import zenzai.parser.ParseSettings;
-import zenzai.parser.Parser;
-import zenzai.parser.Tag;
+import nokogiri.internals.html.TextUtil;
+import nokogiri.internals.html.parser.ParseSettings;
+import nokogiri.internals.html.parser.Parser;
+import nokogiri.internals.html.parser.Tag;
 
 import static org.junit.jupiter.api.Assertions.*;
 
