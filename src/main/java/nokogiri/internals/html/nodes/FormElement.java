@@ -30,7 +30,7 @@ public class FormElement extends Element {
     }
 
     @Override
-    protected void removeChild(nokogiri.internals.html.nodes.Node out) {
+    protected void removeChild(Node out) {
         super.removeChild(out);
         linkedEls.remove(out);
     }

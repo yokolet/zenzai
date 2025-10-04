@@ -64,20 +64,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     @Override
-    public nokogiri.internals.html.nodes.Node clone() {
-        nokogiri.internals.html.nodes.Node thisClone = doClone(null); // splits for orphan
+    public Node clone() {
+        Node thisClone = doClone(null); // splits for orphan
 
         // Queue up nodes that need their children cloned (BFS).
         final LinkedList<nokogiri.internals.html.nodes.Node> nodesToProcess = new LinkedList<>();
         nodesToProcess.add(thisClone);
 
         while (!nodesToProcess.isEmpty()) {
-            nokogiri.internals.html.nodes.Node currParent = nodesToProcess.remove();
+            Node currParent = nodesToProcess.remove();
 
             final int size = currParent.childNodeSize();
             for (int i = 0; i < size; i++) {
                 final List<nokogiri.internals.html.nodes.Node> childNodes = currParent.ensureChildNodes();
-                nokogiri.internals.html.nodes.Node childClone = childNodes.get(i).doClone(currParent);
+                Node childClone = childNodes.get(i).doClone(currParent);
                 childNodes.set(i, childClone);
                 nodesToProcess.add(childClone);
             }
@@ -1026,7 +1026,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         ((Element) this).childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
     }
 
-    protected void removeChild(Node out) {
+    protected void removeChild(nokogiri.internals.html.nodes.Node out) {
         Validate.isTrue(out.parentNode == this);
         Element el = (Element) this;
         if (el.hasValidChildren()) // can remove by index

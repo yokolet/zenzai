@@ -92,8 +92,8 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
      @return an Iterator
      */
     @Override
-    public Iterator<nokogiri.internals.html.nodes.Element> iterator() {
-        return new NodeIterator<>(this, nokogiri.internals.html.nodes.Element.class);
+    public Iterator<Element> iterator() {
+        return new NodeIterator<>(this, Element.class);
     }
 
     // org.w3c.dom.Node
