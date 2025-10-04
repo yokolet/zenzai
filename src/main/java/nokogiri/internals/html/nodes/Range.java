@@ -108,7 +108,7 @@ public class Range {
      * @param start if this is the starting range. {@code false} for Element end tags.
      * @return the Range, or the Untracked (-1) position if tracking is disabled.
      */
-    static Range of(nokogiri.internals.html.nodes.Node node, boolean start) {
+    static Range of(Node node, boolean start) {
 
         final String key = start ? RangeKey : EndRangeKey;
         if (!node.hasAttributes()) return Untracked;
@@ -122,8 +122,8 @@ public class Range {
     /**
      A Position object tracks the character position in the original input source where a Node starts or ends. If you want to
      track these positions, tracking must be enabled in the Parser with
-     {@link org.jsoup.parser.Parser#setTrackPosition(boolean)}.
-     @see nokogiri.internals.html.nodes.Node#sourceRange()
+     {@link nokogiri.internals.html.parser.Parser#setTrackPosition(boolean)}.
+     @see Node#sourceRange()
      */
     public static class Position {
         private final int pos, lineNumber, columnNumber;

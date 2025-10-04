@@ -1,13 +1,13 @@
 package nokogiri.internals.html.nodes;
 
-import nokogiri.internals.html.parser.Parser;
-import nokogiri.internals.html.parser.HtmlTreeBuilder;
-
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import nokogiri.internals.html.parser.Parser;
+import nokogiri.internals.html.parser.HtmlTreeBuilder;
 
 final class NodeUtils {
 
@@ -23,7 +23,7 @@ final class NodeUtils {
     /**
      * Get the parser that was used to make this node, or the default HTML parser if it has no parent.
      */
-    static Parser parser(nokogiri.internals.html.nodes.Node node) {
+    static Parser parser(Node node) {
         Document doc = node.ownerDocument();
         return doc != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
     }

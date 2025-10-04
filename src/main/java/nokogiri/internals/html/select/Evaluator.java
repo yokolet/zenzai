@@ -1,5 +1,10 @@
 package nokogiri.internals.html.select;
 
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.nodes.Comment;
 import nokogiri.internals.html.nodes.Document;
@@ -9,12 +14,6 @@ import nokogiri.internals.html.nodes.LeafNode;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.TextNode;
 import nokogiri.internals.html.nodes.XmlDeclaration;
-import nokogiri.internals.html.parser.ParseSettings;
-
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static nokogiri.internals.html.internal.Normalizer.lowerCase;
 import static nokogiri.internals.html.internal.Normalizer.normalize;

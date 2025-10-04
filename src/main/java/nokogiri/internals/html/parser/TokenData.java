@@ -1,7 +1,9 @@
 package nokogiri.internals.html.parser;
 
-import nokogiri.internals.html.internal.StringUtil;
 import org.jspecify.annotations.Nullable;
+
+import nokogiri.internals.html.internal.StringUtil;
+
 
 /**
  A value holder for Tokens, as the stream is Tokenized. Can hold a String or a StringBuilder.

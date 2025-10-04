@@ -1,11 +1,12 @@
 package nokogiri.internals.html.nodes;
 
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.internal.QuietAppendable;
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Document.OutputSettings;
 import nokogiri.internals.html.parser.Tag;
 import nokogiri.internals.html.select.NodeVisitor;
-import org.jspecify.annotations.Nullable;
 
 /** Base Printer */
 class Printer implements NodeVisitor {

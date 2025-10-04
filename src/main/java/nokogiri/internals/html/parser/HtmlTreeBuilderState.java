@@ -1,5 +1,9 @@
 package nokogiri.internals.html.parser;
 
+import java.util.ArrayList;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Attribute;
@@ -9,9 +13,6 @@ import nokogiri.internals.html.nodes.DocumentType;
 import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.Range;
-import org.jspecify.annotations.Nullable;
-
-import java.util.ArrayList;
 
 import static nokogiri.internals.html.internal.StringUtil.inSorted;
 import static nokogiri.internals.html.parser.HtmlTreeBuilder.isSpecial;

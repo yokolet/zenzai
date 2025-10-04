@@ -1,12 +1,13 @@
 package nokogiri.internals.html.parser;
 
+import java.util.Arrays;
+
+import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Document;
 import nokogiri.internals.html.nodes.Entities;
-import org.jspecify.annotations.Nullable;
-
-import java.util.Arrays;
 
 /**
  * Readers the input stream into tokens.

@@ -6,10 +6,8 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.jspecify.annotations.Nullable;
-
 import org.w3c.dom.*;
 
-import org.w3c.dom.Element;
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.helper.W3CValidation;
 import nokogiri.internals.html.internal.Normalizer;
@@ -110,7 +108,7 @@ public class Attribute implements Cloneable, Attr {
 
     // org.w3c.dom.Node
     @Override
-    public org.w3c.dom.NodeList getChildNodes() { return new nokogiri.internals.html.nodes.Element.NodeList(0); }
+    public org.w3c.dom.NodeList getChildNodes() { return new Element.NodeList(0); }
 
     // org.w3c.dom.Node
     @Override
@@ -245,7 +243,7 @@ public class Attribute implements Cloneable, Attr {
     @Override
     public boolean getSpecified() {
         // TODO: verify the behavior
-        return nokogiri.internals.html.nodes.Attribute.isBooleanAttribute(getKey());
+        return isBooleanAttribute(getKey());
     }
 
     // org.w3c.dom.Attr
@@ -411,12 +409,12 @@ public class Attribute implements Cloneable, Attr {
      * @param syntax HTML or XML
      * @return the original key if it's valid; a key with invalid characters replaced with "_" otherwise; or null if a valid key could not be created.
      */
-    @Nullable public static String getValidKey(String key, nokogiri.internals.html.nodes.Document.OutputSettings.Syntax syntax) {
-        if (syntax == nokogiri.internals.html.nodes.Document.OutputSettings.Syntax.xml && !isValidXmlKey(key)) {
+    @Nullable public static String getValidKey(String key,Document.OutputSettings.Syntax syntax) {
+        if (syntax == Document.OutputSettings.Syntax.xml && !isValidXmlKey(key)) {
             key = xmlKeyReplace.matcher(key).replaceAll("_");
             return isValidXmlKey(key) ? key : null; // null if could not be coerced
         }
-        else if (syntax == nokogiri.internals.html.nodes.Document.OutputSettings.Syntax.html && !isValidHtmlKey(key)) {
+        else if (syntax == Document.OutputSettings.Syntax.html && !isValidHtmlKey(key)) {
             key = htmlKeyReplace.matcher(key).replaceAll("_");
             return isValidHtmlKey(key) ? key : null; // null if could not be coerced
         }
@@ -456,8 +454,8 @@ public class Attribute implements Cloneable, Attr {
      was not tracked.
      @see nokogiri.internals.html.parser.Parser#setTrackPosition(boolean)
      @see Attributes#sourceRange(String)
-     @see nokogiri.internals.html.nodes.Node#sourceRange()
-     @see nokogiri.internals.html.nodes.Element#endSourceRange()
+     @see Node#sourceRange()
+     @see Element#endSourceRange()
      @since 1.17.1
      */
     public Range.AttributeRange sourceRange() {
@@ -504,7 +502,7 @@ public class Attribute implements Cloneable, Attr {
     }
 
     // collapse unknown foo=null, known checked=null, checked="", checked=checked; write out others
-    protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final nokogiri.internals.html.nodes.Document.OutputSettings out) {
+    protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
         return (out.syntax() == Syntax.html &&
                 (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
     }

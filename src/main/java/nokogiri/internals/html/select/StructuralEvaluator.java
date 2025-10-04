@@ -1,5 +1,9 @@
 package nokogiri.internals.html.select;
 
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 import nokogiri.internals.html.internal.Functions;
 import nokogiri.internals.html.internal.SoftPool;
 import nokogiri.internals.html.internal.StringUtil;
@@ -8,10 +12,6 @@ import nokogiri.internals.html.nodes.LeafNode;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.NodeIterator;
 import nokogiri.internals.html.nodes.TextNode;
-
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.Map;
 
 /**
  * Base structural evaluator.

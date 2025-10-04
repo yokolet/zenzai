@@ -2,6 +2,7 @@ package nokogiri.internals.html.nodes;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.DOMException;
+
 import nokogiri.internals.html.internal.QuietAppendable;
 
 public class CDataNode extends TextNode implements CDATASection {

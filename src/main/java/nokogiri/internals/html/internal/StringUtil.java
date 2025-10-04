@@ -1,7 +1,5 @@
 package nokogiri.internals.html.internal;
 
-import org.jspecify.annotations.Nullable;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -10,6 +8,8 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import org.jspecify.annotations.Nullable;
 
 import nokogiri.internals.html.helper.Validate;
 

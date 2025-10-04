@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.w3c.dom.DOMException;
-
 import org.w3c.dom.NamedNodeMap;
+
 import nokogiri.internals.html.helper.DataUtil;
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.helper.W3CValidation;
@@ -15,6 +15,7 @@ import nokogiri.internals.html.select.Elements;
 import nokogiri.internals.html.parser.ParseSettings;
 import nokogiri.internals.html.parser.Parser;
 import nokogiri.internals.html.parser.Tag;
+import nokogiri.internals.html.select.Evaluator;
 
 import static nokogiri.internals.html.parser.Parser.NamespaceHtml;
 
@@ -282,7 +283,7 @@ public class Document extends Element implements org.w3c.dom.Document {
     public org.w3c.dom.Node renameNode(org.w3c.dom.Node n, String namespaceURI, String qualifiedName) throws DOMException {
         if (n.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
             W3CValidation.wrongDocument(this, (nokogiri.internals.html.nodes.Node)n);
-            Element el = (nokogiri.internals.html.nodes.Element) n;
+            Element el = (Element) n;
             return el.tagName(qualifiedName, namespaceURI);
         } else if (n.getNodeType() == org.w3c.dom.Node.ATTRIBUTE_NODE) {
             Attribute attr = (Attribute) n;
@@ -449,7 +450,7 @@ public class Document extends Element implements org.w3c.dom.Document {
         Element titleEl = head().selectFirst(titleEval);
         return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
     }
-    private static final nokogiri.internals.html.select.Evaluator titleEval = new nokogiri.internals.html.select.Evaluator.Tag("title");
+    private static final Evaluator titleEval = new Evaluator.Tag("title");
 
     /**
      Find the root HTML element, or create it if it doesn't exist.

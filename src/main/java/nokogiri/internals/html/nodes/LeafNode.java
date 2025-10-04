@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.internal.QuietAppendable;
 
-public abstract class LeafNode extends nokogiri.internals.html.nodes.Node {
+public abstract class LeafNode extends Node {
     Object value;
 
     public LeafNode() {

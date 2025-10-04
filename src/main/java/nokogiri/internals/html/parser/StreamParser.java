@@ -1,15 +1,5 @@
 package nokogiri.internals.html.parser;
 
-import org.jsoup.Connection;
-import nokogiri.internals.html.helper.Validate;
-import nokogiri.internals.html.nodes.Document;
-import nokogiri.internals.html.nodes.Element;
-import nokogiri.internals.html.nodes.Node;
-import nokogiri.internals.html.select.Evaluator;
-import nokogiri.internals.html.select.NodeVisitor;
-import nokogiri.internals.html.select.Selector;
-import org.jspecify.annotations.Nullable;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
@@ -24,6 +14,16 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import org.jspecify.annotations.Nullable;
+
+import nokogiri.internals.html.helper.Validate;
+import nokogiri.internals.html.nodes.Document;
+import nokogiri.internals.html.nodes.Element;
+import nokogiri.internals.html.nodes.Node;
+import nokogiri.internals.html.select.Evaluator;
+import nokogiri.internals.html.select.NodeVisitor;
+import nokogiri.internals.html.select.Selector;
 
 /**
  A StreamParser provides a progressive parse of its input. As each Element is completed, it is emitted via a Stream or
@@ -43,7 +43,7 @@ import java.util.stream.StreamSupport;
  until the input is fully consumed.</p>
  <p>A StreamParser can be reused via a new {@link #parse(Reader, String)}, but is not thread-safe for concurrent inputs.
  New parsers should be used in each thread.</p>
- <p>If created via {@link Connection.Response#streamParser()}, or another Reader that is I/O backed, the iterator and
+ <p>If created via Connection.Response#streamParser(), or another Reader that is I/O backed, the iterator and
  stream consumers will throw an {@link java.io.UncheckedIOException} if the underlying Reader errors during read.</p>
  <p>For examples, see the jsoup
  <a href="https://jsoup.org/cookbook/input/streamparser-dom-sax">StreamParser cookbook.</a></p>

@@ -1,10 +1,11 @@
 package nokogiri.internals.html.select;
 
+import java.util.stream.Stream;
+
 import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.helper.Validate;
 import nokogiri.internals.html.nodes.Element;
-
-import java.util.stream.Stream;
 
 public class Selector {
     // not instantiable

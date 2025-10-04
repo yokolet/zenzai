@@ -1,6 +1,7 @@
 package nokogiri.internals.html.nodes;
 
 import org.w3c.dom.DOMException;
+
 import nokogiri.internals.html.internal.QuietAppendable;
 import nokogiri.internals.html.internal.StringUtil;
 
@@ -78,11 +79,11 @@ public class XmlDeclaration extends LeafNode {
      */
     public String getWholeDeclaration() {
         StringBuilder sb = StringUtil.borrowBuilder();
-        getWholeDeclaration(QuietAppendable.wrap(sb), new nokogiri.internals.html.nodes.Document.OutputSettings());
+        getWholeDeclaration(QuietAppendable.wrap(sb), new Document.OutputSettings());
         return StringUtil.releaseBuilder(sb).trim();
     }
 
-    private void getWholeDeclaration(QuietAppendable accum, nokogiri.internals.html.nodes.Document.OutputSettings out) {
+    private void getWholeDeclaration(QuietAppendable accum, Document.OutputSettings out) {
         for (Attribute attribute : attributes()) {
             String key = attribute.getKey();
             String val = attribute.getValue();
@@ -92,7 +93,7 @@ public class XmlDeclaration extends LeafNode {
                 accum.append(key);
                 if (!val.isEmpty()) {
                     accum.append("=\"");
-                    nokogiri.internals.html.nodes.Entities.escape(accum, val, out, Entities.ForAttribute);
+                    Entities.escape(accum, val, out, Entities.ForAttribute);
                     accum.append('"');
                 }
             }
@@ -100,7 +101,7 @@ public class XmlDeclaration extends LeafNode {
     }
 
     @Override
-    void outerHtmlHead(QuietAppendable accum, nokogiri.internals.html.nodes.Document.OutputSettings out) {
+    void outerHtmlHead(QuietAppendable accum, Document.OutputSettings out) {
         accum
                 .append("<")
                 .append(isDeclaration ? "!" : "?")

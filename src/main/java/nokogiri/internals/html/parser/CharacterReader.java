@@ -1,10 +1,5 @@
 package nokogiri.internals.html.parser;
 
-import nokogiri.internals.html.helper.Validate;
-import nokogiri.internals.html.internal.SoftPool;
-import nokogiri.internals.html.internal.StringUtil;
-import org.jspecify.annotations.Nullable;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Reader;
@@ -13,6 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
+
+import org.jspecify.annotations.Nullable;
+
+import nokogiri.internals.html.helper.Validate;
+import nokogiri.internals.html.internal.SoftPool;
+import nokogiri.internals.html.internal.StringUtil;
 
 /**
  CharacterReader consumes tokens off a string. Used internally by jsoup. API subject to changes.

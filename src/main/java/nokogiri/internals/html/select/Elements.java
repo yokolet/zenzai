@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.internal.StringUtil;
 import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.FormElement;

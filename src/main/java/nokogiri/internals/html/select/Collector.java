@@ -3,12 +3,11 @@ package nokogiri.internals.html.select;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+
 import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.LeafNode;
 import nokogiri.internals.html.nodes.Node;
 import nokogiri.internals.html.nodes.TextNode;
-import nokogiri.internals.html.select.Elements;
-import nokogiri.internals.html.select.Evaluator;
 
 import static java.util.stream.Collectors.toCollection;
 

@@ -64,20 +64,20 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
 
     @Override
-    public nokogiri.internals.html.nodes.Node clone() {
-        nokogiri.internals.html.nodes.Node thisClone = doClone(null); // splits for orphan
+    public Node clone() {
+        Node thisClone = doClone(null); // splits for orphan
 
         // Queue up nodes that need their children cloned (BFS).
         final LinkedList<nokogiri.internals.html.nodes.Node> nodesToProcess = new LinkedList<>();
         nodesToProcess.add(thisClone);
 
         while (!nodesToProcess.isEmpty()) {
-            nokogiri.internals.html.nodes.Node currParent = nodesToProcess.remove();
+            Node currParent = nodesToProcess.remove();
 
             final int size = currParent.childNodeSize();
             for (int i = 0; i < size; i++) {
                 final List<nokogiri.internals.html.nodes.Node> childNodes = currParent.ensureChildNodes();
-                nokogiri.internals.html.nodes.Node childClone = childNodes.get(i).doClone(currParent);
+                Node childClone = childNodes.get(i).doClone(currParent);
                 childNodes.set(i, childClone);
                 nodesToProcess.add(childClone);
             }
@@ -93,7 +93,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
     public abstract short getNodeType(); // subclases implement this method
     public org.w3c.dom.Node getParentNode() { return parentNode; }
-    public org.w3c.dom.NodeList getChildNodes() { return new nokogiri.internals.html.nodes.Element.NodeList(0); }
+    public org.w3c.dom.NodeList getChildNodes() { return new Element.NodeList(0); }
     public org.w3c.dom.Node getFirstChild() { return null; }
     public org.w3c.dom.Node getLastChild() { return null; }
     public org.w3c.dom.Node getPreviousSibling() { return nextSibling(); }
@@ -232,7 +232,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return a single independent copy of this node
      * @see #clone()
      */
-    public nokogiri.internals.html.nodes.Node shallowClone() {
+    public Node shallowClone() {
         return doClone(null);
     }
 
@@ -296,7 +296,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @param nodeVisitor the visitor callbacks to perform on each node
      * @return this node, for chaining
      */
-    public nokogiri.internals.html.nodes.Node traverse(NodeVisitor nodeVisitor) {
+    public Node traverse(NodeVisitor nodeVisitor) {
         Validate.notNull(nodeVisitor);
         nodeVisitor.traverse(this);
         return this;
@@ -350,7 +350,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      */
     public @Nullable Document ownerDocument() {
         if (document != null) { return (nokogiri.internals.html.nodes.Document)document; }
-        nokogiri.internals.html.nodes.Node node = this;
+        Node node = this;
         while (node != null) {
             if (node instanceof Document) {
                 document = (Document)node;
@@ -406,7 +406,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return this node, for chaining
      * @see #after(Node)
      */
-    public Node before(nokogiri.internals.html.nodes.Node node) {
+    public Node before(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
@@ -434,7 +434,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * @return this node, for chaining
      * @see #before(Node)
      */
-    public Node after(nokogiri.internals.html.nodes.Node node) {
+    public Node after(Node node) {
         Validate.notNull(node);
         Validate.notNull(parentNode);
 
@@ -572,7 +572,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
 
         List<nokogiri.internals.html.nodes.Node> nodes = parentNode.ensureChildNodes();
         List<nokogiri.internals.html.nodes.Node> siblings = new ArrayList<>(nodes.size() - 1);
-        for (nokogiri.internals.html.nodes.Node node: nodes)
+        for (Node node: nodes)
             if (node != this)
                 siblings.add(node);
         return siblings;
@@ -701,7 +701,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @see #previousElementSibling()
      */
     public @Nullable Element nextElementSibling() {
-        nokogiri.internals.html.nodes.Node next = this;
+        Node next = this;
         while ((next = next.nextSibling()) != null) {
             if (next instanceof Element) return (Element) next;
         }
@@ -733,7 +733,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         final List<nokogiri.internals.html.nodes.Node> siblings = parentNode.ensureChildNodes();
         final int index = siblingIndex() + 1;
         if (siblings.size() > index) {
-            nokogiri.internals.html.nodes.Node node = siblings.get(index);
+            Node node = siblings.get(index);
             assert (node.siblingIndex == index); // sanity test that invalidations haven't missed
             return node;
         } else
@@ -791,7 +791,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      @return the child node at this index.
      @throws IndexOutOfBoundsException if the index is out of bounds.
      */
-    public nokogiri.internals.html.nodes.Node childNode(int index) {
+    public Node childNode(int index) {
         return ensureChildNodes().get(index);
     }
 
@@ -930,12 +930,12 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
 
     protected abstract List<nokogiri.internals.html.nodes.Node> ensureChildNodes();
 
-    protected nokogiri.internals.html.nodes.Node doClone(@Nullable Node parent) {
+    protected Node doClone(@Nullable Node parent) {
         assert parent == null || parent instanceof Element;
-        nokogiri.internals.html.nodes.Node clone;
+        Node clone;
 
         try {
-            clone = (nokogiri.internals.html.nodes.Node) super.clone();
+            clone = (Node) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
@@ -972,7 +972,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         final List<nokogiri.internals.html.nodes.Node> nodes = ensureChildNodes();
 
         // fast path - if used as a wrap (index=0, children = child[0].parent.children - do inplace
-        final nokogiri.internals.html.nodes.Node firstParent = children[0].parent();
+        final Node firstParent = children[0].parent();
         if (firstParent != null && firstParent.childNodeSize() == children.length) {
             boolean sameList = true;
             final List<nokogiri.internals.html.nodes.Node> firstParentNodes = firstParent.ensureChildNodes();
@@ -998,7 +998,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         }
 
         Validate.noNullElements(children);
-        for (nokogiri.internals.html.nodes.Node child : children) {
+        for (Node child : children) {
             reparentChild(child);
         }
         nodes.addAll(index, Arrays.asList(children));
@@ -1026,7 +1026,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         ((Element) this).childNodes.incrementMod(); // as mod count not changed in set(), requires explicit update, to invalidate the child element cache
     }
 
-    protected void removeChild(Node out) {
+    protected void removeChild(nokogiri.internals.html.nodes.Node out) {
         Validate.isTrue(out.parentNode == this);
         Element el = (Element) this;
         if (el.hasValidChildren()) // can remove by index
