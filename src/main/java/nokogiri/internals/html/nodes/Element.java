@@ -358,7 +358,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
 
     @Override @Nullable
     public final Element parent() {
-        return (Element) parentNode;
+        return parentNode;
     }
 
     /**
@@ -1388,6 +1388,8 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
     }
 
     static final class NodeList extends ArrayList<nokogiri.internals.html.nodes.Node> implements org.w3c.dom.NodeList {
+        private static final long serialVersionUID = 1L;
+
         /** Tracks if the children have valid sibling indices. We only need to reindex on siblingIndex() demand. */
         boolean validChildren = true;
 
@@ -1435,6 +1437,7 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
         if (attributes == null || !attributes.hasUserData()) return null; // don't create empty userdata
         Map<String, Object> userData = attributes.userData();
         //noinspection unchecked
+        @SuppressWarnings("unchecked")
         WeakReference<List<Element>> ref = (WeakReference<List<Element>>) userData.get(childElsKey);
         if (ref != null) {
             List<Element> els = ref.get();

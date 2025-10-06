@@ -84,6 +84,8 @@ public abstract class QuietAppendable {
     }
 
     static final class SerializationException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
         private SerializationException(Throwable cause) {
             super(cause);
         }

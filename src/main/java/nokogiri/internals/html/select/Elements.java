@@ -10,6 +10,8 @@ import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.FormElement;
 
 public class Elements extends Nodes<Element> {
+    private static final long serialVersionUID = 1L;
+
     public Elements() {
     }
 

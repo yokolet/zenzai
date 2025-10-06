@@ -1,6 +1,8 @@
 package nokogiri.internals.html.internal;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,14 +98,13 @@ public final class StringUtil {
         try {
             URL base;
             try {
-                base = new URL(baseUrl);
-            } catch (MalformedURLException e) {
-                // the base is unsuitable, but the attribute/rel may be abs on its own, so try that
-                URL abs = new URL(relUrl);
+                base = URI.create(baseUrl).toURL();
+                return resolve(base, relUrl).toExternalForm();
+            } catch (IllegalArgumentException e) {
+                URL abs = URI.create(relUrl).toURL();
                 return abs.toExternalForm();
             }
-            return resolve(base, relUrl).toExternalForm();
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException | IllegalArgumentException e) {
             // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
             // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
             return validUriScheme.matcher(relUrl).find() ? relUrl : "";

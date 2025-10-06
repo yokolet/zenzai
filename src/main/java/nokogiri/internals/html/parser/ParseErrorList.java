@@ -7,7 +7,9 @@ import java.util.ArrayList;
  *
  * @author Jonathan Hedley
  */
-public class ParseErrorList extends ArrayList<ParseError>{
+public class ParseErrorList extends ArrayList<ParseError> {
+    private static final long serialVersionUID = 1L;
+
     private static final int INITIAL_CAPACITY = 16;
     private final int initialCapacity;
     private final int maxSize;

@@ -10,6 +10,8 @@ import nokogiri.internals.html.nodes.Element;
 import nokogiri.internals.html.nodes.Node;
 
 public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.NodeList  {
+    private static final long serialVersionUID = 1L;
+
     public Nodes() {
     }
 
@@ -29,8 +31,11 @@ public class Nodes<T extends Node> extends ArrayList<T> implements org.w3c.dom.N
     public Nodes<T> clone() {
         super.clone();
         Nodes<T> clone = new Nodes<>(size());
-        for (T node : this)
-            clone.add((T) node.clone());
+        for (T node : this) {
+            @SuppressWarnings("unchecked")
+            T clonedNode = (T) node.clone();
+            clone.add(clonedNode);
+        }
         return clone;
     }
 

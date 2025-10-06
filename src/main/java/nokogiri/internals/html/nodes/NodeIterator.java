@@ -66,6 +66,7 @@ public class NodeIterator<T extends nokogiri.internals.html.nodes.Node> implemen
      save some GC if the iterator is used in a tight loop.
      * @param start the new start node.
      */
+    @SuppressWarnings("unchecked")
     public void restart(nokogiri.internals.html.nodes.Node start) {
         if (type.isInstance(start))
             //noinspection unchecked
@@ -88,6 +89,7 @@ public class NodeIterator<T extends nokogiri.internals.html.nodes.Node> implemen
         next = findNextNode();
     }
 
+    @SuppressWarnings("unchecked")
     private @Nullable T findNextNode() {
         Node node = current;
         while (true) {

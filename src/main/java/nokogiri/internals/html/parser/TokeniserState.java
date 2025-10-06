@@ -597,8 +597,8 @@ enum TokeniserState {
                     t.transition(AttributeName);
                     break;
                 case '?': // Handle trailing ? in <?xml...?>
-                    if (t.tagPending instanceof Token.XmlDecl)
-                        break;
+                    if (t.tagPending instanceof Token.XmlDecl) { break; }
+                    break;
                     // otherwise fall through to default
                 default: // A-Z, anything else
                     t.tagPending.newAttribute();
@@ -648,7 +648,9 @@ enum TokeniserState {
                     if (t.syntax == xml && t.tagPending instanceof Token.XmlDecl) {
                         t.transition(AfterAttributeName);
                         break;
-                    } // otherwise default - take it
+                    }
+                    break;
+                    // otherwise default - take it
                 default: // buffer underrun
                     t.tagPending.appendAttributeName(c, pos, r.pos());
             }
@@ -1146,6 +1148,7 @@ enum TokeniserState {
                     break;
                 case eof:
                     t.eofError(this);
+                    break;
                     // note: fall through to > case
                 case '>': // catch invalid <!DOCTYPE>
                     t.error(this);

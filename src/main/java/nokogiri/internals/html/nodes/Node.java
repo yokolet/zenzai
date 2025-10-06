@@ -306,7 +306,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      * Get the list index of this node in its node sibling list. E.g. if this is the first node
      * sibling, returns 0.
      * @return position in node sibling list
-     * @see org.jsoup.nodes.Element#elementSiblingIndex()
+     * @see Element#elementSiblingIndex()
      */
     public int siblingIndex() {
         if (parentNode != null && !parentNode.childNodes.validChildren)
@@ -457,7 +457,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
 
         // Parse context - parent (because wrapping), this, or null
         Element context =
-                parentNode != null && parentNode instanceof Element ? (Element) parentNode :
+                parentNode != null && parentNode instanceof Element ? parentNode :
                         this instanceof Element ? (Element) this :
                                 null;
         List<Node> wrapChildren = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
@@ -782,7 +782,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      */
     public boolean parentElementIs(String normalName, String namespace) {
         return parentNode != null && parentNode instanceof Element
-                && ((Element) parentNode).elementIs(normalName, namespace);
+                && parentNode.elementIs(normalName, namespace);
     }
 
     /**
@@ -800,7 +800,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
      Position tracking must be enabled prior to parsing the content. For an Element, this will be the positions of the
      start tag.
      @return the range for the start of the node, or {@code untracked} if its range was not tracked.
-     @see org.jsoup.parser.Parser#setTrackPosition(boolean)
+     @see Parser#setTrackPosition(boolean)
      @see Range#isImplicit()
      @see Element#endSourceRange()
      @see Attributes#sourceRange(String name)

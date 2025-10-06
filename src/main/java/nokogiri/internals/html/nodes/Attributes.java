@@ -159,7 +159,9 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
         int i = indexOfKey(UserDataKey);
         if (i != NotFound) {
             //noinspection unchecked
-            vals[i] = new HashMap<>((Map<String, Object>) vals[i]);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> userData = (Map<String, Object>) vals[i];
+            vals[i] = userData != null ? new HashMap<>(userData) : null;
         }
 
         return clone;
@@ -559,7 +561,9 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
     /** Get the Ranges, if tracking is enabled; null otherwise. */
     @Nullable Map<String, Range.AttributeRange> getRanges() {
         //noinspection unchecked
-        return (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        @SuppressWarnings("unchecked")
+        Map<String, Range.AttributeRange> data = (Map<String, Range.AttributeRange>) userData(AttrRangeKey);
+        return data;
     }
 
     // we track boolean attributes as null in values - they're just keys. so returns empty for consumers
@@ -592,17 +596,21 @@ public class Attributes implements org.w3c.dom.NamedNodeMap, Iterable<Attribute>
      * @return the map holding user-data
      */
     Map<String, Object> userData() {
-        final Map<String, Object> userData;
+        //final Map<String, Object> userData;
         int i = indexOfKey(UserDataKey);
         if (i == NotFound) {
-            userData = new HashMap<>();
+            final Map<String, Object> userData = new HashMap<>();
             addObject(UserDataKey, userData);
+            return userData;
         } else {
             //noinspection unchecked
-            userData = (Map<String, Object>) vals[i];
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> userData = (Map<String, Object>) vals[i];
+            assert userData != null;
+            return userData;
         }
-        assert userData != null;
-        return userData;
+//        assert userData != null;
+//        return userData;
     }
 
     /**
