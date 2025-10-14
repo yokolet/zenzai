@@ -117,6 +117,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
         if (context != null) {
             final String contextName = context.normalName();
             contextElement = new Element(tagFor(contextName, contextName, defaultNamespace(), settings), baseUri);
+            contextElement.setOwnerDocument(doc);
             if (context.ownerDocument() != null) // quirks setup:
                 doc.quirksMode(context.ownerDocument().quirksMode());
 

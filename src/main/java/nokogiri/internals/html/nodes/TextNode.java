@@ -57,6 +57,11 @@ public class TextNode extends LeafNode implements Text {
         return Node.TEXT_NODE;
     }
 
+    @Override
+    public String getLocalName() {
+        return "";
+    }
+
     // jsoup.nodes.Node
     @Override public String nodeName() {
         return "#text";

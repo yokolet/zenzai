@@ -22,6 +22,8 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     static final String EmptyString = "";
     int siblingIndex;
     org.w3c.dom.Document document;
+    HashMap<String, Object> userData = new HashMap<>();
+    HashMap<String, Object> dataHandlers = new HashMap<>();
 
     /**
      * Default constructor. Doesn't set up base uri, children, or attributes; use with caution.
@@ -145,10 +147,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     public void setPrefix(String prefix) throws DOMException {
         // no-op
     }
-    public String getLocalName() {
-        // TODO: check return values from ELEMENT_NODE and ATTRIBUTE_NODE
-        return null;
-    }
+    public abstract String getLocalName();
     public boolean hasAttributes() { return false; }
     public String getBaseURI() { return null; }
     public short compareDocumentPosition(org.w3c.dom.Node other) throws DOMException {
@@ -176,12 +175,12 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
     }
     public Object getFeature(String feature, String version) { return null; }
     public Object setUserData(String key, Object data, UserDataHandler handler) {
-        // TODO: guess HTML5 doesn't have user data feature
-        return null;
+        userData.put(key, data);
+        dataHandlers.put(key, handler);
+        return data;
     }
     public Object getUserData(String key) {
-        // TODO: same as above. HTML5 doesn't have user data feature
-        return null;
+        return userData.get(key);
     }
 
     /**
@@ -918,7 +917,7 @@ public abstract class Node implements org.w3c.dom.Node, Cloneable {
         return this.outerHtml().equals(((Node) o).outerHtml());
     }
 
-    protected void setOwnerDocument(Document ownerDocument) {
+    public void setOwnerDocument(Document ownerDocument) {
         document = ownerDocument;
     }
 

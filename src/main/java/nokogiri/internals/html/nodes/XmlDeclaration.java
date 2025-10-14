@@ -65,6 +65,11 @@ public class XmlDeclaration extends LeafNode {
         coreValue(textContent);
     }
 
+    @Override
+    public String getLocalName() {
+        return "";
+    }
+
     /**
      * Get the name of this declaration.
      * @return name of this declaration.

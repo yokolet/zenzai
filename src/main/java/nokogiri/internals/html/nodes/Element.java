@@ -110,6 +110,12 @@ public class Element extends nokogiri.internals.html.nodes.Node implements org.w
 
     // org.w3c.dom.Node
     @Override
+    public String getLocalName() {
+        return tag.localName();
+    }
+
+    // org.w3c.dom.Node
+    @Override
     public org.w3c.dom.NodeList getChildNodes() {
         return childNodes;
     }
