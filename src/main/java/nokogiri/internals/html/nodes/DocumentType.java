@@ -64,6 +64,11 @@ public class DocumentType extends LeafNode implements org.w3c.dom.DocumentType {
         // no-op
     }
 
+    @Override
+    public String getLocalName() {
+        return "doctype";
+    }
+
     // org.w3c.dom.DocumentType
     @Override
     public String getName() { return name(); }

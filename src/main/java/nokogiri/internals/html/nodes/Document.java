@@ -200,7 +200,7 @@ public class Document extends Element implements org.w3c.dom.Document {
     // org.w3c.dom.Document
     @Override
     public org.w3c.dom.Element createElementNS(String namespaceURI, String qualifiedName) throws DOMException {
-        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, "Not supported for this type of node.");
+        return createElement(qualifiedName);
     }
     // org.w3c.dom.Document
     @Override

@@ -65,6 +65,11 @@ public class DataNode extends LeafNode implements CharacterData {
         coreValue(textContent);
     }
 
+    @Override
+    public String getLocalName() {
+        return "";
+    }
+
     // org.w3c.dom.CharacterData
     @Override
     public String getData() throws DOMException { return coreValue(); }

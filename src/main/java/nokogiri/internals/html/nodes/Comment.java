@@ -53,6 +53,11 @@ public class Comment extends LeafNode implements org.w3c.dom.Comment {
         coreValue(textContent);
     }
 
+    @Override
+    public String getLocalName() {
+        return "";
+    }
+
     // org.w3c.dom.CharacterData
     // nodes.Comment
     @Override
